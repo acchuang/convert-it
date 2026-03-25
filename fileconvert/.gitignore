@@ -1,0 +1,18 @@
+# dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# here.now state (contains sensitive claim tokens)
+.herenow/
+
+# Claude Code
+.claude/
+skills-lock.json
+
+# misc
+.DS_Store
+files/
+files.zip
