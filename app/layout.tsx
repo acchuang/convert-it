@@ -20,8 +20,19 @@ const dmMono = DM_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://convert-it.pages.dev'),
   title: 'CONVERT — Universal File Converter',
   description: 'Convert any file to any format, entirely in your browser.',
+  openGraph: {
+    url: 'https://convert-it.pages.dev',
+    siteName: 'CONVERT',
+    title: 'CONVERT — Universal File Converter',
+    description: 'Convert any file to any format, entirely in your browser.',
+    type: 'website',
+  },
+  alternates: {
+    canonical: '/',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
