@@ -19,6 +19,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   image: '#FF4D00',
   document: '#00C2FF',
   data: '#C8FF00',
+  video: '#FF00C8',
+  audio: '#00FF88',
 };
 
 export default function HomePage() {
@@ -263,7 +265,7 @@ export default function HomePage() {
                   <span className="text-[#C8FF00] underline underline-offset-2">browse</span>
                 </p>
                 <p className="text-[#555] text-sm" style={{ fontFamily: 'var(--font-mono)' }}>
-                  Images · Documents · Data files
+                  Images · Video · Audio · Documents · Data
                 </p>
               </motion.div>
             )}
@@ -284,7 +286,7 @@ export default function HomePage() {
           transition={{ delay: 0.4 }}
           className="flex flex-wrap gap-2 justify-center mb-12"
         >
-          {['image', 'data', 'document'].map(cat => {
+          {['image', 'data', 'document', 'video', 'audio'].map(cat => {
             const catFormats = FORMATS.filter(f => f.category === cat);
             const color = CATEGORY_COLORS[cat];
             return catFormats.map(f => (
@@ -449,6 +451,8 @@ export default function HomePage() {
           </span>
           <div className="flex gap-6 text-xs text-[#444]" style={{ fontFamily: 'var(--font-mono)' }}>
             <span>Images</span>
+            <span>Video</span>
+            <span>Audio</span>
             <span>Documents</span>
             <span>Data</span>
           </div>

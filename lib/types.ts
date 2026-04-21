@@ -1,4 +1,4 @@
-export type FileCategory = 'image' | 'document' | 'data';
+export type FileCategory = 'image' | 'document' | 'data' | 'video' | 'audio';
 
 export interface FormatInfo {
   ext: string;
@@ -12,6 +12,10 @@ export interface ConversionSettings {
   jsonIndent: number;     // 0 | 2 | 4 (0 = minified)
   csvDelimiter: string;   // ',' | ';' | '|' | '\t'
   xmlRootElement: string; // root element name for json→xml, csv→xml
+  // Audio/Video settings
+  audioBitrate: number;   // 64 | 128 | 192 | 256 | 320 (kbps)
+  videoQuality: number; // 0-51, lower is better quality (CRF)
+  videoPreset: string;  // ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow
 }
 
 export const DEFAULT_SETTINGS: ConversionSettings = {
@@ -19,6 +23,9 @@ export const DEFAULT_SETTINGS: ConversionSettings = {
   jsonIndent: 2,
   csvDelimiter: ',',
   xmlRootElement: 'root',
+  audioBitrate: 192,
+  videoQuality: 23,
+  videoPreset: 'medium',
 };
 
 export interface HistoryEntry {

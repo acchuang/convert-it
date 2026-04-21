@@ -27,7 +27,7 @@ const TEXT_FORMATS = new Set(['json', 'csv', 'xml', 'yaml', 'tsv', 'md', 'html',
 
 function hasSettings(targetExt: string | null): boolean {
   if (!targetExt) return false;
-  return ['jpg', 'jpeg', 'webp', 'png', 'csv', 'json', 'xml', 'xlsx'].includes(targetExt);
+  return ['jpg', 'jpeg', 'webp', 'png', 'csv', 'json', 'xml', 'xlsx', 'mp4', 'webm', 'avi', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a'].includes(targetExt);
 }
 
 function SettingsPanel({
@@ -43,6 +43,8 @@ function SettingsPanel({
   const showDelimiter = ['csv', 'xlsx'].includes(targetExt);
   const showIndent = ['json', 'xlsx'].includes(targetExt);
   const showRootEl = targetExt === 'xml';
+  const showAudioBitrate = ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a'].includes(targetExt);
+  const showVideoSettings = ['mp4', 'webm', 'avi', 'mov', 'mkv', 'flv'].includes(targetExt);
 
   const qualityPct = Math.round(settings.quality * 100);
 
@@ -126,6 +128,56 @@ function SettingsPanel({
               placeholder="root"
             />
           </div>
+        )}
+
+        {showAudioBitrate && (
+          <div className="flex items-center gap-3">
+            <span className="text-[#555] text-xs uppercase tracking-wider">Bitrate</span>
+            <div className="flex gap-1">
+              {[64, 128, 192, 256, 320].map(bitrate => (
+                <button
+                  key={bitrate}
+                  onClick={() => onChange({ audioBitrate: bitrate })}
+                  className={`px-2 py-1 text-xs rounded transition-colors ${
+                    settings.audioBitrate === bitrate
+                      ? 'bg-[#C8FF00] text-[#0A0A0A]'
+                      : 'bg-[#1A1A1A] text-[#888] border border-[#2A2A2A] hover:border-[#444]'
+                  }`}
+                >
+                  {bitrate}K
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {showVideoSettings && (
+          <>
+            <div className="flex items-center gap-3">
+              <span className="text-[#555] text-xs uppercase tracking-wider">Quality</span>
+              <input
+                type="range"
+                min={18}
+                max={35}
+                value={settings.videoQuality}
+                onChange={e => onChange({ videoQuality: Number(e.target.value) })}
+                className="w-24 accent-[#FF00C8]"
+              />
+              <span className="text-[#F5F0E8] text-xs w-8">CRF {settings.videoQuality}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-[#555] text-xs uppercase tracking-wider">Preset</span>
+              <select
+                value={settings.videoPreset}
+                onChange={e => onChange({ videoPreset: e.target.value })}
+                className="bg-[#1A1A1A] border border-[#2A2A2A] text-[#F5F0E8] text-xs rounded px-2 py-1 focus:outline-none focus:border-[#FF00C8] transition-colors"
+              >
+                {['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow'].map(preset => (
+                  <option key={preset} value={preset}>{preset}</option>
+                ))}
+              </select>
+            </div>
+          </>
         )}
       </div>
     </motion.div>
