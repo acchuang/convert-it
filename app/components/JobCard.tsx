@@ -23,9 +23,11 @@ const CATEGORY_COLORS: Record<string, string> = {
   data: '#C8FF00',
 };
 
+const TEXT_FORMATS = new Set(['json', 'csv', 'xml', 'yaml', 'tsv', 'md', 'html', 'txt']);
+
 function hasSettings(targetExt: string | null): boolean {
   if (!targetExt) return false;
-  return ['jpg', 'jpeg', 'webp', 'csv', 'json', 'xml'].includes(targetExt);
+  return ['jpg', 'jpeg', 'webp', 'png', 'csv', 'json', 'xml', 'xlsx'].includes(targetExt);
 }
 
 function SettingsPanel({
@@ -37,9 +39,9 @@ function SettingsPanel({
   settings: ConversionSettings;
   onChange: (patch: Partial<ConversionSettings>) => void;
 }) {
-  const showQuality = ['jpg', 'jpeg', 'webp'].includes(targetExt);
-  const showDelimiter = targetExt === 'csv';
-  const showIndent = targetExt === 'json';
+  const showQuality = ['jpg', 'jpeg', 'webp', 'png'].includes(targetExt);
+  const showDelimiter = ['csv', 'xlsx'].includes(targetExt);
+  const showIndent = ['json', 'xlsx'].includes(targetExt);
   const showRootEl = targetExt === 'xml';
 
   const qualityPct = Math.round(settings.quality * 100);
@@ -146,10 +148,20 @@ export function JobCard({
   onSettingsChange: (patch: Partial<ConversionSettings>) => void;
 }) {
   const [showSettings, setShowSettings] = useState(false);
+  const [copied, setCopied] = useState(false);
   const targets = getTargetFormats(job.sourceExt);
   const sourceInfo = getFormatInfo(job.sourceExt);
   const catColor = sourceInfo ? CATEGORY_COLORS[sourceInfo.category] : '#666';
   const canConfigure = hasSettings(job.targetExt);
+  const canCopy = job.status === 'done' && job.targetExt ? TEXT_FORMATS.has(job.targetExt) : false;
+
+  const handleCopy = async () => {
+    if (!job.resultBlob) return;
+    const text = await job.resultBlob.text();
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const statusConfig = {
     idle: { label: 'READY', color: '#666' },
@@ -183,6 +195,9 @@ export function JobCard({
           <p className="text-[#F5F0E8] text-sm font-medium truncate">{job.file.name}</p>
           <p className="text-[#555] text-xs" style={{ fontFamily: 'var(--font-mono)' }}>
             {formatFileSize(job.file.size)}
+            {job.status === 'done' && job.resultBlob && (
+              <span className="text-[#444]"> → {formatFileSize(job.resultBlob.size)}</span>
+            )}
           </p>
         </div>
 
@@ -198,7 +213,7 @@ export function JobCard({
           {targets.length === 0 && <option value="">No conversions</option>}
           {targets.map(t => (
             <option key={t} value={t}>
-              .{t.toUpperCase()}
+              {t === job.sourceExt ? `.${t.toUpperCase()} (compress)` : `.${t.toUpperCase()}`}
             </option>
           ))}
         </select>
@@ -237,19 +252,53 @@ export function JobCard({
           )}
 
           {job.status === 'done' && (
-            <motion.button
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              whileHover={{ scale: 1.03 }}
-              onClick={onDownload}
-              className="px-4 py-2 bg-[#22C55E] text-white text-xs font-semibold rounded-lg hover:bg-[#16A34A] transition-colors flex items-center gap-1.5"
-              style={{ fontFamily: 'var(--font-mono)' }}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
-              </svg>
-              DOWNLOAD
-            </motion.button>
+            <div className="flex items-center gap-2">
+              {canCopy && (
+                <motion.button
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  whileHover={{ scale: 1.03 }}
+                  onClick={handleCopy}
+                  className={`px-3 py-2 text-xs font-semibold rounded-lg border transition-colors flex items-center gap-1.5 ${
+                    copied
+                      ? 'border-[#22C55E]/50 text-[#22C55E] bg-[#22C55E]/10'
+                      : 'border-[#2A2A2A] text-[#888] hover:border-[#444] hover:text-[#F5F0E8]'
+                  }`}
+                  style={{ fontFamily: 'var(--font-mono)' }}
+                >
+                  {copied ? (
+                    <>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M20 6L9 17l-5-5" />
+                      </svg>
+                      COPIED
+                    </>
+                  ) : (
+                    <>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                      </svg>
+                      COPY
+                    </>
+                  )}
+                </motion.button>
+              )}
+
+              <motion.button
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                whileHover={{ scale: 1.03 }}
+                onClick={onDownload}
+                className="px-4 py-2 bg-[#22C55E] text-white text-xs font-semibold rounded-lg hover:bg-[#16A34A] transition-colors flex items-center gap-1.5"
+                style={{ fontFamily: 'var(--font-mono)' }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                </svg>
+                DOWNLOAD
+              </motion.button>
+            </div>
           )}
 
           {job.status === 'error' && (
