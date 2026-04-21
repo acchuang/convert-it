@@ -16,9 +16,11 @@
     "start": "next start"
   },
   "dependencies": {
+    "@types/jszip": "^3.4.0",
     "fast-xml-parser": "^5.5.12",
     "framer-motion": "^11.0.0",
     "ico-codec": "^1.0.0",
+    "jszip": "^3.10.1",
     "marked": "^18.0.0",
     "next": "15.1.0",
     "papaparse": "^5.5.3",

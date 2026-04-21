@@ -1,9 +1,14 @@
 import { parse as yamlParse, stringify as yamlStringify } from 'yaml';
+import type { ConversionSettings } from './types';
 
-export function yamlToJson(file: File): Promise<Blob> {
+export function yamlToJson(file: File, _s: string, _t: string, settings?: ConversionSettings): Promise<Blob> {
+  const indent = settings?.jsonIndent ?? 2;
   return file.text().then(text => {
     const data = yamlParse(text);
-    return new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const json = indent === 0
+      ? JSON.stringify(data)
+      : JSON.stringify(data, null, indent);
+    return new Blob([json], { type: 'application/json' });
   });
 }
 

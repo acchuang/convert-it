@@ -1,4 +1,5 @@
 import { encodeIcoBlob } from 'ico-codec';
+import type { ConversionSettings } from './types';
 
 const IMAGE_MIME_MAP: Record<string, string> = {
   jpg: 'image/jpeg',
@@ -32,7 +33,8 @@ function rasterizeImage(
   source: HTMLImageElement,
   targetExt: string,
   width: number,
-  height: number
+  height: number,
+  quality: number
 ): Promise<Blob> {
   const canvas = document.createElement('canvas');
   canvas.width = width;
@@ -54,12 +56,18 @@ function rasterizeImage(
         else reject(new Error('Canvas export failed'));
       },
       mimeType,
-      0.92
+      quality
     );
   });
 }
 
-export async function convertImage(file: File, sourceExt: string, targetExt: string): Promise<Blob> {
+export async function convertImage(
+  file: File,
+  sourceExt: string,
+  targetExt: string,
+  settings?: ConversionSettings
+): Promise<Blob> {
+  const quality = settings?.quality ?? 0.92;
   const isSvg = sourceExt === 'svg';
 
   let img: HTMLImageElement;
@@ -77,10 +85,10 @@ export async function convertImage(file: File, sourceExt: string, targetExt: str
 
   if (targetExt === 'ico') {
     const size = Math.min(img.naturalWidth, 256);
-    const pngBlob = await rasterizeImage(img, 'png', img.naturalWidth, img.naturalHeight);
+    const pngBlob = await rasterizeImage(img, 'png', img.naturalWidth, img.naturalHeight, 1);
     const pngBuffer = new Uint8Array(await pngBlob.arrayBuffer());
     return encodeIcoBlob([{ size, data: pngBuffer }]);
   }
 
-  return rasterizeImage(img, targetExt, img.naturalWidth, img.naturalHeight);
+  return rasterizeImage(img, targetExt, img.naturalWidth, img.naturalHeight, quality);
 }

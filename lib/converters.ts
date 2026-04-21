@@ -1,11 +1,12 @@
-import type { FileCategory, FormatInfo, ConverterFn } from './types';
+import type { FileCategory, FormatInfo, ConverterFn, ConversionSettings } from './types';
 import { csvToJson, csvToTsv, csvToXml, csvToHtml, tsvToCsv, tsvToJson, jsonToCsv } from './csv-converters';
 import { xmlToJson, xmlToTxt, jsonToXml } from './xml-converters';
 import { yamlToJson, jsonToYaml } from './yaml-converters';
 import { mdToHtml, htmlToMd, htmlToTxt, txtToHtml, txtToMd, jsonToTxt } from './markdown-converters';
 import { convertImage } from './image-converters';
 
-export type { FileCategory, FormatInfo, ConverterFn } from './types';
+export type { FileCategory, FormatInfo, ConverterFn, ConversionSettings } from './types';
+export { DEFAULT_SETTINGS } from './types';
 
 export const FORMATS: FormatInfo[] = [
   { ext: 'jpg', label: 'JPEG', mimeType: 'image/jpeg', category: 'image' },
@@ -82,18 +83,22 @@ export function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export async function convertFile(file: File, targetExt: string): Promise<Blob> {
+export async function convertFile(
+  file: File,
+  targetExt: string,
+  settings?: ConversionSettings
+): Promise<Blob> {
   const sourceExt = getFileExtension(file.name);
   const category = getFormatInfo(sourceExt)?.category;
 
   if (category === 'image') {
-    return convertImage(file, sourceExt, targetExt);
+    return convertImage(file, sourceExt, targetExt, settings);
   }
 
   const key = `${sourceExt}:${targetExt}`;
   const converter = CONVERTER_REGISTRY[key];
   if (converter) {
-    return converter(file, sourceExt, targetExt);
+    return converter(file, sourceExt, targetExt, settings);
   }
 
   throw new Error(`Unsupported conversion: ${sourceExt} → ${targetExt}`);

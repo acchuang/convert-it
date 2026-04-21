@@ -1,7 +1,9 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getTargetFormats, getFormatInfo, formatFileSize } from '@/lib/converters';
+import type { ConversionSettings } from '@/lib/types';
 
 export interface FileJob {
   id: string;
@@ -12,6 +14,7 @@ export interface FileJob {
   resultBlob?: Blob;
   error?: string;
   progress: number;
+  settings: ConversionSettings;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -20,22 +23,133 @@ const CATEGORY_COLORS: Record<string, string> = {
   data: '#C8FF00',
 };
 
+function hasSettings(targetExt: string | null): boolean {
+  if (!targetExt) return false;
+  return ['jpg', 'jpeg', 'webp', 'csv', 'json', 'xml'].includes(targetExt);
+}
+
+function SettingsPanel({
+  targetExt,
+  settings,
+  onChange,
+}: {
+  targetExt: string;
+  settings: ConversionSettings;
+  onChange: (patch: Partial<ConversionSettings>) => void;
+}) {
+  const showQuality = ['jpg', 'jpeg', 'webp'].includes(targetExt);
+  const showDelimiter = targetExt === 'csv';
+  const showIndent = targetExt === 'json';
+  const showRootEl = targetExt === 'xml';
+
+  const qualityPct = Math.round(settings.quality * 100);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: 'auto' }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ duration: 0.2 }}
+      className="overflow-hidden"
+    >
+      <div
+        className="mt-3 pt-3 border-t border-[#1E1E1E] flex flex-wrap gap-x-6 gap-y-3"
+        style={{ fontFamily: 'var(--font-mono)' }}
+      >
+        {showQuality && (
+          <div className="flex items-center gap-3">
+            <span className="text-[#555] text-xs uppercase tracking-wider">Quality</span>
+            <input
+              type="range"
+              min={10}
+              max={100}
+              value={qualityPct}
+              onChange={e => onChange({ quality: Number(e.target.value) / 100 })}
+              className="w-24 accent-[#C8FF00]"
+            />
+            <span className="text-[#F5F0E8] text-xs w-8">{qualityPct}%</span>
+          </div>
+        )}
+
+        {showDelimiter && (
+          <div className="flex items-center gap-3">
+            <span className="text-[#555] text-xs uppercase tracking-wider">Delimiter</span>
+            <div className="flex gap-1">
+              {([',', ';', '|', '\t'] as const).map(d => (
+                <button
+                  key={d}
+                  onClick={() => onChange({ csvDelimiter: d })}
+                  className={`px-2 py-1 text-xs rounded transition-colors ${
+                    settings.csvDelimiter === d
+                      ? 'bg-[#C8FF00] text-[#0A0A0A]'
+                      : 'bg-[#1A1A1A] text-[#888] border border-[#2A2A2A] hover:border-[#444]'
+                  }`}
+                >
+                  {d === '\t' ? 'TAB' : d === ',' ? 'COMMA' : d === ';' ? 'SEMI' : 'PIPE'}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {showIndent && (
+          <div className="flex items-center gap-3">
+            <span className="text-[#555] text-xs uppercase tracking-wider">Indent</span>
+            <div className="flex gap-1">
+              {([2, 4, 0] as const).map(n => (
+                <button
+                  key={n}
+                  onClick={() => onChange({ jsonIndent: n })}
+                  className={`px-2 py-1 text-xs rounded transition-colors ${
+                    settings.jsonIndent === n
+                      ? 'bg-[#C8FF00] text-[#0A0A0A]'
+                      : 'bg-[#1A1A1A] text-[#888] border border-[#2A2A2A] hover:border-[#444]'
+                  }`}
+                >
+                  {n === 0 ? 'MIN' : `${n}SP`}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {showRootEl && (
+          <div className="flex items-center gap-3">
+            <span className="text-[#555] text-xs uppercase tracking-wider">Root</span>
+            <input
+              type="text"
+              value={settings.xmlRootElement}
+              onChange={e => onChange({ xmlRootElement: e.target.value || 'root' })}
+              className="bg-[#1A1A1A] border border-[#2A2A2A] text-[#F5F0E8] text-xs rounded px-2 py-1 w-24 focus:outline-none focus:border-[#C8FF00] transition-colors"
+              placeholder="root"
+            />
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
 export function JobCard({
   job,
   onTargetChange,
   onConvert,
   onDownload,
   onRemove,
+  onSettingsChange,
 }: {
   job: FileJob;
   onTargetChange: (ext: string) => void;
   onConvert: () => void;
   onDownload: () => void;
   onRemove: () => void;
+  onSettingsChange: (patch: Partial<ConversionSettings>) => void;
 }) {
+  const [showSettings, setShowSettings] = useState(false);
   const targets = getTargetFormats(job.sourceExt);
   const sourceInfo = getFormatInfo(job.sourceExt);
   const catColor = sourceInfo ? CATEGORY_COLORS[sourceInfo.category] : '#666';
+  const canConfigure = hasSettings(job.targetExt);
 
   const statusConfig = {
     idle: { label: 'READY', color: '#666' },
@@ -149,6 +263,23 @@ export function JobCard({
             </button>
           )}
 
+          {canConfigure && job.status !== 'converting' && (
+            <button
+              onClick={() => setShowSettings(s => !s)}
+              title="Conversion settings"
+              className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${
+                showSettings
+                  ? 'text-[#C8FF00] bg-[#C8FF00]/10'
+                  : 'text-[#444] hover:text-[#888] hover:bg-[#1A1A1A]'
+              }`}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
+              </svg>
+            </button>
+          )}
+
           <button
             onClick={onRemove}
             className="w-8 h-8 flex items-center justify-center text-[#444] hover:text-[#EF4444] hover:bg-[#EF4444]/10 rounded-lg transition-all"
@@ -159,6 +290,16 @@ export function JobCard({
           </button>
         </div>
       </div>
+
+      <AnimatePresence>
+        {showSettings && job.targetExt && canConfigure && (
+          <SettingsPanel
+            targetExt={job.targetExt}
+            settings={job.settings}
+            onChange={onSettingsChange}
+          />
+        )}
+      </AnimatePresence>
 
       {job.status === 'converting' && (
         <div className="mt-3 h-0.5 bg-[#1A1A1A] rounded-full overflow-hidden">

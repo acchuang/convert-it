@@ -7,8 +7,12 @@ import {
   getFileExtension,
   getTargetFormats,
   FORMATS,
+  DEFAULT_SETTINGS,
 } from '@/lib/converters';
+import type { ConversionSettings } from '@/lib/types';
 import { JobCard, type FileJob } from './components/JobCard';
+import { HistoryPanel } from './components/HistoryPanel';
+import { getHistory, addHistoryEntry, type HistoryEntry } from '@/lib/history';
 
 const CATEGORY_COLORS: Record<string, string> = {
   image: '#FF4D00',
@@ -19,6 +23,8 @@ const CATEGORY_COLORS: Record<string, string> = {
 export default function HomePage() {
   const [jobs, setJobs] = useState<FileJob[]>([]);
   const [dragging, setDragging] = useState(false);
+  const [batchFormat, setBatchFormat] = useState('');
+  const [history, setHistory] = useState<HistoryEntry[]>(() => getHistory());
   const inputRef = useRef<HTMLInputElement>(null);
 
   const addFiles = useCallback((files: FileList | File[]) => {
@@ -29,6 +35,7 @@ export default function HomePage() {
       targetExt: getTargetFormats(getFileExtension(file.name))[0] ?? null,
       status: 'idle',
       progress: 0,
+      settings: { ...DEFAULT_SETTINGS },
     }));
     setJobs(prev => [...prev, ...newJobs]);
   }, []);
@@ -45,14 +52,33 @@ export default function HomePage() {
   const updateJob = (id: string, patch: Partial<FileJob>) =>
     setJobs(prev => prev.map(j => (j.id === id ? { ...j, ...patch } : j)));
 
+  const updateJobSettings = (id: string, patch: Partial<ConversionSettings>) =>
+    setJobs(prev =>
+      prev.map(j =>
+        j.id === id
+          ? { ...j, settings: { ...j.settings, ...patch }, status: 'idle', resultBlob: undefined }
+          : j
+      )
+    );
+
   const convertJob = async (job: FileJob) => {
     if (!job.targetExt) return;
     updateJob(job.id, { status: 'converting', progress: 10 });
     try {
       await new Promise(r => setTimeout(r, 300));
       updateJob(job.id, { progress: 50 });
-      const blob = await convertFile(job.file, job.targetExt);
+      const blob = await convertFile(job.file, job.targetExt, job.settings);
       updateJob(job.id, { status: 'done', resultBlob: blob, progress: 100 });
+
+      addHistoryEntry({
+        filename: job.file.name,
+        sourceExt: job.sourceExt,
+        targetExt: job.targetExt,
+        convertedAt: new Date().toISOString(),
+        fileSize: job.file.size,
+        resultSize: blob.size,
+      });
+      setHistory(getHistory());
     } catch (err) {
       updateJob(job.id, {
         status: 'error',
@@ -73,6 +99,39 @@ export default function HomePage() {
     URL.revokeObjectURL(url);
   };
 
+  const downloadAllAsZip = async () => {
+    const doneJobs = jobs.filter(j => j.status === 'done' && j.resultBlob && j.targetExt);
+    if (doneJobs.length === 0) return;
+
+    const JSZip = (await import('jszip')).default;
+    const zip = new JSZip();
+
+    for (const job of doneJobs) {
+      const base = job.file.name.replace(/\.[^.]+$/, '');
+      zip.file(`${base}.${job.targetExt}`, job.resultBlob!);
+    }
+
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'converted-files.zip';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const applyBatchFormat = () => {
+    if (!batchFormat) return;
+    setJobs(prev =>
+      prev.map(j => {
+        if (j.status !== 'idle') return j;
+        const targets = getTargetFormats(j.sourceExt);
+        if (!targets.includes(batchFormat)) return j;
+        return { ...j, targetExt: batchFormat, resultBlob: undefined };
+      })
+    );
+  };
+
   const removeJob = (id: string) =>
     setJobs(prev => prev.filter(j => j.id !== id));
 
@@ -81,6 +140,8 @@ export default function HomePage() {
   };
 
   const clearAll = () => setJobs([]);
+
+  const doneCount = jobs.filter(j => j.status === 'done').length;
 
   return (
     <main className="min-h-screen bg-[#0A0A0A] text-[#F5F0E8]" style={{ fontFamily: 'var(--font-body)' }}>
@@ -238,8 +299,8 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
             >
-              {/* Toolbar */}
-              <div className="flex items-center justify-between mb-4">
+              {/* Toolbar row 1 */}
+              <div className="flex items-center justify-between mb-3">
                 <h2
                   style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
                   className="text-xl text-[#F5F0E8]"
@@ -254,6 +315,18 @@ export default function HomePage() {
                   >
                     CLEAR ALL
                   </button>
+                  {doneCount >= 2 && (
+                    <button
+                      onClick={downloadAllAsZip}
+                      className="px-4 py-2 text-xs border border-[#22C55E]/40 text-[#22C55E] rounded-lg hover:bg-[#22C55E]/10 transition-all flex items-center gap-1.5"
+                      style={{ fontFamily: 'var(--font-mono)' }}
+                    >
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                      </svg>
+                      ZIP ({doneCount})
+                    </button>
+                  )}
                   <button
                     onClick={convertAll}
                     className="px-5 py-2 text-xs bg-[#C8FF00] text-[#0A0A0A] rounded-lg font-semibold hover:bg-[#D8FF33] transition-all"
@@ -263,6 +336,30 @@ export default function HomePage() {
                   </button>
                 </div>
               </div>
+
+              {/* Toolbar row 2 — batch format selector */}
+              {jobs.length > 1 && (
+                <div className="flex items-center gap-2 mb-4" style={{ fontFamily: 'var(--font-mono)' }}>
+                  <span className="text-xs text-[#444] uppercase tracking-wider">Set all to</span>
+                  <select
+                    value={batchFormat}
+                    onChange={e => setBatchFormat(e.target.value)}
+                    className="bg-[#1A1A1A] border border-[#2A2A2A] text-[#F5F0E8] text-xs rounded-lg px-3 py-1.5 appearance-none cursor-pointer hover:border-[#444] focus:outline-none focus:border-[#C8FF00] transition-colors"
+                  >
+                    <option value="">— pick format —</option>
+                    {FORMATS.map(f => (
+                      <option key={f.ext} value={f.ext}>.{f.ext.toUpperCase()}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={applyBatchFormat}
+                    disabled={!batchFormat}
+                    className="px-3 py-1.5 text-xs border border-[#2A2A2A] rounded-lg text-[#888] hover:border-[#444] hover:text-[#F5F0E8] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  >
+                    APPLY
+                  </button>
+                </div>
+              )}
 
               {/* Job cards */}
               <div className="space-y-3">
@@ -275,6 +372,7 @@ export default function HomePage() {
                       onConvert={() => convertJob(job)}
                       onDownload={() => downloadJob(job)}
                       onRemove={() => removeJob(job.id)}
+                      onSettingsChange={patch => updateJobSettings(job.id, patch)}
                     />
                   ))}
                 </AnimatePresence>
@@ -283,42 +381,49 @@ export default function HomePage() {
           )}
         </AnimatePresence>
 
-        {/* How it works */}
+        {/* How it works + History (shown when no active jobs) */}
         {jobs.length === 0 && (
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-4"
-          >
-            {[
-              { num: '01', title: 'DROP', desc: 'Drag and drop your files or click to browse from your device.' },
-              { num: '02', title: 'SELECT', desc: 'Choose the target format from the available conversions.' },
-              { num: '03', title: 'CONVERT', desc: 'Instant conversion in your browser. No uploads, no data leaves your device.' },
-            ].map((step, i) => (
-              <motion.div
-                key={step.num}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 + i * 0.1 }}
-                className="bg-[#111] border border-[#1A1A1A] rounded-2xl p-6 hover:border-[#2A2A2A] transition-colors"
-              >
-                <div
-                  style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
-                  className="text-5xl text-[#C8FF00] mb-3"
+          <>
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-4"
+            >
+              {[
+                { num: '01', title: 'DROP', desc: 'Drag and drop your files or click to browse from your device.' },
+                { num: '02', title: 'SELECT', desc: 'Choose the target format from the available conversions.' },
+                { num: '03', title: 'CONVERT', desc: 'Instant conversion in your browser. No uploads, no data leaves your device.' },
+              ].map((step, i) => (
+                <motion.div
+                  key={step.num}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 + i * 0.1 }}
+                  className="bg-[#111] border border-[#1A1A1A] rounded-2xl p-6 hover:border-[#2A2A2A] transition-colors"
                 >
-                  {step.num}
-                </div>
-                <div
-                  style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
-                  className="text-xl text-[#F5F0E8] mb-2"
-                >
-                  {step.title}
-                </div>
-                <p className="text-[#555] text-sm leading-relaxed">{step.desc}</p>
-              </motion.div>
-            ))}
-          </motion.section>
+                  <div
+                    style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
+                    className="text-5xl text-[#C8FF00] mb-3"
+                  >
+                    {step.num}
+                  </div>
+                  <div
+                    style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
+                    className="text-xl text-[#F5F0E8] mb-2"
+                  >
+                    {step.title}
+                  </div>
+                  <p className="text-[#555] text-sm leading-relaxed">{step.desc}</p>
+                </motion.div>
+              ))}
+            </motion.section>
+
+            <HistoryPanel
+              entries={history}
+              onClear={() => setHistory([])}
+            />
+          </>
         )}
       </div>
 

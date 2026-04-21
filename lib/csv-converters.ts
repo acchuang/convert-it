@@ -1,9 +1,14 @@
 import Papa from 'papaparse';
+import type { ConversionSettings } from './types';
 
-export function csvToJson(file: File): Promise<Blob> {
+export function csvToJson(file: File, _s: string, _t: string, settings?: ConversionSettings): Promise<Blob> {
+  const indent = settings?.jsonIndent ?? 2;
   return file.text().then(text => {
     const result = Papa.parse(text, { header: true, skipEmptyLines: true, dynamicTyping: true });
-    return new Blob([JSON.stringify(result.data, null, 2)], { type: 'application/json' });
+    const json = indent === 0
+      ? JSON.stringify(result.data)
+      : JSON.stringify(result.data, null, indent);
+    return new Blob([json], { type: 'application/json' });
   });
 }
 
@@ -15,7 +20,8 @@ export function csvToTsv(file: File): Promise<Blob> {
   });
 }
 
-export function csvToXml(file: File): Promise<Blob> {
+export function csvToXml(file: File, _s: string, _t: string, settings?: ConversionSettings): Promise<Blob> {
+  const rootEl = settings?.xmlRootElement ?? 'root';
   return file.text().then(text => {
     const result = Papa.parse<Record<string, string>>(text, { header: true, skipEmptyLines: true });
     const rows = result.data.map(row => {
@@ -24,7 +30,7 @@ export function csvToXml(file: File): Promise<Blob> {
         .join('\n');
       return `  <row>\n${fields}\n  </row>`;
     });
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<data>\n${rows.join('\n')}\n</data>`;
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<${rootEl}>\n${rows.join('\n')}\n</${rootEl}>`;
     return new Blob([xml], { type: 'application/xml' });
   });
 }
@@ -43,26 +49,32 @@ export function csvToHtml(file: File): Promise<Blob> {
   });
 }
 
-export function tsvToCsv(file: File): Promise<Blob> {
+export function tsvToCsv(file: File, _s: string, _t: string, settings?: ConversionSettings): Promise<Blob> {
+  const delimiter = settings?.csvDelimiter ?? ',';
   return file.text().then(text => {
     const result = Papa.parse(text, { header: false, delimiter: '\t', skipEmptyLines: true });
-    const csv = Papa.unparse(result.data);
+    const csv = Papa.unparse(result.data, { delimiter });
     return new Blob([csv], { type: 'text/csv' });
   });
 }
 
-export function tsvToJson(file: File): Promise<Blob> {
+export function tsvToJson(file: File, _s: string, _t: string, settings?: ConversionSettings): Promise<Blob> {
+  const indent = settings?.jsonIndent ?? 2;
   return file.text().then(text => {
     const result = Papa.parse(text, { header: true, delimiter: '\t', skipEmptyLines: true, dynamicTyping: true });
-    return new Blob([JSON.stringify(result.data, null, 2)], { type: 'application/json' });
+    const json = indent === 0
+      ? JSON.stringify(result.data)
+      : JSON.stringify(result.data, null, indent);
+    return new Blob([json], { type: 'application/json' });
   });
 }
 
-export function jsonToCsv(file: File): Promise<Blob> {
+export function jsonToCsv(file: File, _s: string, _t: string, settings?: ConversionSettings): Promise<Blob> {
+  const delimiter = settings?.csvDelimiter ?? ',';
   return file.text().then(text => {
     const data = JSON.parse(text);
     const arr = Array.isArray(data) ? data : [data];
-    const csv = Papa.unparse(arr);
+    const csv = Papa.unparse(arr, { delimiter });
     return new Blob([csv], { type: 'text/csv' });
   });
 }
