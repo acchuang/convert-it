@@ -13,6 +13,7 @@ import type { ConversionSettings } from '@/lib/types';
 import { JobCard, type FileJob } from './components/JobCard';
 import { HistoryPanel } from './components/HistoryPanel';
 import { getHistory, addHistoryEntry, type HistoryEntry } from '@/lib/history';
+import { useStats, formatCount } from '@/lib/useStats';
 
 const CATEGORY_COLORS: Record<string, string> = {
   image: '#FF4D00',
@@ -26,6 +27,7 @@ export default function HomePage() {
   const [batchFormat, setBatchFormat] = useState('');
   const [history, setHistory] = useState<HistoryEntry[]>(() => getHistory());
   const inputRef = useRef<HTMLInputElement>(null);
+  const stats = useStats();
 
   const addFiles = useCallback((files: FileList | File[]) => {
     const newJobs: FileJob[] = Array.from(files).map(file => ({
@@ -174,6 +176,18 @@ export default function HomePage() {
           <span>No Signup</span>
           <span className="w-1 h-1 rounded-full bg-[#333]" />
           <span>Client-Side</span>
+
+          {stats && (
+            <>
+              <span className="w-1 h-1 rounded-full bg-[#333]" />
+              <span className="flex items-center gap-1.5 text-[#22C55E]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse" />
+                {stats.active} online
+              </span>
+              <span className="w-1 h-1 rounded-full bg-[#333]" />
+              <span>{formatCount(stats.total)} visits</span>
+            </>
+          )}
         </motion.div>
       </header>
 

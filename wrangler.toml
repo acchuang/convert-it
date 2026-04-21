@@ -1,0 +1,6 @@
+name = "convert-it"
+pages_build_output_dir = "out"
+
+[[kv_namespaces]]
+binding = "STATS"
+id = "289c1ed006304e69b19f15a11f28c862"
