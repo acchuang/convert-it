@@ -17,6 +17,7 @@ import { HistoryPanel } from './components/HistoryPanel';
 import { getHistory, addHistoryEntry, type HistoryEntry } from '@/lib/history';
 import { useStats, formatCount } from '@/lib/useStats';
 import { useTheme } from './components/ThemeProvider';
+import { LanguageSelector } from './components/LanguageSelector';
 
 const CATEGORY_COLORS: Record<string, string> = {
   image: '#FF4D00',
@@ -240,6 +241,10 @@ export default function HomePage() {
               </svg>
             )}
           </button>
+
+          {/* Language */}
+          <LanguageSelector />
+
 
           {/* About */}
           <Link

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Bebas_Neue, DM_Sans, DM_Mono } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from './components/ThemeProvider';
+import { LocaleProvider } from './components/LocaleProvider';
 
 const bebasNeue = Bebas_Neue({
   weight: '400',
@@ -27,12 +28,12 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://convert-it.pages.dev'),
   title: 'Convert-it — Universal File Converter',
   description: 'Convert any file to any format, entirely in your browser. No uploads, no server, no signup.',
-  applicationName: 'CONVERT',
+  applicationName: 'Convert-it',
   authors: [{ name: 'https://github.com/acchuang' }],
   keywords: ['file converter', 'image converter', 'video converter', 'audio converter', 'document converter', 'online converter', 'browser converter', 'free converter'],
   openGraph: {
     url: 'https://convert-it.pages.dev',
-    siteName: 'CONVERT',
+    siteName: 'Convert-it',
     title: 'Convert-it — Universal File Converter',
     description: 'Convert any file to any format, entirely in your browser.',
     type: 'website',
@@ -55,13 +56,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="theme-color" content="#FAFAFA" media="(prefers-color-scheme: light)" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="CONVERT" />
+        <meta name="apple-mobile-web-app-title" content="Convert-it" />
         <link rel="apple-touch-icon" href="/favicon.svg" />
       </head>
       <body>
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <LocaleProvider>
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
+        </LocaleProvider>
       </body>
     </html>
   );
