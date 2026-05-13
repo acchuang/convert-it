@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef, useMemo } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   convertFile,
@@ -239,6 +240,15 @@ export default function HomePage() {
               </svg>
             )}
           </button>
+
+          {/* About */}
+          <Link
+            href="/about"
+            className="text-xs text-[var(--text-dim)] hover:text-[var(--text-primary)] transition-colors"
+            style={{ fontFamily: 'var(--font-mono)' }}
+          >
+            ABOUT
+          </Link>
 
           {/* Buy Me a Coffee */}
           <a
