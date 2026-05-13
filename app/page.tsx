@@ -206,8 +206,8 @@ export default function HomePage() {
           style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
           className="text-3xl tracking-wide"
         >
-          <span className="text-[var(--accent)]">CON</span>
-          <span className="text-[var(--text-primary)]">VERT</span>
+          <span className="text-[var(--accent)]">Convert</span>
+          <span className="text-[var(--text-primary)]">-it</span>
         </motion.div>
 
         <div className="flex items-center gap-4">

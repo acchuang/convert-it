@@ -1,0 +1,136 @@
+{
+  "site": {
+    "title": "Convert-it — ユニバーサルファイルコンバーター",
+    "description": "あらゆるファイルをあらゆる形式に、ブラウザだけで変換。"
+  },
+  "header": {
+    "free": "無料",
+    "noSignup": "登録不要",
+    "clientSide": "クライアント側",
+    "themeDark": "ダークモードに切り替え",
+    "themeLight": "ライトモードに切り替え",
+    "github": "GitHubでソースを見る",
+    "buyCoffee": "コーヒーをおごる",
+    "about": "概要",
+    "home": "← ホーム",
+    "totalVisits": "総訪問",
+    "online": "オンライン"
+  },
+  "dropzone": {
+    "title": "ドラッグ＆ドロップ",
+    "subtitle": "またはクリックして参照",
+    "image": "画像",
+    "video": "動画",
+    "audio": "音声",
+    "document": "文書",
+    "data": "データ"
+  },
+  "toolbar": {
+    "addFiles": "ファイル追加",
+    "files": "ファイル",
+    "done": "完了",
+    "zipAll": "↓ すべてZIP",
+    "convertAll": "すべて変換 →",
+    "clear": "クリア",
+    "setAllTo": "すべてを設定",
+    "pickFormat": "— 形式を選択 —",
+    "apply": "適用"
+  },
+  "warning": {
+    "largeFile": "大きなファイルを検出",
+    "over200": "大きなファイルは処理に時間がかかる場合があります。",
+    "over500": "500MBを超えるファイルはブラウザのメモリ制限により失敗する可能性があります。"
+  },
+  "job": {
+    "convert": "変換 →",
+    "retry": "再試行",
+    "download": "ダウンロード",
+    "copy": "コピー",
+    "copied": "コピー済",
+    "view": "表示",
+    "hide": "非表示",
+    "preview": "プレビュー",
+    "closePreview": "プレビューを閉じる",
+    "previewUnavailable": "この形式ではプレビューできません",
+    "settings": "変換設定",
+    "remove": "削除",
+    "quality": "品質",
+    "delimiter": "区切り文字",
+    "comma": "カンマ",
+    "semi": "セミコロン",
+    "pipe": "パイプ",
+    "tab": "タブ",
+    "indent": "インデント",
+    "min": "最小",
+    "sp2": "2スペース",
+    "sp4": "4スペース",
+    "root": "ルート",
+    "bitrate": "ビットレート",
+    "preset": "プリセット",
+    "targetFormat": "変換先形式",
+    "converting": "変換中",
+    "truncated": "... （省略）"
+  },
+  "howItWorks": {
+    "heading": "使い方",
+    "step1": {
+      "title": "ドロップ",
+      "desc": "ファイルをドラッグ＆ドロップするか、クリックしてデバイスから選択します。"
+    },
+    "step2": {
+      "title": "選択",
+      "desc": "利用可能な変換先からターゲット形式を選びます。"
+    },
+    "step3": {
+      "title": "変換",
+      "desc": "ブラウザで即座に変換。アップロード不要、データは端末から離れません。"
+    }
+  },
+  "history": {
+    "heading": "最近",
+    "clear": "クリア"
+  },
+  "footer": {
+    "copyright": "© 2025 Convert-it — すべての変換はブラウザ内で行われます",
+    "images": "画像",
+    "video": "動画",
+    "audio": "音声",
+    "documents": "文書",
+    "data": "データ",
+    "github": "GITHUB"
+  },
+  "about": {
+    "heading": "概要",
+    "intro": "Convert-itは無料のオープンソースのユニバーサルファイルコンバーターで、完全にブラウザ内で動作します。アップロード不要、サーバー不要、登録不要 — ファイルがデバイスから離れることはありません。",
+    "intro2": "開発者、デザイナー、そして怪しいオンラインツールや肥大化したデスクトップソフトウェアなしで、素早くプライベートなファイル変換が必要なすべての人のために作られました。",
+    "howHeading": "使い方",
+    "step1": { "title": "ドラッグ＆ドロップ", "desc": "ファイルをドロップするかクリックして参照。Convert-itが自動的に形式を検出し、利用可能な変換を提案します。" },
+    "step2": { "title": "カスタマイズ", "desc": "変換前に品質、区切り文字、ビットレート、プリセット設定をファイルごとに調整します。" },
+    "step3": { "title": "ダウンロード", "desc": "変換されたファイルをすぐに取得。個別にダウンロードするか、すべての結果をZIPにまとめます。" },
+    "formatsHeading": "対応形式",
+    "privacyHeading": "プライバシー",
+    "privacy1": "ファイルがブラウザから離れることはありません。すべての変換はWebAssemblyとCanvas APIを使用してローカルで行われます。データのアップロード、保存、アクセスは一切行いません。",
+    "privacy2": "収集するデータは、Cloudflare KVを通じた匿名の集計使用統計（総訪問数とアクティブセッション数）のみです。個人情報、追跡、テーマ設定以外のCookieはありません。",
+    "ossHeading": "オープンソース",
+    "oss1": "Convert-itはMITライセンスのオープンソースです。完全なコードベースはGitHubで公開されています。貢献、バグ報告、機能リクエストを歓迎します。",
+    "ossGithub": "GITHUB",
+    "ossSupport": "サポート",
+    "techHeading": "技術スタック",
+    "techFramework": "フレームワーク",
+    "techLanguage": "言語",
+    "techCSS": "CSS",
+    "techMotion": "モーション",
+    "techVideo": "動画/音声",
+    "techImages": "画像",
+    "techSheets": "スプレッドシート",
+    "techHosting": "ホスティング"
+  },
+  "lang": {
+    "selector": "言語を選択",
+    "en": "English",
+    "zh-TW": "繁體中文",
+    "ja": "日本語",
+    "ko": "한국어",
+    "fr": "Français"
+  }
+}

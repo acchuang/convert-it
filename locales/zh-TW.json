@@ -1,0 +1,136 @@
+{
+  "site": {
+    "title": "Convert-it — 通用檔案轉換器",
+    "description": "在瀏覽器中將任何檔案轉換為任何格式。"
+  },
+  "header": {
+    "free": "免費",
+    "noSignup": "無需註冊",
+    "clientSide": "本地端",
+    "themeDark": "切換至深色模式",
+    "themeLight": "切換至淺色模式",
+    "github": "在 GitHub 上查看原始碼",
+    "buyCoffee": "請我喝杯咖啡",
+    "about": "關於",
+    "home": "← 首頁",
+    "totalVisits": "總訪問",
+    "online": "在線"
+  },
+  "dropzone": {
+    "title": "拖放檔案",
+    "subtitle": "或點擊瀏覽",
+    "image": "圖片",
+    "video": "影片",
+    "audio": "音訊",
+    "document": "文件",
+    "data": "資料"
+  },
+  "toolbar": {
+    "addFiles": "新增檔案",
+    "files": "個檔案",
+    "done": "已完成",
+    "zipAll": "↓ 全部壓縮",
+    "convertAll": "全部轉換 →",
+    "clear": "清除",
+    "setAllTo": "全部設為",
+    "pickFormat": "— 選擇格式 —",
+    "apply": "套用"
+  },
+  "warning": {
+    "largeFile": "偵測到大檔案",
+    "over200": "大檔案可能需要較長的處理時間。",
+    "over500": "超過 500MB 的檔案可能因瀏覽器記憶體限制而失敗。"
+  },
+  "job": {
+    "convert": "轉換 →",
+    "retry": "重試",
+    "download": "下載",
+    "copy": "複製",
+    "copied": "已複製",
+    "view": "預覽",
+    "hide": "隱藏",
+    "preview": "預覽",
+    "closePreview": "關閉預覽",
+    "previewUnavailable": "此格式不支援預覽",
+    "settings": "轉換設定",
+    "remove": "移除",
+    "quality": "品質",
+    "delimiter": "分隔符號",
+    "comma": "逗號",
+    "semi": "分號",
+    "pipe": "豎線",
+    "tab": "定位",
+    "indent": "縮排",
+    "min": "最小",
+    "sp2": "2空格",
+    "sp4": "4空格",
+    "root": "根元素",
+    "bitrate": "位元率",
+    "preset": "預設",
+    "targetFormat": "目標格式",
+    "converting": "轉換中",
+    "truncated": "... （已截斷）"
+  },
+  "howItWorks": {
+    "heading": "使用方式",
+    "step1": {
+      "title": "拖放",
+      "desc": "將檔案拖放至此處，或點擊從裝置中瀏覽選擇。"
+    },
+    "step2": {
+      "title": "選擇",
+      "desc": "從可用的轉換選項中選擇目標格式。"
+    },
+    "step3": {
+      "title": "轉換",
+      "desc": "在瀏覽器中即時轉換。無需上傳，資料不會離開您的裝置。"
+    }
+  },
+  "history": {
+    "heading": "最近記錄",
+    "clear": "清除"
+  },
+  "footer": {
+    "copyright": "© 2025 Convert-it — 所有轉換均在您的瀏覽器中完成",
+    "images": "圖片",
+    "video": "影片",
+    "audio": "音訊",
+    "documents": "文件",
+    "data": "資料",
+    "github": "GITHUB"
+  },
+  "about": {
+    "heading": "關於",
+    "intro": "Convert-it 是一個免費、開源的通用檔案轉換器，完全在您的瀏覽器中運行。無需上傳、無需伺服器、無需註冊 — 您的檔案永遠不會離開您的裝置。",
+    "intro2": "為開發者、設計師以及任何需要快速、私密檔案轉換的人打造，無需繁瑣的線上工具或臃腫的桌面軟體。",
+    "howHeading": "使用方式",
+    "step1": { "title": "拖放", "desc": "將檔案拖放或點擊瀏覽。Convert-it 會自動偵測格式並建議可用的轉換。" },
+    "step2": { "title": "自訂", "desc": "在轉換前調整品質、分隔符號、位元率或預設設定。" },
+    "step3": { "title": "下載", "desc": "立即取得轉換後的檔案。可單獨下載或將所有結果壓縮為 ZIP。" },
+    "formatsHeading": "支援的格式",
+    "privacyHeading": "隱私保護",
+    "privacy1": "您的檔案永遠不會離開瀏覽器。所有轉換均使用 WebAssembly 和 Canvas API 在本地進行。我們不會上傳、儲存或存取您的任何資料。",
+    "privacy2": "我們收集的唯一資料是透過 Cloudflare KV 的匿名、匯總使用統計（總訪問量和活躍會話數）— 不含個人資訊、無追蹤、除了您的主題偏好外不使用 Cookie。",
+    "ossHeading": "開源",
+    "oss1": "Convert-it 採用 MIT 授權並開源。完整程式碼可在 GitHub 上取得。歡迎貢獻、回報錯誤和提出功能請求。",
+    "ossGithub": "GITHUB",
+    "ossSupport": "支持",
+    "techHeading": "技術棧",
+    "techFramework": "框架",
+    "techLanguage": "語言",
+    "techCSS": "CSS",
+    "techMotion": "動畫",
+    "techVideo": "影片/音訊",
+    "techImages": "圖片",
+    "techSheets": "試算表",
+    "techHosting": "託管"
+  },
+  "lang": {
+    "selector": "選擇語言",
+    "en": "English",
+    "zh-TW": "繁體中文",
+    "ja": "日本語",
+    "ko": "한국어",
+    "fr": "Français"
+  }
+}

@@ -2,11 +2,11 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'About — CONVERT',
-  description: 'About CONVERT — the universal file converter that runs entirely in your browser.',
+  title: 'About — Convert-it',
+  description: 'About Convert-it — the universal file converter that runs entirely in your browser.',
   openGraph: {
-    title: 'About — CONVERT',
-    description: 'About CONVERT — the universal file converter that runs entirely in your browser.',
+    title: 'About — Convert-it',
+    description: 'About Convert-it — the universal file converter that runs entirely in your browser.',
   },
 };
 
@@ -24,7 +24,7 @@ export default function AboutPage() {
       className="min-h-screen bg-app"
       style={{ fontFamily: 'var(--font-body)' }}
       role="main"
-      aria-label="About CONVERT"
+      aria-label="About Convert-it"
     >
       {/* Header */}
       <header
@@ -37,8 +37,8 @@ export default function AboutPage() {
           className="text-3xl tracking-wide"
         >
           <Link href="/" className="hover:opacity-80 transition-opacity">
-            <span className="text-[var(--accent)]">CON</span>
-            <span className="text-[var(--text-primary)]">VERT</span>
+            <span className="text-[var(--accent)]">Convert</span>
+            <span className="text-[var(--text-primary)]">-it</span>
           </Link>
         </div>
 
@@ -63,7 +63,7 @@ export default function AboutPage() {
             ABOUT
           </div>
           <p className="text-lg text-[var(--text-secondary)] leading-relaxed mb-6">
-            <strong className="text-[var(--text-primary)]">CONVERT</strong> is a free, open-source
+            <strong className="text-[var(--text-primary)]">Convert-it</strong> is a free, open-source
             universal file converter that runs entirely in your browser. No uploads, no servers,
             no signups — your files never leave your device.
           </p>
@@ -84,7 +84,7 @@ export default function AboutPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { step: '01', title: 'Drag & Drop', desc: 'Drop your files or click to browse. CONVERT auto-detects the format and suggests available conversions.' },
+              { step: '01', title: 'Drag & Drop', desc: 'Drop your files or click to browse. Convert-it auto-detects the format and suggests available conversions.' },
               { step: '02', title: 'Customize', desc: 'Tweak quality, delimiter, bitrate, or preset settings per file before converting.' },
               { step: '03', title: 'Download', desc: 'Get your converted file instantly. Download individually or zip all results at once.' },
             ].map(s => (
@@ -180,7 +180,7 @@ export default function AboutPage() {
           </h2>
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6">
             <p className="text-[var(--text-secondary)] leading-relaxed mb-4">
-              CONVERT is MIT-licensed and open source. The full codebase is available on GitHub.
+              Convert-it is MIT-licensed and open source. The full codebase is available on GitHub.
               Contributions, bug reports, and feature requests are welcome.
             </p>
             <div className="flex flex-wrap gap-3">
@@ -256,7 +256,7 @@ export default function AboutPage() {
       <footer className="border-t border-[var(--border-primary)] px-6 py-6 mt-16" role="contentinfo">
         <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <span style={{ fontFamily: 'var(--font-mono)' }} className="text-xs text-[var(--text-dim)]">
-            © 2025 CONVERT — All conversions happen in your browser
+            © 2025 Convert-it — All conversions happen in your browser
           </span>
           <nav className="flex gap-6 text-xs text-[var(--text-dim)]" style={{ fontFamily: 'var(--font-mono)' }} aria-label="Navigation">
             <Link href="/" className="hover:text-[var(--text-primary)] transition-colors">HOME</Link>

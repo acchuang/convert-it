@@ -25,7 +25,7 @@ const dmMono = DM_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://convert-it.pages.dev'),
-  title: 'CONVERT — Universal File Converter',
+  title: 'Convert-it — Universal File Converter',
   description: 'Convert any file to any format, entirely in your browser. No uploads, no server, no signup.',
   applicationName: 'CONVERT',
   authors: [{ name: 'https://github.com/acchuang' }],
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   openGraph: {
     url: 'https://convert-it.pages.dev',
     siteName: 'CONVERT',
-    title: 'CONVERT — Universal File Converter',
+    title: 'Convert-it — Universal File Converter',
     description: 'Convert any file to any format, entirely in your browser.',
     type: 'website',
   },

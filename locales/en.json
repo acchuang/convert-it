@@ -1,0 +1,136 @@
+{
+  "site": {
+    "title": "Convert-it — Universal File Converter",
+    "description": "Convert any file to any format, entirely in your browser."
+  },
+  "header": {
+    "free": "Free",
+    "noSignup": "No Signup",
+    "clientSide": "Client-Side",
+    "themeDark": "Switch to dark mode",
+    "themeLight": "Switch to light mode",
+    "github": "View source on GitHub",
+    "buyCoffee": "Buy me a coffee",
+    "about": "ABOUT",
+    "home": "← HOME",
+    "totalVisits": "total",
+    "online": "online"
+  },
+  "dropzone": {
+    "title": "DRAG & DROP",
+    "subtitle": "or click to browse",
+    "image": "IMAGE",
+    "video": "VIDEO",
+    "audio": "AUDIO",
+    "document": "DOCUMENT",
+    "data": "DATA"
+  },
+  "toolbar": {
+    "addFiles": "ADD FILES",
+    "files": "files",
+    "done": "done",
+    "zipAll": "↓ ZIP ALL",
+    "convertAll": "CONVERT ALL →",
+    "clear": "CLEAR",
+    "setAllTo": "Set all to",
+    "pickFormat": "— pick format —",
+    "apply": "APPLY"
+  },
+  "warning": {
+    "largeFile": "Large file detected",
+    "over200": "Large files may take longer to process.",
+    "over500": "Files over 500MB may fail due to browser memory limits."
+  },
+  "job": {
+    "convert": "CONVERT →",
+    "retry": "RETRY",
+    "download": "DOWNLOAD",
+    "copy": "COPY",
+    "copied": "COPIED",
+    "view": "VIEW",
+    "hide": "HIDE",
+    "preview": "Preview",
+    "closePreview": "Close preview",
+    "previewUnavailable": "Preview not available for this format",
+    "settings": "Conversion settings",
+    "remove": "Remove",
+    "quality": "Quality",
+    "delimiter": "Delimiter",
+    "comma": "COMMA",
+    "semi": "SEMI",
+    "pipe": "PIPE",
+    "tab": "TAB",
+    "indent": "Indent",
+    "min": "MIN",
+    "sp2": "2SP",
+    "sp4": "4SP",
+    "root": "Root",
+    "bitrate": "Bitrate",
+    "preset": "Preset",
+    "targetFormat": "Target format",
+    "converting": "Converting",
+    "truncated": "... (truncated)"
+  },
+  "howItWorks": {
+    "heading": "HOW IT WORKS",
+    "step1": {
+      "title": "DROP",
+      "desc": "Drag and drop your files or click to browse from your device."
+    },
+    "step2": {
+      "title": "SELECT",
+      "desc": "Choose the target format from the available conversions."
+    },
+    "step3": {
+      "title": "CONVERT",
+      "desc": "Instant conversion in your browser. No uploads, no data leaves your device."
+    }
+  },
+  "history": {
+    "heading": "RECENT",
+    "clear": "CLEAR"
+  },
+  "footer": {
+    "copyright": "© 2025 Convert-it — All conversions happen in your browser",
+    "images": "Images",
+    "video": "Video",
+    "audio": "Audio",
+    "documents": "Documents",
+    "data": "Data",
+    "github": "GITHUB"
+  },
+  "about": {
+    "heading": "ABOUT",
+    "intro": "Convert-it is a free, open-source universal file converter that runs entirely in your browser. No uploads, no servers, no signups — your files never leave your device.",
+    "intro2": "Built for developers, designers, and anyone who needs quick, private file conversions without the hassle of sketchy online tools or bloated desktop software.",
+    "howHeading": "HOW IT WORKS",
+    "step1": { "title": "Drag & Drop", "desc": "Drop your files or click to browse. Convert-it auto-detects the format and suggests available conversions." },
+    "step2": { "title": "Customize", "desc": "Tweak quality, delimiter, bitrate, or preset settings per file before converting." },
+    "step3": { "title": "Download", "desc": "Get your converted file instantly. Download individually or zip all results at once." },
+    "formatsHeading": "SUPPORTED FORMATS",
+    "privacyHeading": "PRIVACY",
+    "privacy1": "Your files never leave your browser. All conversion happens locally using WebAssembly and the Canvas API. We don't upload, store, or have any access to your data.",
+    "privacy2": "The only data we collect is anonymous, aggregated usage stats (total visits and active sessions) via Cloudflare KV — no personal information, no tracking, no cookies beyond your theme preference.",
+    "ossHeading": "OPEN SOURCE",
+    "oss1": "Convert-it is MIT-licensed and open source. The full codebase is available on GitHub. Contributions, bug reports, and feature requests are welcome.",
+    "ossGithub": "GITHUB",
+    "ossSupport": "SUPPORT",
+    "techHeading": "TECH STACK",
+    "techFramework": "Framework",
+    "techLanguage": "Language",
+    "techCSS": "CSS",
+    "techMotion": "Motion",
+    "techVideo": "Video/Audio",
+    "techImages": "Images",
+    "techSheets": "Spreadsheets",
+    "techHosting": "Hosting"
+  },
+  "lang": {
+    "selector": "Select language",
+    "en": "English",
+    "zh-TW": "繁體中文",
+    "ja": "日本語",
+    "ko": "한국어",
+    "fr": "Français"
+  }
+}
