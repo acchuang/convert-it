@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   convertFile,
@@ -8,12 +8,14 @@ import {
   getTargetFormats,
   FORMATS,
   DEFAULT_SETTINGS,
+  getFormatInfo,
 } from '@/lib/converters';
 import type { ConversionSettings } from '@/lib/types';
 import { JobCard, type FileJob } from './components/JobCard';
 import { HistoryPanel } from './components/HistoryPanel';
 import { getHistory, addHistoryEntry, type HistoryEntry } from '@/lib/history';
 import { useStats, formatCount } from '@/lib/useStats';
+import { useTheme } from './components/ThemeProvider';
 
 const CATEGORY_COLORS: Record<string, string> = {
   image: '#FF4D00',
@@ -23,13 +25,29 @@ const CATEGORY_COLORS: Record<string, string> = {
   audio: '#00FF88',
 };
 
+const LARGE_FILE_THRESHOLD_MB = 200;
+const WARN_FILE_THRESHOLD_MB = 500;
+
+function formatMB(bytes: number): string {
+  return (bytes / (1024 * 1024)).toFixed(0);
+}
+
 export default function HomePage() {
   const [jobs, setJobs] = useState<FileJob[]>([]);
   const [dragging, setDragging] = useState(false);
+  const [dragCategory, setDragCategory] = useState<string | null>(null);
   const [batchFormat, setBatchFormat] = useState('');
   const [history, setHistory] = useState<HistoryEntry[]>(() => getHistory());
   const inputRef = useRef<HTMLInputElement>(null);
   const stats = useStats();
+  const { theme, toggle: toggleTheme } = useTheme();
+
+  const largeFiles = useMemo(() =>
+    jobs.filter(j => {
+      const cat = getFormatInfo(j.sourceExt)?.category;
+      return (cat === 'video' || cat === 'audio') && j.file.size > LARGE_FILE_THRESHOLD_MB * 1024 * 1024;
+    }), [jobs]
+  );
 
   const addFiles = useCallback((files: FileList | File[]) => {
     const newJobs: FileJob[] = Array.from(files).map(file => ({
@@ -44,10 +62,35 @@ export default function HomePage() {
     setJobs(prev => [...prev, ...newJobs]);
   }, []);
 
+  const detectDragCategory = useCallback((files: FileList) => {
+    if (files.length === 0) return;
+    const ext = getFileExtension(files[0].name);
+    const info = getFormatInfo(ext);
+    setDragCategory(info?.category ?? null);
+  }, []);
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(true);
+    if (e.dataTransfer.files.length) detectDragCategory(e.dataTransfer.files);
+  }, [detectDragCategory]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setDragging(false);
+    setDragCategory(null);
+  }, []);
+
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       setDragging(false);
+      setDragCategory(null);
       if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
     },
     [addFiles]
@@ -148,219 +191,292 @@ export default function HomePage() {
   const doneCount = jobs.filter(j => j.status === 'done').length;
 
   return (
-    <main className="min-h-screen bg-[#0A0A0A] text-[#F5F0E8]" style={{ fontFamily: 'var(--font-body)' }}>
+    <main className="min-h-screen bg-app" style={{ fontFamily: 'var(--font-body)' }} role="main" aria-label="CONVERT file converter">
       {/* Header */}
-      <header className="border-b border-[#1A1A1A] px-6 py-4 flex items-center justify-between sticky top-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-sm">
+      <header
+        className="border-b border-app px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-sm"
+        style={{ backgroundColor: 'var(--header-bg)' }}
+        role="banner"
+      >
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
+          initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-3"
+          transition={{ duration: 0.4 }}
+          style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
+          className="text-3xl tracking-wide"
         >
-          <div className="w-8 h-8 bg-[#C8FF00] rounded-sm flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M2 4h8v2l4-3-4-3v2H1v4h1V4z" fill="#0A0A0A" />
-              <path d="M14 12H6v-2l-4 3 4 3v-2h9V10h-1v2z" fill="#0A0A0A" />
-            </svg>
-          </div>
-          <span style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.1em' }} className="text-2xl text-[#F5F0E8]">
-            CONVERT
-          </span>
+          <span className="text-[var(--accent)]">CON</span>
+          <span className="text-[var(--text-primary)]">VERT</span>
         </motion.div>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="hidden md:flex items-center gap-6 text-xs text-[#666] tracking-widest uppercase"
-          style={{ fontFamily: 'var(--font-mono)' }}
-        >
-          <span>Free</span>
-          <span className="w-1 h-1 rounded-full bg-[#333]" />
-          <span>No Signup</span>
-          <span className="w-1 h-1 rounded-full bg-[#333]" />
-          <span>Client-Side</span>
 
+        <div className="flex items-center gap-4">
+          {/* Stats */}
           {stats && (
-            <>
-              <span className="w-1 h-1 rounded-full bg-[#333]" />
-              <span className="flex items-center gap-1.5 text-[#22C55E]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse" />
-                {stats.active} online
+            <div className="flex items-center gap-3 text-xs" style={{ fontFamily: 'var(--font-mono)' }} aria-live="polite" aria-label="Site statistics">
+              <span className="text-[var(--text-dim)]" title="All-time visits">
+                {formatCount(stats.total)} total
               </span>
-              <span className="w-1 h-1 rounded-full bg-[#333]" />
-              <span>{formatCount(stats.total)} visits</span>
-            </>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" title="Active sessions" />
+              <span className="text-[var(--text-dim)]">{formatCount(stats.active)} online</span>
+            </div>
           )}
-        </motion.div>
+
+          {/* Theme toggle */}
+          <button
+            onClick={toggleTheme}
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-[var(--text-dim)] hover:text-[var(--accent)] hover:bg-[var(--bg-tertiary)] transition-all"
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          >
+            {theme === 'dark' ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="5" />
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+              </svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+              </svg>
+            )}
+          </button>
+
+          {/* Buy Me a Coffee */}
+          <a
+            href="https://buymeacoffee.com/acchuang"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-[var(--text-dim)] hover:text-[#FF813F] hover:bg-[var(--bg-tertiary)] transition-all"
+            aria-label="Buy me a coffee"
+            title="Buy me a coffee"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20 8h-1V6c0-2.21-1.79-4-4-4H4c-2.21 0-4 1.79-4 4v10c0 2.21 1.79 4 4 4h11c2.21 0 4-1.79 4-4v-1h1c1.66 0 3-1.34 3-3v-1c0-1.66-1.34-3-3-3zm-9 10H4V6h7v12zm9-3h-1V9h1c.55 0 1 .45 1 1v1c0 .55-.45 1-1 1z"/>
+            </svg>
+          </a>
+
+          {/* GitHub link */}
+          <a
+            href="https://github.com/acchuang/convert-it"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-[var(--text-dim)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-all"
+            aria-label="View source on GitHub"
+            title="View source on GitHub"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+            </svg>
+          </a>
+        </div>
       </header>
 
-      <div className="max-w-5xl mx-auto px-4 md:px-6 py-12">
-        {/* Hero */}
-        <motion.section
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-12 text-center"
-        >
-          <h1
-            style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.04em', lineHeight: 0.9 }}
-            className="text-[clamp(3.5rem,12vw,8rem)] text-[#F5F0E8] mb-4"
-          >
-            ANY FILE.<br />
-            <span className="text-[#C8FF00]">ANY FORMAT.</span>
-          </h1>
-          <p className="text-[#888] text-lg max-w-md mx-auto">
-            Upload, pick your target format, and convert instantly — all in your browser.
-          </p>
-        </motion.section>
-
-        {/* Drop Zone */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          onDragOver={e => { e.preventDefault(); setDragging(true); }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={handleDrop}
-          onClick={() => inputRef.current?.click()}
-          className={`relative border-2 border-dashed rounded-2xl p-12 md:p-16 text-center cursor-pointer transition-all duration-300 mb-8 overflow-hidden ${
-            dragging
-              ? 'border-[#C8FF00] bg-[#C8FF00]/5'
-              : 'border-[#2A2A2A] hover:border-[#444] bg-[#111]'
-          }`}
-        >
-          {['top-0 left-0', 'top-0 right-0', 'bottom-0 left-0', 'bottom-0 right-0'].map((pos, i) => (
-            <div key={i} className={`absolute ${pos} w-6 h-6 ${dragging ? 'border-[#C8FF00]' : 'border-[#333]'} transition-colors duration-300`}
-              style={{
-                borderTop: i < 2 ? `2px solid` : 'none',
-                borderBottom: i >= 2 ? `2px solid` : 'none',
-                borderLeft: i % 2 === 0 ? `2px solid` : 'none',
-                borderRight: i % 2 === 1 ? `2px solid` : 'none',
-                borderColor: dragging ? '#C8FF00' : '#333',
-              }}
-            />
-          ))}
-
-          <AnimatePresence>
-            {dragging ? (
-              <motion.div
-                key="dragging"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        {/* Drop zone */}
+        <AnimatePresence>
+          {jobs.length === 0 || dragging ? (
+            <motion.section
+              key="dropzone"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="mb-10"
+              aria-label="File upload area"
+            >
+              <div
+                onDragEnter={handleDragEnter}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => inputRef.current?.click()}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click(); }}
+                role="button"
+                tabIndex={0}
+                aria-label="Click or drag files here to start converting"
+                className={`
+                  relative border-2 border-dashed rounded-3xl p-12 text-center cursor-pointer
+                  transition-all duration-300
+                  ${dragging
+                    ? 'border-[var(--accent)] bg-[var(--accent)]/5 scale-[1.01]'
+                    : 'border-[var(--border-secondary)] hover:border-[var(--border-hover)] bg-[var(--bg-secondary)]'
+                  }
+                `}
               >
-                <div className="text-6xl mb-4">⚡</div>
-                <p style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.1em' }} className="text-2xl text-[#C8FF00]">
-                  DROP IT
-                </p>
-              </motion.div>
-            ) : (
-              <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <div className="w-16 h-16 border-2 border-[#333] rounded-xl flex items-center justify-center mx-auto mb-5 bg-[#1A1A1A]">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="1.5">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
-                  </svg>
+                {/* Drag visual indicator */}
+                {dragging && dragCategory && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                  >
+                    <div
+                      className="text-6xl font-bold"
+                      style={{
+                        fontFamily: 'var(--font-display)',
+                        color: CATEGORY_COLORS[dragCategory] ?? '#C8FF00',
+                        letterSpacing: '0.08em',
+                      }}
+                    >
+                      {dragCategory.toUpperCase()}
+                    </div>
+                  </motion.div>
+                )}
+
+                <input
+                  ref={inputRef}
+                  type="file"
+                  multiple
+                  onChange={e => { if (e.target.files) addFiles(e.target.files); e.target.value = ''; }}
+                  className="hidden"
+                  aria-hidden="true"
+                />
+
+                <div className={dragging ? 'opacity-0' : 'opacity-100 transition-opacity duration-200'}>
+                  <div
+                    style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.12em' }}
+                    className="text-6xl text-[var(--accent)] mb-4"
+                  >
+                    +
+                  </div>
+                  <div
+                    style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}
+                    className="text-xl text-[var(--text-primary)] mb-2"
+                  >
+                    DRAG & DROP
+                  </div>
+                  <p className="text-[var(--text-muted)] text-sm mb-4" style={{ fontFamily: 'var(--font-mono)' }}>
+                    or click to browse
+                  </p>
+
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {(['image', 'video', 'audio', 'document', 'data'] as const).map(cat => (
+                      <span
+                        key={cat}
+                        className="px-3 py-1 text-xs rounded-full border opacity-60"
+                        style={{
+                          borderColor: CATEGORY_COLORS[cat] + '40',
+                          color: CATEGORY_COLORS[cat],
+                          fontFamily: 'var(--font-mono)',
+                        }}
+                      >
+                        {cat.toUpperCase()}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <p className="text-[#F5F0E8] font-medium mb-1 text-lg">
-                  Drop files here or{' '}
-                  <span className="text-[#C8FF00] underline underline-offset-2">browse</span>
-                </p>
-                <p className="text-[#555] text-sm" style={{ fontFamily: 'var(--font-mono)' }}>
-                  Images · Video · Audio · Documents · Data
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-          <input
-            ref={inputRef}
-            type="file"
-            multiple
-            className="hidden"
-            onChange={e => e.target.files && addFiles(e.target.files)}
-          />
-        </motion.div>
+              </div>
+            </motion.section>
+          ) : null}
+        </AnimatePresence>
 
-        {/* Format pills */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="flex flex-wrap gap-2 justify-center mb-12"
-        >
-          {['image', 'data', 'document', 'video', 'audio'].map(cat => {
-            const catFormats = FORMATS.filter(f => f.category === cat);
-            const color = CATEGORY_COLORS[cat];
-            return catFormats.map(f => (
-              <span
-                key={f.ext}
-                className="text-xs px-2 py-1 rounded border"
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  borderColor: color + '40',
-                  color: color,
-                  background: color + '0D',
-                  letterSpacing: '0.05em',
-                }}
-              >
-                .{f.ext.toUpperCase()}
-              </span>
-            ));
-          })}
-        </motion.div>
-
-        {/* Jobs list */}
+        {/* Active jobs section */}
         <AnimatePresence>
           {jobs.length > 0 && (
             <motion.section
+              key="jobs"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              aria-label="Conversion jobs"
             >
-              {/* Toolbar row 1 */}
-              <div className="flex items-center justify-between mb-3">
-                <h2
-                  style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
-                  className="text-xl text-[#F5F0E8]"
+              {/* File size warning */}
+              {largeFiles.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-4 px-4 py-3 rounded-xl border flex items-start gap-3"
+                  style={{
+                    backgroundColor: 'var(--error)',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    borderColor: 'rgba(239, 68, 68, 0.3)',
+                    color: 'var(--error)',
+                  }}
+                  role="alert"
+                  aria-live="assertive"
                 >
-                  {jobs.length} FILE{jobs.length !== 1 ? 'S' : ''} QUEUED
-                </h2>
-                <div className="flex gap-2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0 mt-0.5">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                  </svg>
+                  <div>
+                    <p className="text-xs font-semibold" style={{ fontFamily: 'var(--font-mono)' }}>
+                      Large file detected
+                    </p>
+                    <p className="text-xs mt-0.5 opacity-80">
+                      {largeFiles.map(j => `${j.file.name} (${formatMB(j.file.size)}MB)`).join(', ')}
+                      {largeFiles.some(j => j.file.size > WARN_FILE_THRESHOLD_MB * 1024 * 1024)
+                        ? ' — Files over 500MB may fail due to browser memory limits.'
+                        : ' — Large files may take longer to process.'}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Toolbar */}
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <div className="flex items-center gap-2">
                   <button
-                    onClick={clearAll}
-                    className="px-4 py-2 text-xs border border-[#2A2A2A] rounded-lg text-[#666] hover:border-[#444] hover:text-[#999] transition-all"
+                    onClick={() => { inputRef.current?.click(); }}
+                    className="px-4 py-2 border border-[var(--border-secondary)] rounded-lg text-xs text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] transition-all flex items-center gap-1.5"
                     style={{ fontFamily: 'var(--font-mono)' }}
+                    aria-label="Add more files"
                   >
-                    CLEAR ALL
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                    ADD FILES
                   </button>
-                  {doneCount >= 2 && (
+
+                  <span className="text-xs text-[var(--text-dim)]" style={{ fontFamily: 'var(--font-mono)' }}>
+                    {jobs.length} file{jobs.length !== 1 ? 's' : ''}
+                    {doneCount > 0 && ` · ${doneCount} done`}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {doneCount > 0 && (
                     <button
                       onClick={downloadAllAsZip}
-                      className="px-4 py-2 text-xs border border-[#22C55E]/40 text-[#22C55E] rounded-lg hover:bg-[#22C55E]/10 transition-all flex items-center gap-1.5"
+                      className="px-4 py-2 border border-[var(--border-secondary)] rounded-lg text-xs text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] transition-all"
                       style={{ fontFamily: 'var(--font-mono)' }}
+                      aria-label="Download all as ZIP"
                     >
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
-                      </svg>
-                      ZIP ({doneCount})
+                      ↓ ZIP ALL
                     </button>
                   )}
+
+                  {jobs.some(j => j.status === 'idle' && j.targetExt) && (
+                    <button
+                      onClick={convertAll}
+                      className="px-4 py-2 bg-[var(--accent)] text-[#0A0A0A] text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity"
+                      style={{ fontFamily: 'var(--font-mono)' }}
+                      aria-label="Convert all files"
+                    >
+                      CONVERT ALL →
+                    </button>
+                  )}
+
                   <button
-                    onClick={convertAll}
-                    className="px-5 py-2 text-xs bg-[#C8FF00] text-[#0A0A0A] rounded-lg font-semibold hover:bg-[#D8FF33] transition-all"
+                    onClick={clearAll}
+                    className="px-3 py-2 text-xs text-[var(--text-dim)] hover:text-[var(--error)] transition-colors"
                     style={{ fontFamily: 'var(--font-mono)' }}
+                    aria-label="Clear all jobs"
                   >
-                    CONVERT ALL →
+                    CLEAR
                   </button>
                 </div>
               </div>
 
-              {/* Toolbar row 2 — batch format selector */}
+              {/* Batch format selector */}
               {jobs.length > 1 && (
                 <div className="flex items-center gap-2 mb-4" style={{ fontFamily: 'var(--font-mono)' }}>
-                  <span className="text-xs text-[#444] uppercase tracking-wider">Set all to</span>
+                  <span className="text-xs text-[var(--text-dim)] uppercase tracking-wider">Set all to</span>
                   <select
                     value={batchFormat}
                     onChange={e => setBatchFormat(e.target.value)}
-                    className="bg-[#1A1A1A] border border-[#2A2A2A] text-[#F5F0E8] text-xs rounded-lg px-3 py-1.5 appearance-none cursor-pointer hover:border-[#444] focus:outline-none focus:border-[#C8FF00] transition-colors"
+                    className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] text-[var(--text-primary)] text-xs rounded-lg px-3 py-1.5 appearance-none cursor-pointer hover:border-[var(--border-hover)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+                    aria-label="Batch target format"
                   >
                     <option value="">— pick format —</option>
                     {FORMATS.map(f => (
@@ -370,7 +486,8 @@ export default function HomePage() {
                   <button
                     onClick={applyBatchFormat}
                     disabled={!batchFormat}
-                    className="px-3 py-1.5 text-xs border border-[#2A2A2A] rounded-lg text-[#888] hover:border-[#444] hover:text-[#F5F0E8] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    className="px-3 py-1.5 text-xs border border-[var(--border-secondary)] rounded-lg text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    aria-label="Apply batch format"
                   >
                     APPLY
                   </button>
@@ -378,7 +495,7 @@ export default function HomePage() {
               )}
 
               {/* Job cards */}
-              <div className="space-y-3">
+              <div className="space-y-3" role="list" aria-label="File conversion jobs">
                 <AnimatePresence>
                   {jobs.map(job => (
                     <JobCard
@@ -403,8 +520,9 @@ export default function HomePage() {
             <motion.section
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-4"
+              transition={{ delay: 0.3 }}
+              className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4"
+              aria-label="How it works"
             >
               {[
                 { num: '01', title: 'DROP', desc: 'Drag and drop your files or click to browse from your device.' },
@@ -415,22 +533,22 @@ export default function HomePage() {
                   key={step.num}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 + i * 0.1 }}
-                  className="bg-[#111] border border-[#1A1A1A] rounded-2xl p-6 hover:border-[#2A2A2A] transition-colors"
+                  transition={{ delay: 0.3 + i * 0.1 }}
+                  className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6 hover:border-[var(--border-hover)] transition-colors"
                 >
                   <div
                     style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
-                    className="text-5xl text-[#C8FF00] mb-3"
+                    className="text-5xl text-[var(--accent)] mb-3"
                   >
                     {step.num}
                   </div>
                   <div
                     style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
-                    className="text-xl text-[#F5F0E8] mb-2"
+                    className="text-xl text-[var(--text-primary)] mb-2"
                   >
                     {step.title}
                   </div>
-                  <p className="text-[#555] text-sm leading-relaxed">{step.desc}</p>
+                  <p className="text-[var(--text-muted)] text-sm leading-relaxed">{step.desc}</p>
                 </motion.div>
               ))}
             </motion.section>
@@ -444,18 +562,18 @@ export default function HomePage() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-[#1A1A1A] px-6 py-6 mt-16">
+      <footer className="border-t border-[var(--border-primary)] px-6 py-6 mt-16" role="contentinfo">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <span style={{ fontFamily: 'var(--font-mono)' }} className="text-xs text-[#444]">
+          <span style={{ fontFamily: 'var(--font-mono)' }} className="text-xs text-[var(--text-dim)]">
             © 2025 CONVERT — All conversions happen in your browser
           </span>
-          <div className="flex gap-6 text-xs text-[#444]" style={{ fontFamily: 'var(--font-mono)' }}>
+          <nav className="flex gap-6 text-xs text-[var(--text-dim)]" style={{ fontFamily: 'var(--font-mono)' }} aria-label="Supported formats">
             <span>Images</span>
             <span>Video</span>
             <span>Audio</span>
             <span>Documents</span>
             <span>Data</span>
-          </div>
+          </nav>
         </div>
       </footer>
     </main>

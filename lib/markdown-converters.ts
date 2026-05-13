@@ -57,3 +57,20 @@ export function jsonToTxt(file: File): Promise<Blob> {
     return new Blob([JSON.stringify(data, null, 2)], { type: 'text/plain' });
   });
 }
+
+export async function jsonToMd(file: File): Promise<Blob> {
+  const text = await file.text();
+  const data = JSON.parse(text);
+  const arr = Array.isArray(data) ? data : [data];
+  if (arr.length === 0) return new Blob([''], { type: 'text/markdown' });
+
+  const headers = Object.keys(arr[0] as Record<string, unknown>);
+  const headerRow = '| ' + headers.join(' | ') + ' |';
+  const sepRow = '| ' + headers.map(() => '---').join(' | ') + ' |';
+  const bodyRows = arr.map((row: Record<string, unknown>) => {
+    return '| ' + headers.map(h => String(row[h] ?? '')).join(' | ') + ' |';
+  });
+
+  const md = [headerRow, sepRow, ...bodyRows].join('\n');
+  return new Blob([md], { type: 'text/markdown' });
+}

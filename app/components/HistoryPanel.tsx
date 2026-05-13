@@ -8,8 +8,10 @@ import { timeAgo, clearHistory, type HistoryEntry } from '@/lib/history';
 const CATEGORY_COLORS: Record<string, string> = {
   jpg: '#FF4D00', jpeg: '#FF4D00', png: '#FF4D00', webp: '#FF4D00',
   gif: '#FF4D00', bmp: '#FF4D00', ico: '#FF4D00', svg: '#FF4D00',
-  txt: '#00C2FF', md: '#00C2FF', html: '#00C2FF',
-  csv: '#C8FF00', json: '#C8FF00', xml: '#C8FF00', yaml: '#C8FF00', tsv: '#C8FF00',
+  mp4: '#FF00C8', webm: '#FF00C8', avi: '#FF00C8', mov: '#FF00C8', mkv: '#FF00C8', flv: '#FF00C8',
+  mp3: '#00FF88', wav: '#00FF88', aac: '#00FF88', ogg: '#00FF88', flac: '#00FF88', m4a: '#00FF88',
+  txt: '#00C2FF', md: '#00C2FF', html: '#00C2FF', pdf: '#00C2FF',
+  csv: '#C8FF00', json: '#C8FF00', xml: '#C8FF00', yaml: '#C8FF00', tsv: '#C8FF00', xlsx: '#C8FF00',
 };
 
 function getColor(ext: string) {
@@ -41,11 +43,11 @@ export function HistoryPanel({
         >
           <h2
             style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
-            className="text-lg text-[#F5F0E8] group-hover:text-[#C8FF00] transition-colors"
+            className="text-lg text-primary group-hover:text-[var(--accent)] transition-colors"
           >
             RECENT
           </h2>
-          <span className="text-[#444] text-xs" style={{ fontFamily: 'var(--font-mono)' }}>
+          <span className="text-[var(--text-dim)] text-xs" style={{ fontFamily: 'var(--font-mono)' }}>
             {entries.length}
           </span>
           <svg
@@ -53,7 +55,7 @@ export function HistoryPanel({
             height="12"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#444"
+            stroke="var(--text-dim)"
             strokeWidth="2"
             className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
           >
@@ -63,7 +65,7 @@ export function HistoryPanel({
 
         <button
           onClick={() => { clearHistory(); onClear(); }}
-          className="text-xs text-[#444] hover:text-[#EF4444] transition-colors"
+          className="text-xs text-[var(--text-dim)] hover:text-[var(--error)] transition-colors"
           style={{ fontFamily: 'var(--font-mono)' }}
         >
           CLEAR
@@ -86,21 +88,21 @@ export function HistoryPanel({
                 return (
                   <div
                     key={entry.id}
-                    className="bg-[#111] border border-[#1A1A1A] rounded-lg px-4 py-2.5 flex items-center gap-3 hover:border-[#2A2A2A] transition-colors"
+                    className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-lg px-4 py-2.5 flex items-center gap-3 hover:border-[var(--border-hover)] transition-colors"
                   >
                     <div className="flex items-center gap-1.5 flex-shrink-0" style={{ fontFamily: 'var(--font-mono)' }}>
                       <span className="text-xs" style={{ color: srcColor }}>.{entry.sourceExt.toUpperCase()}</span>
-                      <span className="text-[#333] text-xs">→</span>
+                      <span className="text-[var(--text-dim)] text-xs">→</span>
                       <span className="text-xs" style={{ color: tgtColor }}>.{entry.targetExt.toUpperCase()}</span>
                     </div>
 
-                    <p className="text-[#888] text-xs truncate flex-1">{entry.filename}</p>
+                    <p className="text-[var(--text-secondary)] text-xs truncate flex-1">{entry.filename}</p>
 
                     <div className="flex items-center gap-3 flex-shrink-0" style={{ fontFamily: 'var(--font-mono)' }}>
-                      <span className="text-[#555] text-xs hidden sm:block">
+                      <span className="text-[var(--text-muted)] text-xs hidden sm:block">
                         {formatFileSize(entry.fileSize)} → {formatFileSize(entry.resultSize)}
                       </span>
-                      <span className="text-[#444] text-xs">{timeAgo(entry.convertedAt)}</span>
+                      <span className="text-[var(--text-dim)] text-xs">{timeAgo(entry.convertedAt)}</span>
                     </div>
                   </div>
                 );

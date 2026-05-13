@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getTargetFormats, getFormatInfo, formatFileSize } from '@/lib/converters';
 import type { ConversionSettings } from '@/lib/types';
+import { PreviewPanel } from './PreviewPanel';
 
 export interface FileJob {
   id: string;
@@ -21,6 +22,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   image: '#FF4D00',
   document: '#00C2FF',
   data: '#C8FF00',
+  video: '#FF00C8',
+  audio: '#00FF88',
 };
 
 const TEXT_FORMATS = new Set(['json', 'csv', 'xml', 'yaml', 'tsv', 'md', 'html', 'txt']);
@@ -57,27 +60,27 @@ function SettingsPanel({
       className="overflow-hidden"
     >
       <div
-        className="mt-3 pt-3 border-t border-[#1E1E1E] flex flex-wrap gap-x-6 gap-y-3"
-        style={{ fontFamily: 'var(--font-mono)' }}
+        className="mt-3 pt-3 border-t flex flex-wrap gap-x-6 gap-y-3"
+        style={{ borderColor: 'var(--border-primary)', fontFamily: 'var(--font-mono)' }}
       >
         {showQuality && (
           <div className="flex items-center gap-3">
-            <span className="text-[#555] text-xs uppercase tracking-wider">Quality</span>
+            <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider">Quality</span>
             <input
               type="range"
               min={10}
               max={100}
               value={qualityPct}
               onChange={e => onChange({ quality: Number(e.target.value) / 100 })}
-              className="w-24 accent-[#C8FF00]"
+              className="w-24 accent-[var(--accent)]"
             />
-            <span className="text-[#F5F0E8] text-xs w-8">{qualityPct}%</span>
+            <span className="text-primary text-xs w-8">{qualityPct}%</span>
           </div>
         )}
 
         {showDelimiter && (
           <div className="flex items-center gap-3">
-            <span className="text-[#555] text-xs uppercase tracking-wider">Delimiter</span>
+            <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider">Delimiter</span>
             <div className="flex gap-1">
               {([',', ';', '|', '\t'] as const).map(d => (
                 <button
@@ -85,8 +88,8 @@ function SettingsPanel({
                   onClick={() => onChange({ csvDelimiter: d })}
                   className={`px-2 py-1 text-xs rounded transition-colors ${
                     settings.csvDelimiter === d
-                      ? 'bg-[#C8FF00] text-[#0A0A0A]'
-                      : 'bg-[#1A1A1A] text-[#888] border border-[#2A2A2A] hover:border-[#444]'
+                      ? 'bg-[var(--accent)] text-[#0A0A0A]'
+                      : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
                   }`}
                 >
                   {d === '\t' ? 'TAB' : d === ',' ? 'COMMA' : d === ';' ? 'SEMI' : 'PIPE'}
@@ -98,7 +101,7 @@ function SettingsPanel({
 
         {showIndent && (
           <div className="flex items-center gap-3">
-            <span className="text-[#555] text-xs uppercase tracking-wider">Indent</span>
+            <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider">Indent</span>
             <div className="flex gap-1">
               {([2, 4, 0] as const).map(n => (
                 <button
@@ -106,8 +109,8 @@ function SettingsPanel({
                   onClick={() => onChange({ jsonIndent: n })}
                   className={`px-2 py-1 text-xs rounded transition-colors ${
                     settings.jsonIndent === n
-                      ? 'bg-[#C8FF00] text-[#0A0A0A]'
-                      : 'bg-[#1A1A1A] text-[#888] border border-[#2A2A2A] hover:border-[#444]'
+                      ? 'bg-[var(--accent)] text-[#0A0A0A]'
+                      : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
                   }`}
                 >
                   {n === 0 ? 'MIN' : `${n}SP`}
@@ -119,12 +122,12 @@ function SettingsPanel({
 
         {showRootEl && (
           <div className="flex items-center gap-3">
-            <span className="text-[#555] text-xs uppercase tracking-wider">Root</span>
+            <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider">Root</span>
             <input
               type="text"
               value={settings.xmlRootElement}
               onChange={e => onChange({ xmlRootElement: e.target.value || 'root' })}
-              className="bg-[#1A1A1A] border border-[#2A2A2A] text-[#F5F0E8] text-xs rounded px-2 py-1 w-24 focus:outline-none focus:border-[#C8FF00] transition-colors"
+              className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] text-primary text-xs rounded px-2 py-1 w-24 focus:outline-none focus:border-[var(--accent)] transition-colors"
               placeholder="root"
             />
           </div>
@@ -132,19 +135,19 @@ function SettingsPanel({
 
         {showAudioBitrate && (
           <div className="flex items-center gap-3">
-            <span className="text-[#555] text-xs uppercase tracking-wider">Bitrate</span>
+            <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider">Bitrate</span>
             <div className="flex gap-1">
-              {[64, 128, 192, 256, 320].map(bitrate => (
+              {([64, 128, 192, 256, 320] as const).map(n => (
                 <button
-                  key={bitrate}
-                  onClick={() => onChange({ audioBitrate: bitrate })}
+                  key={n}
+                  onClick={() => onChange({ audioBitrate: n })}
                   className={`px-2 py-1 text-xs rounded transition-colors ${
-                    settings.audioBitrate === bitrate
-                      ? 'bg-[#C8FF00] text-[#0A0A0A]'
-                      : 'bg-[#1A1A1A] text-[#888] border border-[#2A2A2A] hover:border-[#444]'
+                    settings.audioBitrate === n
+                      ? 'bg-[var(--accent)] text-[#0A0A0A]'
+                      : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
                   }`}
                 >
-                  {bitrate}K
+                  {n}k
                 </button>
               ))}
             </div>
@@ -154,26 +157,28 @@ function SettingsPanel({
         {showVideoSettings && (
           <>
             <div className="flex items-center gap-3">
-              <span className="text-[#555] text-xs uppercase tracking-wider">Quality</span>
+              <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider">Quality</span>
               <input
                 type="range"
                 min={18}
-                max={35}
+                max={51}
                 value={settings.videoQuality}
                 onChange={e => onChange({ videoQuality: Number(e.target.value) })}
-                className="w-24 accent-[#FF00C8]"
+                className="w-24"
+                style={{ accentColor: 'var(--video-color)' }}
               />
-              <span className="text-[#F5F0E8] text-xs w-8">CRF {settings.videoQuality}</span>
+              <span className="text-primary text-xs w-8">CRF {settings.videoQuality}</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-[#555] text-xs uppercase tracking-wider">Preset</span>
+              <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider">Preset</span>
               <select
                 value={settings.videoPreset}
                 onChange={e => onChange({ videoPreset: e.target.value })}
-                className="bg-[#1A1A1A] border border-[#2A2A2A] text-[#F5F0E8] text-xs rounded px-2 py-1 focus:outline-none focus:border-[#FF00C8] transition-colors"
+                className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] text-primary text-xs rounded px-2 py-1 appearance-none cursor-pointer hover:border-[var(--border-hover)] focus:outline-none transition-colors"
+                style={{ borderColor: 'var(--border-secondary)' }}
               >
-                {['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow'].map(preset => (
-                  <option key={preset} value={preset}>{preset}</option>
+                {(['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow'] as const).map(p => (
+                  <option key={p} value={p}>{p}</option>
                 ))}
               </select>
             </div>
@@ -184,139 +189,145 @@ function SettingsPanel({
   );
 }
 
-export function JobCard({
-  job,
-  onTargetChange,
-  onConvert,
-  onDownload,
-  onRemove,
-  onSettingsChange,
-}: {
+interface JobCardProps {
   job: FileJob;
   onTargetChange: (ext: string) => void;
   onConvert: () => void;
   onDownload: () => void;
   onRemove: () => void;
   onSettingsChange: (patch: Partial<ConversionSettings>) => void;
-}) {
+}
+
+export function JobCard({ job, onTargetChange, onConvert, onDownload, onRemove, onSettingsChange }: JobCardProps) {
   const [showSettings, setShowSettings] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  const info = getFormatInfo(job.sourceExt);
+  const category = info?.category ?? 'document';
+  const categoryColor = CATEGORY_COLORS[category] ?? '#666';
   const targets = getTargetFormats(job.sourceExt);
-  const sourceInfo = getFormatInfo(job.sourceExt);
-  const catColor = sourceInfo ? CATEGORY_COLORS[sourceInfo.category] : '#666';
-  const canConfigure = hasSettings(job.targetExt);
-  const canCopy = job.status === 'done' && job.targetExt ? TEXT_FORMATS.has(job.targetExt) : false;
+  const canConfigure = job.targetExt ? hasSettings(job.targetExt) : false;
+  const canPreview = job.status === 'done' && !!job.resultBlob && !!job.targetExt;
+  const isTextResult = job.targetExt ? TEXT_FORMATS.has(job.targetExt) : false;
 
-  const handleCopy = async () => {
+  const copyResult = async () => {
     if (!job.resultBlob) return;
-    const text = await job.resultBlob.text();
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      const text = await job.resultBlob.text();
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // fallback silently
+    }
   };
-
-  const statusConfig = {
-    idle: { label: 'READY', color: '#666' },
-    converting: { label: 'CONVERTING', color: '#C8FF00' },
-    done: { label: 'DONE', color: '#22C55E' },
-    error: { label: 'ERROR', color: '#EF4444' },
-  }[job.status];
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 20 }}
-      className="bg-[#111] border border-[#1E1E1E] rounded-xl p-4 hover:border-[#2A2A2A] transition-all"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      transition={{ duration: 0.2 }}
+      className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-4 hover:border-[var(--border-hover)] transition-colors"
+      role="listitem"
+      aria-label={`${job.file.name} — ${job.status}`}
     >
-      <div className="flex items-center gap-3 flex-wrap md:flex-nowrap">
+      <div className="flex items-center gap-3">
+        {/* Category dot */}
         <div
-          className="w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-          style={{
-            background: catColor + '15',
-            color: catColor,
-            fontFamily: 'var(--font-mono)',
-            border: `1px solid ${catColor}30`,
-          }}
-        >
-          .{job.sourceExt.toUpperCase()}
-        </div>
+          className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+          style={{ backgroundColor: categoryColor }}
+          aria-hidden="true"
+        />
 
+        {/* Filename */}
         <div className="flex-1 min-w-0">
-          <p className="text-[#F5F0E8] text-sm font-medium truncate">{job.file.name}</p>
-          <p className="text-[#555] text-xs" style={{ fontFamily: 'var(--font-mono)' }}>
+          <p className="text-sm text-primary truncate">{job.file.name}</p>
+          <p className="text-xs text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }}>
             {formatFileSize(job.file.size)}
-            {job.status === 'done' && job.resultBlob && (
-              <span className="text-[#444]"> → {formatFileSize(job.resultBlob.size)}</span>
-            )}
           </p>
         </div>
 
-        <div className="text-[#333] text-lg hidden md:block">&rarr;</div>
-
-        <select
-          value={job.targetExt ?? ''}
-          onChange={e => onTargetChange(e.target.value)}
-          disabled={job.status === 'converting'}
-          className="bg-[#1A1A1A] border border-[#2A2A2A] text-[#F5F0E8] text-xs rounded-lg px-3 py-2 appearance-none cursor-pointer hover:border-[#444] focus:outline-none focus:border-[#C8FF00] transition-colors"
-          style={{ fontFamily: 'var(--font-mono)' }}
-        >
-          {targets.length === 0 && <option value="">No conversions</option>}
-          {targets.map(t => (
-            <option key={t} value={t}>
-              {t === job.sourceExt ? `.${t.toUpperCase()} (compress)` : `.${t.toUpperCase()}`}
-            </option>
-          ))}
-        </select>
-
+        {/* Source ext badge */}
         <span
-          className="text-xs px-2 py-1 rounded hidden md:inline-block"
+          className="px-2 py-0.5 text-xs rounded-md border flex-shrink-0"
           style={{
+            borderColor: categoryColor + '30',
+            color: categoryColor,
             fontFamily: 'var(--font-mono)',
-            color: statusConfig.color,
-            background: statusConfig.color + '18',
           }}
         >
-          {statusConfig.label}
+          .{job.sourceExt.toUpperCase()}
         </span>
 
-        <div className="flex items-center gap-2 ml-auto md:ml-0">
-          {job.status === 'idle' && targets.length > 0 && (
+        {/* Arrow */}
+        <span className="text-[var(--text-dim)] flex-shrink-0" aria-hidden="true">→</span>
+
+        {/* Target select */}
+        {targets.length > 0 ? (
+          <select
+            value={job.targetExt ?? ''}
+            onChange={e => onTargetChange(e.target.value)}
+            className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] text-primary text-xs rounded-lg px-3 py-1.5 appearance-none cursor-pointer hover:border-[var(--border-hover)] focus:outline-none focus:border-[var(--accent)] transition-colors flex-shrink-0"
+            style={{ fontFamily: 'var(--font-mono)' }}
+            disabled={job.status === 'converting'}
+            aria-label="Target format"
+          >
+            {targets.map(ext => (
+              <option key={ext} value={ext}>.{ext.toUpperCase()}</option>
+            ))}
+          </select>
+        ) : (
+          <span className="text-xs text-[var(--text-muted)] flex-shrink-0" style={{ fontFamily: 'var(--font-mono)' }}>
+            —
+          </span>
+        )}
+
+        {/* Actions */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {job.status === 'idle' && job.targetExt && (
             <motion.button
               whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
               onClick={onConvert}
-              className="px-4 py-2 bg-[#C8FF00] text-[#0A0A0A] text-xs font-semibold rounded-lg hover:bg-[#D8FF33] transition-colors"
+              className="px-4 py-2 bg-[var(--accent)] text-[#0A0A0A] text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity"
               style={{ fontFamily: 'var(--font-mono)' }}
+              aria-label={`Convert ${job.file.name} to ${job.targetExt}`}
             >
-              CONVERT
+              CONVERT →
             </motion.button>
           )}
 
           {job.status === 'converting' && (
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 border-2 border-[#C8FF00] border-t-transparent rounded-full animate-spin" />
-              <span className="text-[#C8FF00] text-xs" style={{ fontFamily: 'var(--font-mono)' }}>
+            <div className="flex items-center gap-2 px-3 py-2" aria-live="polite" aria-label={`Converting ${job.file.name}, ${job.progress} percent`}>
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                className="w-4 h-4 border-2 border-t-[var(--accent)] rounded-full"
+                style={{ borderColor: 'var(--accent)', borderTopColor: 'var(--accent)', opacity: 0.3 }}
+              />
+              <span className="text-xs text-[var(--accent)]" style={{ fontFamily: 'var(--font-mono)' }}>
                 {job.progress}%
               </span>
             </div>
           )}
 
           {job.status === 'done' && (
-            <div className="flex items-center gap-2">
-              {canCopy && (
+            <div className="flex items-center gap-1.5">
+              {isTextResult && (
                 <motion.button
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   whileHover={{ scale: 1.03 }}
-                  onClick={handleCopy}
+                  onClick={copyResult}
                   className={`px-3 py-2 text-xs font-semibold rounded-lg border transition-colors flex items-center gap-1.5 ${
                     copied
-                      ? 'border-[#22C55E]/50 text-[#22C55E] bg-[#22C55E]/10'
-                      : 'border-[#2A2A2A] text-[#888] hover:border-[#444] hover:text-[#F5F0E8]'
+                      ? 'border-[var(--success)]/50 text-[var(--success)]'
+                      : 'border-[var(--border-secondary)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-primary'
                   }`}
-                  style={{ fontFamily: 'var(--font-mono)' }}
+                  style={{ fontFamily: 'var(--font-mono)', backgroundColor: copied ? 'color-mix(in srgb, var(--success) 10%, transparent)' : undefined }}
+                  aria-label={copied ? 'Copied to clipboard' : 'Copy result to clipboard'}
                 >
                   {copied ? (
                     <>
@@ -337,13 +348,37 @@ export function JobCard({
                 </motion.button>
               )}
 
+              {canPreview && (
+                <motion.button
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  whileHover={{ scale: 1.03 }}
+                  onClick={() => setShowPreview(s => !s)}
+                  className={`px-3 py-2 text-xs font-semibold rounded-lg border transition-colors flex items-center gap-1.5 ${
+                    showPreview
+                      ? 'border-[var(--accent)]/50 text-[var(--accent)]'
+                      : 'border-[var(--border-secondary)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-primary'
+                  }`}
+                  style={{ fontFamily: 'var(--font-mono)', backgroundColor: showPreview ? 'color-mix(in srgb, var(--accent) 10%, transparent)' : undefined }}
+                  aria-label={showPreview ? 'Hide preview' : 'Show preview'}
+                  aria-expanded={showPreview}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  {showPreview ? 'HIDE' : 'VIEW'}
+                </motion.button>
+              )}
+
               <motion.button
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 whileHover={{ scale: 1.03 }}
                 onClick={onDownload}
-                className="px-4 py-2 bg-[#22C55E] text-white text-xs font-semibold rounded-lg hover:bg-[#16A34A] transition-colors flex items-center gap-1.5"
+                className="px-4 py-2 bg-[var(--success)] text-white text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1.5"
                 style={{ fontFamily: 'var(--font-mono)' }}
+                aria-label={`Download ${job.file.name} as ${job.targetExt}`}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
@@ -356,9 +391,10 @@ export function JobCard({
           {job.status === 'error' && (
             <button
               onClick={onConvert}
-              className="px-4 py-2 bg-[#EF4444]/20 text-[#EF4444] text-xs rounded-lg border border-[#EF4444]/30 hover:bg-[#EF4444]/30 transition-colors"
-              style={{ fontFamily: 'var(--font-mono)' }}
+              className="px-4 py-2 text-[var(--error)] text-xs rounded-lg border transition-colors hover:opacity-80 flex items-center gap-1"
+              style={{ fontFamily: 'var(--font-mono)', borderColor: 'color-mix(in srgb, var(--error) 30%, transparent)', backgroundColor: 'color-mix(in srgb, var(--error) 10%, transparent)' }}
               title={job.error}
+              aria-label={`Retry conversion of ${job.file.name}`}
             >
               RETRY
             </button>
@@ -368,11 +404,13 @@ export function JobCard({
             <button
               onClick={() => setShowSettings(s => !s)}
               title="Conversion settings"
+              aria-label="Conversion settings"
               className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${
                 showSettings
-                  ? 'text-[#C8FF00] bg-[#C8FF00]/10'
-                  : 'text-[#444] hover:text-[#888] hover:bg-[#1A1A1A]'
+                  ? 'text-[var(--accent)]'
+                  : 'text-[var(--text-dim)] hover:text-[var(--text-secondary)]'
               }`}
+              style={{ backgroundColor: showSettings ? 'color-mix(in srgb, var(--accent) 10%, transparent)' : undefined }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="3" />
@@ -383,7 +421,9 @@ export function JobCard({
 
           <button
             onClick={onRemove}
-            className="w-8 h-8 flex items-center justify-center text-[#444] hover:text-[#EF4444] hover:bg-[#EF4444]/10 rounded-lg transition-all"
+            className="w-8 h-8 flex items-center justify-center text-[var(--text-dim)] hover:text-[var(--error)] rounded-lg transition-all"
+            aria-label={`Remove ${job.file.name}`}
+            style={{ backgroundColor: 'transparent' }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M18 6L6 18M6 6l12 12" />
@@ -402,18 +442,29 @@ export function JobCard({
         )}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {showPreview && canPreview && (
+          <PreviewPanel
+            blob={job.resultBlob}
+            targetExt={job.targetExt}
+            open={showPreview}
+            onClose={() => setShowPreview(false)}
+          />
+        )}
+      </AnimatePresence>
+
       {job.status === 'converting' && (
-        <div className="mt-3 h-0.5 bg-[#1A1A1A] rounded-full overflow-hidden">
+        <div className="mt-3 h-0.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${job.progress}%` }}
-            className="h-full bg-[#C8FF00] rounded-full"
+            className="h-full bg-[var(--accent)] rounded-full"
           />
         </div>
       )}
 
       {job.status === 'error' && job.error && (
-        <p className="mt-2 text-xs text-[#EF4444]" style={{ fontFamily: 'var(--font-mono)' }}>
+        <p className="mt-2 text-xs text-[var(--error)]" style={{ fontFamily: 'var(--font-mono)' }}>
           ⚠ {job.error}
         </p>
       )}

@@ -26,6 +26,60 @@ export function xmlToTxt(file: File): Promise<Blob> {
   });
 }
 
+export async function xmlToCsv(file: File, _s: string, _t: string, settings?: ConversionSettings): Promise<Blob> {
+  const Papa = (await import('papaparse')).default;
+  const delimiter = settings?.csvDelimiter ?? ',';
+  const text = await file.text();
+  const doc = new DOMParser().parseFromString(text, 'text/xml');
+  const rows = doc.querySelectorAll('row');
+  if (rows.length === 0) throw new Error('No <row> elements found in XML');
+  const data: Record<string, string>[] = [];
+  rows.forEach(row => {
+    const obj: Record<string, string> = {};
+    row.querySelectorAll(':scope > *').forEach(el => {
+      obj[el.tagName] = el.textContent ?? '';
+    });
+    data.push(obj);
+  });
+  const csv = Papa.unparse(data, { delimiter });
+  return new Blob([csv], { type: 'text/csv' });
+}
+
+export async function xmlToYaml(file: File): Promise<Blob> {
+  const { stringify } = await import('yaml');
+  const text = await file.text();
+  const doc = new DOMParser().parseFromString(text, 'text/xml');
+  const rows = doc.querySelectorAll('row');
+  const data: Record<string, string>[] = [];
+  rows.forEach(row => {
+    const obj: Record<string, string> = {};
+    row.querySelectorAll(':scope > *').forEach(el => {
+      obj[el.tagName] = el.textContent ?? '';
+    });
+    data.push(obj);
+  });
+  const y = stringify(data.length > 0 ? data : [], { lineWidth: 0 });
+  return new Blob([y], { type: 'application/yaml' });
+}
+
+export async function xmlToTsv(file: File): Promise<Blob> {
+  const Papa = (await import('papaparse')).default;
+  const text = await file.text();
+  const doc = new DOMParser().parseFromString(text, 'text/xml');
+  const rows = doc.querySelectorAll('row');
+  if (rows.length === 0) throw new Error('No <row> elements found in XML');
+  const data: Record<string, string>[] = [];
+  rows.forEach(row => {
+    const obj: Record<string, string> = {};
+    row.querySelectorAll(':scope > *').forEach(el => {
+      obj[el.tagName] = el.textContent ?? '';
+    });
+    data.push(obj);
+  });
+  const tsv = Papa.unparse(data, { delimiter: '\t' });
+  return new Blob([tsv], { type: 'text/tab-separated-values' });
+}
+
 export function jsonToXml(file: File, _s: string, _t: string, settings?: ConversionSettings): Promise<Blob> {
   const rootEl = settings?.xmlRootElement ?? 'root';
   return file.text().then(text => {

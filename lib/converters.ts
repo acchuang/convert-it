@@ -1,11 +1,12 @@
 import type { FileCategory, FormatInfo, ConverterFn, ConversionSettings } from './types';
-import { csvToJson, csvToTsv, csvToXml, csvToHtml, tsvToCsv, tsvToJson, jsonToCsv } from './csv-converters';
-import { xmlToJson, xmlToTxt, jsonToXml } from './xml-converters';
-import { yamlToJson, jsonToYaml } from './yaml-converters';
-import { mdToHtml, htmlToMd, htmlToTxt, txtToHtml, txtToMd, jsonToTxt } from './markdown-converters';
+import { csvToJson, csvToTsv, csvToXml, csvToHtml, tsvToCsv, tsvToJson, jsonToCsv, csvToYaml, csvToTxt, tsvToXml, tsvToHtml, jsonToTsv, jsonToHtml } from './csv-converters';
+import { xmlToJson, xmlToTxt, jsonToXml, xmlToCsv, xmlToYaml, xmlToTsv } from './xml-converters';
+import { yamlToJson, jsonToYaml, yamlToCsv, yamlToXml, yamlToTsv } from './yaml-converters';
+import { mdToHtml, htmlToMd, htmlToTxt, txtToHtml, txtToMd, jsonToTxt, jsonToMd } from './markdown-converters';
 import { convertImage } from './image-converters';
 import { xlsxToCsv, xlsxToJson, csvToXlsx, jsonToXlsx } from './xlsx-converters';
 import { convertAudioVideo, extractAudio } from './audio-video-converters';
+import { txtToPdf, mdToPdf, htmlToPdf, jsonToPdf } from './pdf-converters';
 
 export type { FileCategory, FormatInfo, ConverterFn, ConversionSettings } from './types';
 export { DEFAULT_SETTINGS } from './types';
@@ -41,6 +42,7 @@ export const FORMATS: FormatInfo[] = [
   { ext: 'txt',  label: 'TXT',   mimeType: 'text/plain',            category: 'document' },
   { ext: 'md',   label: 'Markdown', mimeType: 'text/markdown',      category: 'document' },
   { ext: 'html', label: 'HTML',  mimeType: 'text/html',             category: 'document' },
+  { ext: 'pdf',  label: 'PDF',   mimeType: 'application/pdf',       category: 'document' },
   // Data
   { ext: 'csv',  label: 'CSV',   mimeType: 'text/csv',              category: 'data' },
   { ext: 'json', label: 'JSON',  mimeType: 'application/json',      category: 'data' },
@@ -51,15 +53,16 @@ export const FORMATS: FormatInfo[] = [
 ];
 
 export const CONVERSION_MAP: Record<string, string[]> = {
-  // Images — same-format allowed for compression
+  // Images
   jpg:  ['png', 'webp', 'bmp', 'ico', 'jpg'],
   jpeg: ['png', 'webp', 'bmp', 'ico', 'jpg'],
   png:  ['jpg', 'webp', 'bmp', 'ico', 'png'],
   webp: ['jpg', 'png',  'bmp', 'webp'],
   gif:  ['png', 'jpg',  'webp'],
   bmp:  ['jpg', 'png',  'webp'],
+  ico:  ['png', 'jpg',  'webp', 'bmp'],
   svg:  ['png', 'jpg',  'webp'],
-  // Video — can convert to other video formats or extract audio
+  // Video
   mp4:  ['webm', 'avi', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg'],
   webm: ['mp4', 'avi', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg'],
   avi:  ['mp4', 'webm', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg'],
@@ -78,41 +81,58 @@ export const CONVERSION_MAP: Record<string, string[]> = {
   wma:  ['mp3', 'wav', 'aac', 'ogg', 'm4a'],
   opus: ['mp3', 'wav', 'aac', 'ogg', 'm4a'],
   // Documents
-  txt:  ['md',   'html'],
-  md:   ['html', 'txt'],
-  html: ['txt',  'md'],
+  txt:  ['md',   'html', 'pdf'],
+  md:   ['html', 'txt',  'pdf'],
+  html: ['txt',  'md',   'pdf'],
   // Data
-  csv:  ['json', 'xml', 'tsv', 'html', 'xlsx'],
-  json: ['csv',  'xml', 'yaml', 'txt', 'xlsx'],
-  xml:  ['json', 'txt'],
-  yaml: ['json'],
-  tsv:  ['csv',  'json'],
+  csv:  ['json', 'xml', 'tsv', 'html', 'xlsx', 'yaml', 'txt'],
+  json: ['csv',  'xml', 'yaml', 'txt', 'xlsx', 'tsv', 'html', 'md', 'pdf'],
+  xml:  ['json', 'txt', 'csv', 'yaml', 'tsv'],
+  yaml: ['json', 'csv', 'xml', 'tsv'],
+  tsv:  ['csv',  'json', 'xml', 'html'],
   xlsx: ['csv',  'json'],
 };
 
 const CONVERTER_REGISTRY: Record<string, ConverterFn> = {
-  'csv:json':  csvToJson,
-  'csv:tsv':   csvToTsv,
-  'csv:xml':   csvToXml,
-  'csv:html':  csvToHtml,
-  'csv:xlsx':  csvToXlsx,
-  'tsv:csv':   tsvToCsv,
-  'tsv:json':  tsvToJson,
-  'json:csv':  jsonToCsv,
-  'json:xml':  jsonToXml,
-  'json:yaml': jsonToYaml,
-  'json:txt':  jsonToTxt,
-  'json:xlsx': jsonToXlsx,
-  'xml:json':  xmlToJson,
-  'xml:txt':   xmlToTxt,
-  'yaml:json': yamlToJson,
-  'md:html':   mdToHtml,
-  'html:md':   htmlToMd,
-  'html:txt':  htmlToTxt,
-  'txt:html':  txtToHtml,
-  'txt:md':    txtToMd,
-  'xlsx:csv':  xlsxToCsv,
-  'xlsx:json': xlsxToJson,
+  'csv:json':   csvToJson,
+  'csv:tsv':    csvToTsv,
+  'csv:xml':    csvToXml,
+  'csv:html':   csvToHtml,
+  'csv:xlsx':   csvToXlsx,
+  'csv:yaml':   csvToYaml,
+  'csv:txt':    csvToTxt,
+  'tsv:csv':    tsvToCsv,
+  'tsv:json':   tsvToJson,
+  'tsv:xml':    tsvToXml as ConverterFn,
+  'tsv:html':   tsvToHtml as ConverterFn,
+  'json:csv':   jsonToCsv,
+  'json:xml':   jsonToXml,
+  'json:yaml':  jsonToYaml,
+  'json:txt':   jsonToTxt,
+  'json:xlsx':  jsonToXlsx,
+  'json:tsv':   jsonToTsv as ConverterFn,
+  'json:html':  jsonToHtml as ConverterFn,
+  'json:md':    jsonToMd as ConverterFn,
+  'json:pdf':   jsonToPdf as ConverterFn,
+  'xml:json':   xmlToJson,
+  'xml:txt':    xmlToTxt,
+  'xml:csv':    xmlToCsv as ConverterFn,
+  'xml:yaml':   xmlToYaml as ConverterFn,
+  'xml:tsv':    xmlToTsv as ConverterFn,
+  'yaml:json':  yamlToJson,
+  'yaml:csv':   yamlToCsv as ConverterFn,
+  'yaml:xml':   yamlToXml as ConverterFn,
+  'yaml:tsv':   yamlToTsv as ConverterFn,
+  'md:html':    mdToHtml,
+  'md:pdf':     mdToPdf as ConverterFn,
+  'html:md':    htmlToMd,
+  'html:txt':   htmlToTxt,
+  'html:pdf':   htmlToPdf as ConverterFn,
+  'txt:html':   txtToHtml,
+  'txt:md':     txtToMd,
+  'txt:pdf':    txtToPdf as ConverterFn,
+  'xlsx:csv':   xlsxToCsv,
+  'xlsx:json':  xlsxToJson,
 };
 
 export function getFormatInfo(ext: string): FormatInfo | undefined {
@@ -146,11 +166,9 @@ export async function convertFile(
   }
 
   if (category === 'video' || category === 'audio') {
-    // Check if extracting audio from video
     if (category === 'video' && ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a'].includes(targetExt)) {
       return extractAudio(file, sourceExt, targetExt, settings);
     }
-    // Video-to-video or audio-to-audio conversion
     return convertAudioVideo(file, sourceExt, targetExt, settings);
   }
 
