@@ -18,6 +18,7 @@ import { getHistory, addHistoryEntry, type HistoryEntry } from '@/lib/history';
 import { useStats, formatCount } from '@/lib/useStats';
 import { useTheme } from './components/ThemeProvider';
 import { LanguageSelector } from './components/LanguageSelector';
+import { useLocale } from './components/LocaleProvider';
 
 const CATEGORY_COLORS: Record<string, string> = {
   image: '#FF4D00',
@@ -34,6 +35,8 @@ function formatMB(bytes: number): string {
   return (bytes / (1024 * 1024)).toFixed(0);
 }
 
+const ALL_CATEGORIES = ['image', 'video', 'audio', 'document', 'data'] as const;
+
 export default function HomePage() {
   const [jobs, setJobs] = useState<FileJob[]>([]);
   const [dragging, setDragging] = useState(false);
@@ -43,6 +46,7 @@ export default function HomePage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const stats = useStats();
   const { theme, toggle: toggleTheme } = useTheme();
+  const { t } = useLocale();
 
   const largeFiles = useMemo(() =>
     jobs.filter(j => {
@@ -193,7 +197,7 @@ export default function HomePage() {
   const doneCount = jobs.filter(j => j.status === 'done').length;
 
   return (
-    <main className="min-h-screen bg-app" style={{ fontFamily: 'var(--font-body)' }} role="main" aria-label="CONVERT file converter">
+    <main className="min-h-screen bg-app" style={{ fontFamily: 'var(--font-body)' }} role="main" aria-label="Convert-it file converter">
       {/* Header */}
       <header
         className="border-b border-app px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-sm"
@@ -212,23 +216,23 @@ export default function HomePage() {
         </motion.div>
 
         <div className="flex items-center gap-4">
-          {/* Stats */}
           {stats && (
-            <div className="flex items-center gap-3 text-xs" style={{ fontFamily: 'var(--font-mono)' }} aria-live="polite" aria-label="Site statistics">
-              <span className="text-[var(--text-dim)]" title="All-time visits">
-                {formatCount(stats.total)} total
+            <div className="flex items-center gap-3 text-xs" style={{ fontFamily: 'var(--font-mono)' }} aria-live="polite" aria-label={t('header.online')}>
+              <span className="text-[var(--text-dim)]" title={t('header.totalVisits')}>
+                {formatCount(stats.total)} {t('header.totalVisits')}
               </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" title="Active sessions" />
-              <span className="text-[var(--text-dim)]">{formatCount(stats.active)} online</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" title="Active" />
+              <span className="text-[var(--text-dim)]">{formatCount(stats.active)} {t('header.online')}</span>
             </div>
           )}
 
-          {/* Theme toggle */}
+          <LanguageSelector />
+
           <button
             onClick={toggleTheme}
             className="w-9 h-9 flex items-center justify-center rounded-lg text-[var(--text-dim)] hover:text-[var(--accent)] hover:bg-[var(--bg-tertiary)] transition-all"
-            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            aria-label={theme === 'dark' ? t('header.themeLight') : t('header.themeDark')}
+            title={theme === 'dark' ? t('header.themeLight') : t('header.themeDark')}
           >
             {theme === 'dark' ? (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -242,17 +246,13 @@ export default function HomePage() {
             )}
           </button>
 
-          {/* Language */}
-          <LanguageSelector />
-
-
           {/* About */}
           <Link
             href="/about"
             className="text-xs text-[var(--text-dim)] hover:text-[var(--text-primary)] transition-colors"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
-            ABOUT
+            {t('header.about')}
           </Link>
 
           {/* Buy Me a Coffee */}
@@ -261,8 +261,8 @@ export default function HomePage() {
             target="_blank"
             rel="noopener noreferrer"
             className="w-9 h-9 flex items-center justify-center rounded-lg text-[var(--text-dim)] hover:text-[#FF813F] hover:bg-[var(--bg-tertiary)] transition-all"
-            aria-label="Buy me a coffee"
-            title="Buy me a coffee"
+            aria-label={t('header.buyCoffee')}
+            title={t('header.buyCoffee')}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <path d="M20 8h-1V6c0-2.21-1.79-4-4-4H4c-2.21 0-4 1.79-4 4v10c0 2.21 1.79 4 4 4h11c2.21 0 4-1.79 4-4v-1h1c1.66 0 3-1.34 3-3v-1c0-1.66-1.34-3-3-3zm-9 10H4V6h7v12zm9-3h-1V9h1c.55 0 1 .45 1 1v1c0 .55-.45 1-1 1z"/>
@@ -275,8 +275,8 @@ export default function HomePage() {
             target="_blank"
             rel="noopener noreferrer"
             className="w-9 h-9 flex items-center justify-center rounded-lg text-[var(--text-dim)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-all"
-            aria-label="View source on GitHub"
-            title="View source on GitHub"
+            aria-label={t('header.github')}
+            title={t('header.github')}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
@@ -296,7 +296,7 @@ export default function HomePage() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
               className="mb-10"
-              aria-label="File upload area"
+              aria-label={t('dropzone.title')}
             >
               <div
                 onDragEnter={handleDragEnter}
@@ -307,7 +307,7 @@ export default function HomePage() {
                 onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click(); }}
                 role="button"
                 tabIndex={0}
-                aria-label="Click or drag files here to start converting"
+                aria-label={t('dropzone.subtitle')}
                 className={`
                   relative border-2 border-dashed rounded-3xl p-12 text-center cursor-pointer
                   transition-all duration-300
@@ -317,7 +317,6 @@ export default function HomePage() {
                   }
                 `}
               >
-                {/* Drag visual indicator */}
                 {dragging && dragCategory && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
@@ -332,7 +331,7 @@ export default function HomePage() {
                         letterSpacing: '0.08em',
                       }}
                     >
-                      {dragCategory.toUpperCase()}
+                      {t(`dropzone.${dragCategory}`)}
                     </div>
                   </motion.div>
                 )}
@@ -357,14 +356,14 @@ export default function HomePage() {
                     style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}
                     className="text-xl text-[var(--text-primary)] mb-2"
                   >
-                    DRAG & DROP
+                    {t('dropzone.title')}
                   </div>
                   <p className="text-[var(--text-muted)] text-sm mb-4" style={{ fontFamily: 'var(--font-mono)' }}>
-                    or click to browse
+                    {t('dropzone.subtitle')}
                   </p>
 
                   <div className="flex flex-wrap justify-center gap-2">
-                    {(['image', 'video', 'audio', 'document', 'data'] as const).map(cat => (
+                    {ALL_CATEGORIES.map(cat => (
                       <span
                         key={cat}
                         className="px-3 py-1 text-xs rounded-full border opacity-60"
@@ -374,7 +373,7 @@ export default function HomePage() {
                           fontFamily: 'var(--font-mono)',
                         }}
                       >
-                        {cat.toUpperCase()}
+                        {t(`dropzone.${cat}`)}
                       </span>
                     ))}
                   </div>
@@ -392,7 +391,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              aria-label="Conversion jobs"
+              aria-label={t('toolbar.files')}
             >
               {/* File size warning */}
               {largeFiles.length > 0 && (
@@ -401,8 +400,7 @@ export default function HomePage() {
                   animate={{ opacity: 1, y: 0 }}
                   className="mb-4 px-4 py-3 rounded-xl border flex items-start gap-3"
                   style={{
-                    backgroundColor: 'var(--error)',
-                    background: 'rgba(239, 68, 68, 0.1)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
                     borderColor: 'rgba(239, 68, 68, 0.3)',
                     color: 'var(--error)',
                   }}
@@ -416,13 +414,14 @@ export default function HomePage() {
                   </svg>
                   <div>
                     <p className="text-xs font-semibold" style={{ fontFamily: 'var(--font-mono)' }}>
-                      Large file detected
+                      {t('warning.largeFile')}
                     </p>
                     <p className="text-xs mt-0.5 opacity-80">
                       {largeFiles.map(j => `${j.file.name} (${formatMB(j.file.size)}MB)`).join(', ')}
+                      {' — '}
                       {largeFiles.some(j => j.file.size > WARN_FILE_THRESHOLD_MB * 1024 * 1024)
-                        ? ' — Files over 500MB may fail due to browser memory limits.'
-                        : ' — Large files may take longer to process.'}
+                        ? t('warning.over500')
+                        : t('warning.over200')}
                     </p>
                   </div>
                 </motion.div>
@@ -435,17 +434,17 @@ export default function HomePage() {
                     onClick={() => { inputRef.current?.click(); }}
                     className="px-4 py-2 border border-[var(--border-secondary)] rounded-lg text-xs text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] transition-all flex items-center gap-1.5"
                     style={{ fontFamily: 'var(--font-mono)' }}
-                    aria-label="Add more files"
+                    aria-label={t('toolbar.addFiles')}
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path d="M12 5v14M5 12h14" />
                     </svg>
-                    ADD FILES
+                    {t('toolbar.addFiles')}
                   </button>
 
                   <span className="text-xs text-[var(--text-dim)]" style={{ fontFamily: 'var(--font-mono)' }}>
-                    {jobs.length} file{jobs.length !== 1 ? 's' : ''}
-                    {doneCount > 0 && ` · ${doneCount} done`}
+                    {jobs.length} {t('toolbar.files')}
+                    {doneCount > 0 && ` · ${doneCount} ${t('toolbar.done')}`}
                   </span>
                 </div>
 
@@ -455,9 +454,9 @@ export default function HomePage() {
                       onClick={downloadAllAsZip}
                       className="px-4 py-2 border border-[var(--border-secondary)] rounded-lg text-xs text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] transition-all"
                       style={{ fontFamily: 'var(--font-mono)' }}
-                      aria-label="Download all as ZIP"
+                      aria-label={t('toolbar.zipAll')}
                     >
-                      ↓ ZIP ALL
+                      {t('toolbar.zipAll')}
                     </button>
                   )}
 
@@ -466,9 +465,9 @@ export default function HomePage() {
                       onClick={convertAll}
                       className="px-4 py-2 bg-[var(--accent)] text-[#0A0A0A] text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity"
                       style={{ fontFamily: 'var(--font-mono)' }}
-                      aria-label="Convert all files"
+                      aria-label={t('toolbar.convertAll')}
                     >
-                      CONVERT ALL →
+                      {t('toolbar.convertAll')}
                     </button>
                   )}
 
@@ -476,9 +475,9 @@ export default function HomePage() {
                     onClick={clearAll}
                     className="px-3 py-2 text-xs text-[var(--text-dim)] hover:text-[var(--error)] transition-colors"
                     style={{ fontFamily: 'var(--font-mono)' }}
-                    aria-label="Clear all jobs"
+                    aria-label={t('toolbar.clear')}
                   >
-                    CLEAR
+                    {t('toolbar.clear')}
                   </button>
                 </div>
               </div>
@@ -486,14 +485,14 @@ export default function HomePage() {
               {/* Batch format selector */}
               {jobs.length > 1 && (
                 <div className="flex items-center gap-2 mb-4" style={{ fontFamily: 'var(--font-mono)' }}>
-                  <span className="text-xs text-[var(--text-dim)] uppercase tracking-wider">Set all to</span>
+                  <span className="text-xs text-[var(--text-dim)] uppercase tracking-wider">{t('toolbar.setAllTo')}</span>
                   <select
                     value={batchFormat}
                     onChange={e => setBatchFormat(e.target.value)}
                     className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] text-[var(--text-primary)] text-xs rounded-lg px-3 py-1.5 appearance-none cursor-pointer hover:border-[var(--border-hover)] focus:outline-none focus:border-[var(--accent)] transition-colors"
-                    aria-label="Batch target format"
+                    aria-label={t('toolbar.setAllTo')}
                   >
-                    <option value="">— pick format —</option>
+                    <option value="">{t('toolbar.pickFormat')}</option>
                     {FORMATS.map(f => (
                       <option key={f.ext} value={f.ext}>.{f.ext.toUpperCase()}</option>
                     ))}
@@ -502,15 +501,15 @@ export default function HomePage() {
                     onClick={applyBatchFormat}
                     disabled={!batchFormat}
                     className="px-3 py-1.5 text-xs border border-[var(--border-secondary)] rounded-lg text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                    aria-label="Apply batch format"
+                    aria-label={t('toolbar.apply')}
                   >
-                    APPLY
+                    {t('toolbar.apply')}
                   </button>
                 </div>
               )}
 
               {/* Job cards */}
-              <div className="space-y-3" role="list" aria-label="File conversion jobs">
+              <div className="space-y-3" role="list" aria-label={t('toolbar.files')}>
                 <AnimatePresence>
                   {jobs.map(job => (
                     <JobCard
@@ -521,6 +520,7 @@ export default function HomePage() {
                       onDownload={() => downloadJob(job)}
                       onRemove={() => removeJob(job.id)}
                       onSettingsChange={patch => updateJobSettings(job.id, patch)}
+                      t={t}
                     />
                   ))}
                 </AnimatePresence>
@@ -529,7 +529,7 @@ export default function HomePage() {
           )}
         </AnimatePresence>
 
-        {/* How it works + History (shown when no active jobs) */}
+        {/* How it works + History */}
         {jobs.length === 0 && (
           <>
             <motion.section
@@ -537,15 +537,11 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
               className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4"
-              aria-label="How it works"
+              aria-label={t('howItWorks.heading')}
             >
-              {[
-                { num: '01', title: 'DROP', desc: 'Drag and drop your files or click to browse from your device.' },
-                { num: '02', title: 'SELECT', desc: 'Choose the target format from the available conversions.' },
-                { num: '03', title: 'CONVERT', desc: 'Instant conversion in your browser. No uploads, no data leaves your device.' },
-              ].map((step, i) => (
+              {[1, 2, 3].map((n, i) => (
                 <motion.div
-                  key={step.num}
+                  key={n}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 + i * 0.1 }}
@@ -555,15 +551,15 @@ export default function HomePage() {
                     style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
                     className="text-5xl text-[var(--accent)] mb-3"
                   >
-                    {step.num}
+                    {String(n).padStart(2, '0')}
                   </div>
                   <div
                     style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
                     className="text-xl text-[var(--text-primary)] mb-2"
                   >
-                    {step.title}
+                    {t(`howItWorks.step${n}.title`)}
                   </div>
-                  <p className="text-[var(--text-muted)] text-sm leading-relaxed">{step.desc}</p>
+                  <p className="text-[var(--text-muted)] text-sm leading-relaxed">{t(`howItWorks.step${n}.desc`)}</p>
                 </motion.div>
               ))}
             </motion.section>
@@ -571,6 +567,7 @@ export default function HomePage() {
             <HistoryPanel
               entries={history}
               onClear={() => setHistory([])}
+              t={t}
             />
           </>
         )}
@@ -580,14 +577,14 @@ export default function HomePage() {
       <footer className="border-t border-[var(--border-primary)] px-6 py-6 mt-16" role="contentinfo">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <span style={{ fontFamily: 'var(--font-mono)' }} className="text-xs text-[var(--text-dim)]">
-            © 2025 CONVERT — All conversions happen in your browser
+            {t('footer.copyright')}
           </span>
-          <nav className="flex gap-6 text-xs text-[var(--text-dim)]" style={{ fontFamily: 'var(--font-mono)' }} aria-label="Supported formats">
-            <span>Images</span>
-            <span>Video</span>
-            <span>Audio</span>
-            <span>Documents</span>
-            <span>Data</span>
+          <nav className="flex gap-6 text-xs text-[var(--text-dim)]" style={{ fontFamily: 'var(--font-mono)' }} aria-label={t('footer.images')}>
+            <span>{t('footer.images')}</span>
+            <span>{t('footer.video')}</span>
+            <span>{t('footer.audio')}</span>
+            <span>{t('footer.documents')}</span>
+            <span>{t('footer.data')}</span>
           </nav>
         </div>
       </footer>

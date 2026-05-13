@@ -21,18 +21,8 @@ const LocaleContext = createContext<LocaleContextValue>({
   locale: 'en',
   setLocale: () => {},
   locales: LOCALES,
-  t: () => '',
+  t: (k) => k,
 });
-
-let translations: Record<string, Record<string, string>> = {};
-let loaded = false;
-
-async function loadTranslations(locale: Locale) {
-  if (!translations[locale]) {
-    const mod = await import(`@/locales/${locale}.json`);
-    translations[locale] = flattenJson(mod.default ?? mod);
-  }
-}
 
 function flattenJson(
   obj: Record<string, unknown>,
@@ -56,44 +46,55 @@ export function useLocale() {
 
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>('en');
+  const [messages, setMessages] = useState<Record<string, string>>({});
   const [mounted, setMounted] = useState(false);
-  const [ready, setReady] = useState(false);
 
+  // Detect initial locale
   useEffect(() => {
     setMounted(true);
     const stored = localStorage.getItem('convert-it-locale') as Locale | null;
     if (stored && LOCALES.some(l => l.code === stored)) {
       setLocaleState(stored);
     } else {
-      // Detect browser language
       const nav = navigator.language;
       if (nav.startsWith('zh')) setLocaleState('zh-TW');
       else if (nav.startsWith('ja')) setLocaleState('ja');
     }
   }, []);
 
+  // Load translations when locale changes
   useEffect(() => {
     if (!mounted) return;
-    loadTranslations(locale).then(() => setReady(true));
+    let cancelled = false;
+
+    async function load() {
+      const mod = await import(`@/locales/${locale}.json`);
+      if (!cancelled) {
+        const flat = flattenJson(mod.default ?? mod);
+        setMessages(flat);
+      }
+    }
+
+    load();
     localStorage.setItem('convert-it-locale', locale);
     document.documentElement.lang = locale;
+
+    return () => { cancelled = true; };
   }, [locale, mounted]);
 
   const setLocale = useCallback((l: Locale) => {
-    setReady(false);
+    setMessages({});
     setLocaleState(l);
   }, []);
 
   const t = useCallback(
-    (key: string): string => {
-      return translations[locale]?.[key] ?? key;
-    },
-    [locale, ready]
+    (key: string): string => messages[key] ?? key,
+    [messages]
   );
 
   return (
     <LocaleContext.Provider value={{ locale, setLocale, locales: LOCALES, t }}>
-      {ready ? children : children}
+      {children}
     </LocaleContext.Provider>
   );
 }

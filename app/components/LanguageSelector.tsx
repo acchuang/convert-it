@@ -34,7 +34,7 @@ export function LanguageSelector() {
           <circle cx="12" cy="12" r="10" />
           <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
         </svg>
-        <span className="hidden sm:inline">{locale.toUpperCase()}</span>
+        <span className="hidden sm:inline">{current.label}</span>
         <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
           className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
         >
