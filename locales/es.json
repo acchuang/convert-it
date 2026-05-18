@@ -1,0 +1,138 @@
+{
+  "site": {
+    "title": "Convert-it — Convertidor Universal de Archivos",
+    "description": "Convierte cualquier archivo a cualquier formato, completamente en tu navegador."
+  },
+  "header": {
+    "free": "Gratis",
+    "noSignup": "Sin Registro",
+    "clientSide": "Local",
+    "themeDark": "Cambiar a modo oscuro",
+    "themeLight": "Cambiar a modo claro",
+    "github": "Ver código en GitHub",
+    "buyCoffee": "Invítame un café",
+    "about": "ACERCA DE",
+    "home": "← INICIO",
+    "totalVisits": "total",
+    "online": "en línea"
+  },
+  "dropzone": {
+    "title": "ARRASTRAR Y SOLTAR",
+    "subtitle": "o haz clic para explorar",
+    "image": "IMAGEN",
+    "video": "VIDEO",
+    "audio": "AUDIO",
+    "document": "DOCUMENTO",
+    "data": "DATOS"
+  },
+  "toolbar": {
+    "addFiles": "AÑADIR ARCHIVOS",
+    "files": "archivos",
+    "done": "completado",
+    "zipAll": "↓ COMPRIMIR TODO",
+    "convertAll": "CONVERTIR TODO →",
+    "clear": "LIMPIAR",
+    "setAllTo": "Establecer todo como",
+    "pickFormat": "— elegir formato —",
+    "apply": "APLICAR"
+  },
+  "warning": {
+    "largeFile": "Archivo grande detectado",
+    "over200": "Los archivos grandes pueden tardar más en procesarse.",
+    "over500": "Los archivos de más de 500MB pueden fallar por límites de memoria del navegador."
+  },
+  "job": {
+    "convert": "CONVERTIR →",
+    "retry": "REINTENTAR",
+    "download": "DESCARGAR",
+    "copy": "COPIAR",
+    "copied": "COPIADO",
+    "view": "VER",
+    "hide": "OCULTAR",
+    "preview": "Vista previa",
+    "closePreview": "Cerrar vista previa",
+    "previewUnavailable": "Vista previa no disponible para este formato",
+    "settings": "Configuración de conversión",
+    "remove": "Eliminar",
+    "quality": "Calidad",
+    "delimiter": "Delimitador",
+    "comma": "COMA",
+    "semi": "PUNTO Y COMA",
+    "pipe": "BARRA VERTICAL",
+    "tab": "TABULACIÓN",
+    "indent": "Indentación",
+    "min": "MÍN",
+    "sp2": "2ESP",
+    "sp4": "4ESP",
+    "root": "Raíz",
+    "bitrate": "Tasa de bits",
+    "preset": "Preajuste",
+    "targetFormat": "Formato de destino",
+    "converting": "Convirtiendo",
+    "truncated": "... (truncado)"
+  },
+  "howItWorks": {
+    "heading": "CÓMO FUNCIONA",
+    "step1": {
+      "title": "SOLTAR",
+      "desc": "Arrastra y suelta tus archivos o haz clic para explorar desde tu dispositivo."
+    },
+    "step2": {
+      "title": "SELECCIONAR",
+      "desc": "Elige el formato de destino entre las conversiones disponibles."
+    },
+    "step3": {
+      "title": "CONVERTIR",
+      "desc": "Conversión instantánea en tu navegador. Sin subidas, tus datos nunca salen de tu dispositivo."
+    }
+  },
+  "history": {
+    "heading": "RECIENTE",
+    "clear": "LIMPIAR"
+  },
+  "footer": {
+    "copyright": "© 2026 Convert-it — Todas las conversiones ocurren en tu navegador",
+    "images": "Imágenes",
+    "video": "Video",
+    "audio": "Audio",
+    "documents": "Documentos",
+    "data": "Datos",
+    "github": "GITHUB"
+  },
+  "about": {
+    "heading": "ACERCA DE",
+    "intro": "Convert-it es un convertidor de archivos universal, gratuito y de código abierto que funciona completamente en tu navegador. Sin subidas, sin servidores, sin registros — tus archivos nunca salen de tu dispositivo.",
+    "intro2": "Creado para desarrolladores, diseñadores y cualquier persona que necesite conversiones de archivos rápidas y privadas sin la molestia de herramientas en línea poco confiables o software de escritorio pesado.",
+    "howHeading": "CÓMO FUNCIONA",
+    "step1": { "title": "Arrastrar y Soltar", "desc": "Suelta tus archivos o haz clic para explorar. Convert-it detecta automáticamente el formato y sugiere las conversiones disponibles." },
+    "step2": { "title": "Personalizar", "desc": "Ajusta la calidad, delimitador, tasa de bits o preajuste por archivo antes de convertir." },
+    "step3": { "title": "Descargar", "desc": "Obtén tu archivo convertido al instante. Descarga individualmente o comprime todos los resultados a la vez." },
+    "formatsHeading": "FORMATOS COMPATIBLES",
+    "privacyHeading": "PRIVACIDAD",
+    "privacy1": "Tus archivos nunca salen de tu navegador. Toda la conversión ocurre localmente usando WebAssembly y la API Canvas. No subimos, almacenamos ni tenemos acceso a tus datos.",
+    "privacy2": "Los únicos datos que recopilamos son estadísticas de uso anónimas y agregadas (visitas totales y sesiones activas) a través de Cloudflare KV — sin información personal, sin rastreo, sin cookies más allá de tu preferencia de tema.",
+    "ossHeading": "CÓDIGO ABIERTO",
+    "oss1": "Convert-it tiene licencia MIT y es de código abierto. El código completo está disponible en GitHub. Las contribuciones, informes de errores y solicitudes de funciones son bienvenidos.",
+    "ossGithub": "GITHUB",
+    "ossSupport": "APOYAR",
+    "techHeading": "TECNOLOGÍAS",
+    "techFramework": "Framework",
+    "techLanguage": "Lenguaje",
+    "techCSS": "CSS",
+    "techMotion": "Animación",
+    "techVideo": "Video/Audio",
+    "techImages": "Imágenes",
+    "techSheets": "Hojas de cálculo",
+    "techHosting": "Alojamiento"
+  },
+  "lang": {
+    "selector": "Seleccionar idioma",
+    "en": "English",
+    "zh-TW": "繁體中文",
+    "zh-CN": "简体中文",
+    "ja": "日本語",
+    "es": "Español",
+    "ko": "한국어",
+    "fr": "Français"
+  }
+}

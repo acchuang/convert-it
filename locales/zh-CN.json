@@ -1,0 +1,138 @@
+{
+  "site": {
+    "title": "Convert-it — 通用文件转换器",
+    "description": "在浏览器中将任意文件转换为任意格式。"
+  },
+  "header": {
+    "free": "免费",
+    "noSignup": "无需注册",
+    "clientSide": "本地端",
+    "themeDark": "切换到深色模式",
+    "themeLight": "切换到浅色模式",
+    "github": "在 GitHub 上查看源码",
+    "buyCoffee": "请我喝杯咖啡",
+    "about": "关于",
+    "home": "← 首页",
+    "totalVisits": "总访问",
+    "online": "在线"
+  },
+  "dropzone": {
+    "title": "拖放文件",
+    "subtitle": "或点击浏览",
+    "image": "图片",
+    "video": "视频",
+    "audio": "音频",
+    "document": "文档",
+    "data": "数据"
+  },
+  "toolbar": {
+    "addFiles": "添加文件",
+    "files": "个文件",
+    "done": "已完成",
+    "zipAll": "↓ 全部压缩",
+    "convertAll": "全部转换 →",
+    "clear": "清除",
+    "setAllTo": "全部设为",
+    "pickFormat": "— 选择格式 —",
+    "apply": "应用"
+  },
+  "warning": {
+    "largeFile": "检测到大文件",
+    "over200": "大文件可能需要较长的处理时间。",
+    "over500": "超过 500MB 的文件可能因浏览器内存限制而失败。"
+  },
+  "job": {
+    "convert": "转换 →",
+    "retry": "重试",
+    "download": "下载",
+    "copy": "复制",
+    "copied": "已复制",
+    "view": "预览",
+    "hide": "隐藏",
+    "preview": "预览",
+    "closePreview": "关闭预览",
+    "previewUnavailable": "此格式不支持预览",
+    "settings": "转换设置",
+    "remove": "移除",
+    "quality": "质量",
+    "delimiter": "分隔符",
+    "comma": "逗号",
+    "semi": "分号",
+    "pipe": "竖线",
+    "tab": "制表",
+    "indent": "缩进",
+    "min": "最小",
+    "sp2": "2空格",
+    "sp4": "4空格",
+    "root": "根元素",
+    "bitrate": "比特率",
+    "preset": "预设",
+    "targetFormat": "目标格式",
+    "converting": "转换中",
+    "truncated": "... （已截断）"
+  },
+  "howItWorks": {
+    "heading": "使用方式",
+    "step1": {
+      "title": "拖放",
+      "desc": "将文件拖放到此处，或点击从设备中浏览选择。"
+    },
+    "step2": {
+      "title": "选择",
+      "desc": "从可用的转换选项中选择目标格式。"
+    },
+    "step3": {
+      "title": "转换",
+      "desc": "在浏览器中即时转换。无需上传，数据不会离开您的设备。"
+    }
+  },
+  "history": {
+    "heading": "最近记录",
+    "clear": "清除"
+  },
+  "footer": {
+    "copyright": "© 2026 Convert-it — 所有转换均在您的浏览器中完成",
+    "images": "图片",
+    "video": "视频",
+    "audio": "音频",
+    "documents": "文档",
+    "data": "数据",
+    "github": "GITHUB"
+  },
+  "about": {
+    "heading": "关于",
+    "intro": "Convert-it 是一个免费、开源的通用文件转换器，完全在您的浏览器中运行。无需上传、无需服务器、无需注册 — 您的文件永远不会离开您的设备。",
+    "intro2": "为开发者、设计师以及任何需要快速、私密文件转换的人打造，无需繁琐的在线工具或臃肿的桌面软件。",
+    "howHeading": "使用方式",
+    "step1": { "title": "拖放", "desc": "将文件拖放或点击浏览。Convert-it 会自动检测格式并建议可用的转换。" },
+    "step2": { "title": "自定义", "desc": "在转换前调整质量、分隔符、比特率或预设配置。" },
+    "step3": { "title": "下载", "desc": "立即获取转换后的文件。可单独下载或将所有结果打包为 ZIP。" },
+    "formatsHeading": "支持的格式",
+    "privacyHeading": "隐私保护",
+    "privacy1": "您的文件永远不会离开浏览器。所有转换均使用 WebAssembly 和 Canvas API 在本地进行。我们不会上传、存储或访问您的任何数据。",
+    "privacy2": "我们收集的唯一数据是通过 Cloudflare KV 的匿名、汇总使用统计（总访问量和活跃会话数）— 不含个人信息、无追踪、除您的主题偏好外不使用 Cookie。",
+    "ossHeading": "开源",
+    "oss1": "Convert-it 采用 MIT 许可并开源。完整代码可在 GitHub 上获取。欢迎贡献、报告问题和提出功能请求。",
+    "ossGithub": "GITHUB",
+    "ossSupport": "支持",
+    "techHeading": "技术栈",
+    "techFramework": "框架",
+    "techLanguage": "语言",
+    "techCSS": "CSS",
+    "techMotion": "动效",
+    "techVideo": "视频/音频",
+    "techImages": "图片",
+    "techSheets": "电子表格",
+    "techHosting": "托管"
+  },
+  "lang": {
+    "selector": "选择语言",
+    "en": "English",
+    "zh-TW": "繁體中文",
+    "zh-CN": "简体中文",
+    "ja": "日本語",
+    "es": "Español",
+    "ko": "한국어",
+    "fr": "Français"
+  }
+}

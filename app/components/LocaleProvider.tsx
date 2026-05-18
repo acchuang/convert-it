@@ -2,12 +2,14 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
-export type Locale = 'en' | 'zh-TW' | 'ja';
+export type Locale = 'en' | 'zh-TW' | 'zh-CN' | 'ja' | 'es';
 
 const LOCALES: { code: Locale; label: string }[] = [
   { code: 'en', label: 'English' },
   { code: 'zh-TW', label: '繁體中文' },
+  { code: 'zh-CN', label: '简体中文' },
   { code: 'ja', label: '日本語' },
+  { code: 'es', label: 'Español' },
 ];
 
 interface LocaleContextValue {
@@ -57,8 +59,10 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
       setLocaleState(stored);
     } else {
       const nav = navigator.language;
-      if (nav.startsWith('zh')) setLocaleState('zh-TW');
+      if (nav === 'zh-CN' || nav === 'zh-SG' || nav.startsWith('zh-Hans')) setLocaleState('zh-CN');
+      else if (nav.startsWith('zh')) setLocaleState('zh-TW');
       else if (nav.startsWith('ja')) setLocaleState('ja');
+      else if (nav.startsWith('es')) setLocaleState('es');
     }
   }, []);
 
