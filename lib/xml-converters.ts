@@ -1,7 +1,7 @@
 import { XMLParser, XMLBuilder } from 'fast-xml-parser';
 import type { ConversionSettings } from './types';
 
-export function xmlToJson(file: File, _s: string, _t: string, settings?: ConversionSettings): Promise<Blob> {
+export function xmlToJson(file: File, _s: string, _t: string, settings?: ConversionSettings, _onProgress?: (pct: number) => void): Promise<Blob> {
   const indent = settings?.jsonIndent ?? 2;
   return file.text().then(text => {
     const parser = new XMLParser({
@@ -26,7 +26,7 @@ export function xmlToTxt(file: File): Promise<Blob> {
   });
 }
 
-export async function xmlToCsv(file: File, _s: string, _t: string, settings?: ConversionSettings): Promise<Blob> {
+export async function xmlToCsv(file: File, _s: string, _t: string, settings?: ConversionSettings, _onProgress?: (pct: number) => void): Promise<Blob> {
   const Papa = (await import('papaparse')).default;
   const delimiter = settings?.csvDelimiter ?? ',';
   const text = await file.text();
@@ -45,7 +45,7 @@ export async function xmlToCsv(file: File, _s: string, _t: string, settings?: Co
   return new Blob([csv], { type: 'text/csv' });
 }
 
-export async function xmlToYaml(file: File): Promise<Blob> {
+export async function xmlToYaml(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
   const { stringify } = await import('yaml');
   const text = await file.text();
   const doc = new DOMParser().parseFromString(text, 'text/xml');
@@ -62,7 +62,7 @@ export async function xmlToYaml(file: File): Promise<Blob> {
   return new Blob([y], { type: 'application/yaml' });
 }
 
-export async function xmlToTsv(file: File): Promise<Blob> {
+export async function xmlToTsv(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
   const Papa = (await import('papaparse')).default;
   const text = await file.text();
   const doc = new DOMParser().parseFromString(text, 'text/xml');
@@ -80,7 +80,7 @@ export async function xmlToTsv(file: File): Promise<Blob> {
   return new Blob([tsv], { type: 'text/tab-separated-values' });
 }
 
-export function jsonToXml(file: File, _s: string, _t: string, settings?: ConversionSettings): Promise<Blob> {
+export function jsonToXml(file: File, _s: string, _t: string, settings?: ConversionSettings, _onProgress?: (pct: number) => void): Promise<Blob> {
   const rootEl = settings?.xmlRootElement ?? 'root';
   return file.text().then(text => {
     const data = JSON.parse(text);

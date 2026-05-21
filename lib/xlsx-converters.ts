@@ -7,7 +7,7 @@ async function sheetjs() {
   return import('xlsx');
 }
 
-export async function xlsxToCsv(file: File, _s: string, _t: string, settings?: ConversionSettings): Promise<Blob> {
+export async function xlsxToCsv(file: File, _s: string, _t: string, settings?: ConversionSettings, _onProgress?: (pct: number) => void): Promise<Blob> {
   const XLSX = await sheetjs();
   const buffer = await file.arrayBuffer();
   const workbook = XLSX.read(new Uint8Array(buffer), { type: 'array' });
@@ -17,7 +17,7 @@ export async function xlsxToCsv(file: File, _s: string, _t: string, settings?: C
   return new Blob([csv], { type: 'text/csv' });
 }
 
-export async function xlsxToJson(file: File, _s: string, _t: string, settings?: ConversionSettings): Promise<Blob> {
+export async function xlsxToJson(file: File, _s: string, _t: string, settings?: ConversionSettings, _onProgress?: (pct: number) => void): Promise<Blob> {
   const XLSX = await sheetjs();
   const indent = settings?.jsonIndent ?? 2;
   const buffer = await file.arrayBuffer();
@@ -28,7 +28,7 @@ export async function xlsxToJson(file: File, _s: string, _t: string, settings?: 
   return new Blob([json], { type: 'application/json' });
 }
 
-export async function csvToXlsx(file: File): Promise<Blob> {
+export async function csvToXlsx(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
   const XLSX = await sheetjs();
   const text = await file.text();
   // XLSX.read can parse CSV directly
@@ -37,7 +37,7 @@ export async function csvToXlsx(file: File): Promise<Blob> {
   return new Blob([buffer], { type: XLSX_MIME });
 }
 
-export async function jsonToXlsx(file: File): Promise<Blob> {
+export async function jsonToXlsx(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
   const XLSX = await sheetjs();
   const data = JSON.parse(await file.text());
   const arr = Array.isArray(data) ? data : [data];

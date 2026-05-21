@@ -1,6 +1,8 @@
 import { marked } from 'marked';
 import TurndownService from 'turndown';
 
+import type { ConversionSettings } from './types';
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, '&amp;')
@@ -9,7 +11,7 @@ function escapeHtml(s: string): string {
     .replace(/"/g, '&quot;');
 }
 
-export function mdToHtml(file: File): Promise<Blob> {
+export function mdToHtml(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
   return file.text().then(async text => {
     const htmlBody = await marked.parse(text);
     const html = `<!DOCTYPE html>\n<html>\n<head>\n  <meta charset="utf-8">\n</head>\n<body>\n${htmlBody}\n</body>\n</html>`;
@@ -17,7 +19,7 @@ export function mdToHtml(file: File): Promise<Blob> {
   });
 }
 
-export function htmlToMd(file: File): Promise<Blob> {
+export function htmlToMd(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
   return file.text().then(text => {
     const turndown = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
     const md = turndown.turndown(text);
@@ -25,7 +27,7 @@ export function htmlToMd(file: File): Promise<Blob> {
   });
 }
 
-export function htmlToTxt(file: File): Promise<Blob> {
+export function htmlToTxt(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
   return file.text().then(text => {
     const doc = new DOMParser().parseFromString(text, 'text/html');
     const plain = doc.body?.textContent ?? text.replace(/<[^>]+>/g, '');
@@ -34,7 +36,7 @@ export function htmlToTxt(file: File): Promise<Blob> {
   });
 }
 
-export function txtToHtml(file: File): Promise<Blob> {
+export function txtToHtml(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
   return file.text().then(text => {
     const paragraphs = text
       .split('\n')
@@ -45,20 +47,20 @@ export function txtToHtml(file: File): Promise<Blob> {
   });
 }
 
-export function txtToMd(file: File): Promise<Blob> {
+export function txtToMd(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
   return file.text().then(text => {
     return new Blob([text], { type: 'text/markdown' });
   });
 }
 
-export function jsonToTxt(file: File): Promise<Blob> {
+export function jsonToTxt(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
   return file.text().then(text => {
     const data = JSON.parse(text);
     return new Blob([JSON.stringify(data, null, 2)], { type: 'text/plain' });
   });
 }
 
-export async function jsonToMd(file: File): Promise<Blob> {
+export async function jsonToMd(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
   const text = await file.text();
   const data = JSON.parse(text);
   const arr = Array.isArray(data) ? data : [data];

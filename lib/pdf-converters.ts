@@ -35,7 +35,7 @@ async function htmlToPdfBlob(htmlContent: string): Promise<Blob> {
   return doc.output('blob');
 }
 
-export async function txtToPdf(file: File): Promise<Blob> {
+export async function txtToPdf(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
   const text = await file.text();
   const html = text
     .split('\n')
@@ -44,7 +44,7 @@ export async function txtToPdf(file: File): Promise<Blob> {
   return htmlToPdfBlob(html);
 }
 
-export async function mdToPdf(file: File): Promise<Blob> {
+export async function mdToPdf(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
   const { marked } = await import('marked');
   const text = await file.text();
   const htmlBody = await marked.parse(text);
@@ -52,12 +52,12 @@ export async function mdToPdf(file: File): Promise<Blob> {
   return htmlToPdfBlob(html);
 }
 
-export async function htmlToPdf(file: File): Promise<Blob> {
+export async function htmlToPdf(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
   const htmlContent = await file.text();
   return htmlToPdfBlob(htmlContent);
 }
 
-export async function jsonToPdf(file: File): Promise<Blob> {
+export async function jsonToPdf(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
   const text = await file.text();
   const data = JSON.parse(text);
   const formatted = JSON.stringify(data, null, 2);

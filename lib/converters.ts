@@ -52,8 +52,7 @@ export const FORMATS: FormatInfo[] = [
   { ext: 'xlsx', label: 'Excel', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', category: 'data' },
 ];
 
-export const CONVERSION_MAP: Record<string, string[]> = {
-  // Images
+const IMAGE_CONVERSIONS: Record<string, string[]> = {
   jpg:  ['png', 'webp', 'bmp', 'ico', 'jpg'],
   jpeg: ['png', 'webp', 'bmp', 'ico', 'jpg'],
   png:  ['jpg', 'webp', 'bmp', 'ico', 'png'],
@@ -62,7 +61,9 @@ export const CONVERSION_MAP: Record<string, string[]> = {
   bmp:  ['jpg', 'png',  'webp'],
   ico:  ['png', 'jpg',  'webp', 'bmp'],
   svg:  ['png', 'jpg',  'webp'],
-  // Video
+};
+
+const VIDEO_CONVERSIONS: Record<string, string[]> = {
   mp4:  ['webm', 'avi', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg'],
   webm: ['mp4', 'avi', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg'],
   avi:  ['mp4', 'webm', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg'],
@@ -71,7 +72,9 @@ export const CONVERSION_MAP: Record<string, string[]> = {
   flv:  ['mp4', 'webm', 'avi', 'mov', 'mkv', 'mp3', 'wav', 'aac', 'ogg'],
   m4v:  ['mp4', 'webm', 'avi', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg'],
   '3gp': ['mp4', 'webm', 'avi', 'mov', 'mkv', 'mp3', 'wav', 'aac'],
-  // Audio
+};
+
+const AUDIO_CONVERSIONS: Record<string, string[]> = {
   mp3:  ['wav', 'aac', 'ogg', 'flac', 'm4a'],
   wav:  ['mp3', 'aac', 'ogg', 'flac', 'm4a'],
   aac:  ['mp3', 'wav', 'ogg', 'flac', 'm4a'],
@@ -80,17 +83,6 @@ export const CONVERSION_MAP: Record<string, string[]> = {
   m4a:  ['mp3', 'wav', 'aac', 'ogg', 'flac'],
   wma:  ['mp3', 'wav', 'aac', 'ogg', 'm4a'],
   opus: ['mp3', 'wav', 'aac', 'ogg', 'm4a'],
-  // Documents
-  txt:  ['md',   'html', 'pdf'],
-  md:   ['html', 'txt',  'pdf'],
-  html: ['txt',  'md',   'pdf'],
-  // Data
-  csv:  ['json', 'xml', 'tsv', 'html', 'xlsx', 'yaml', 'txt'],
-  json: ['csv',  'xml', 'yaml', 'txt', 'xlsx', 'tsv', 'html', 'md', 'pdf'],
-  xml:  ['json', 'txt', 'csv', 'yaml', 'tsv'],
-  yaml: ['json', 'csv', 'xml', 'tsv'],
-  tsv:  ['csv',  'json', 'xml', 'html'],
-  xlsx: ['csv',  'json'],
 };
 
 const CONVERTER_REGISTRY: Record<string, ConverterFn> = {
@@ -103,37 +95,57 @@ const CONVERTER_REGISTRY: Record<string, ConverterFn> = {
   'csv:txt':    csvToTxt,
   'tsv:csv':    tsvToCsv,
   'tsv:json':   tsvToJson,
-  'tsv:xml':    tsvToXml as ConverterFn,
-  'tsv:html':   tsvToHtml as ConverterFn,
+  'tsv:xml':    tsvToXml,
+  'tsv:html':   tsvToHtml,
   'json:csv':   jsonToCsv,
   'json:xml':   jsonToXml,
   'json:yaml':  jsonToYaml,
   'json:txt':   jsonToTxt,
   'json:xlsx':  jsonToXlsx,
-  'json:tsv':   jsonToTsv as ConverterFn,
-  'json:html':  jsonToHtml as ConverterFn,
-  'json:md':    jsonToMd as ConverterFn,
-  'json:pdf':   jsonToPdf as ConverterFn,
+  'json:tsv':   jsonToTsv,
+  'json:html':  jsonToHtml,
+  'json:md':    jsonToMd,
+  'json:pdf':   jsonToPdf,
   'xml:json':   xmlToJson,
   'xml:txt':    xmlToTxt,
-  'xml:csv':    xmlToCsv as ConverterFn,
-  'xml:yaml':   xmlToYaml as ConverterFn,
-  'xml:tsv':    xmlToTsv as ConverterFn,
+  'xml:csv':    xmlToCsv,
+  'xml:yaml':   xmlToYaml,
+  'xml:tsv':    xmlToTsv,
   'yaml:json':  yamlToJson,
-  'yaml:csv':   yamlToCsv as ConverterFn,
-  'yaml:xml':   yamlToXml as ConverterFn,
-  'yaml:tsv':   yamlToTsv as ConverterFn,
+  'yaml:csv':   yamlToCsv,
+  'yaml:xml':   yamlToXml,
+  'yaml:tsv':   yamlToTsv,
   'md:html':    mdToHtml,
-  'md:pdf':     mdToPdf as ConverterFn,
+  'md:pdf':     mdToPdf,
   'html:md':    htmlToMd,
   'html:txt':   htmlToTxt,
-  'html:pdf':   htmlToPdf as ConverterFn,
+  'html:pdf':   htmlToPdf,
   'txt:html':   txtToHtml,
   'txt:md':     txtToMd,
-  'txt:pdf':    txtToPdf as ConverterFn,
+  'txt:pdf':    txtToPdf,
   'xlsx:csv':   xlsxToCsv,
   'xlsx:json':  xlsxToJson,
 };
+
+function buildConversionMap(): Record<string, string[]> {
+  const map: Record<string, string[]> = {
+    ...IMAGE_CONVERSIONS,
+    ...VIDEO_CONVERSIONS,
+    ...AUDIO_CONVERSIONS,
+  };
+
+  for (const key of Object.keys(CONVERTER_REGISTRY)) {
+    const [source, target] = key.split(':');
+    if (!map[source]) map[source] = [];
+    if (!map[source].includes(target)) {
+      map[source].push(target);
+    }
+  }
+
+  return map;
+}
+
+export const CONVERSION_MAP: Record<string, string[]> = buildConversionMap();
 
 export function getFormatInfo(ext: string): FormatInfo | undefined {
   return FORMATS.find(f => f.ext === ext.toLowerCase());
@@ -156,7 +168,8 @@ export function formatFileSize(bytes: number): string {
 export async function convertFile(
   file: File,
   targetExt: string,
-  settings?: ConversionSettings
+  settings?: ConversionSettings,
+  onProgress?: (pct: number) => void
 ): Promise<Blob> {
   const sourceExt = getFileExtension(file.name);
   const category = getFormatInfo(sourceExt)?.category;
@@ -167,15 +180,15 @@ export async function convertFile(
 
   if (category === 'video' || category === 'audio') {
     if (category === 'video' && ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a'].includes(targetExt)) {
-      return extractAudio(file, sourceExt, targetExt, settings);
+      return extractAudio(file, sourceExt, targetExt, settings, onProgress);
     }
-    return convertAudioVideo(file, sourceExt, targetExt, settings);
+    return convertAudioVideo(file, sourceExt, targetExt, settings, onProgress);
   }
 
   const key = `${sourceExt}:${targetExt}`;
   const converter = CONVERTER_REGISTRY[key];
   if (converter) {
-    return converter(file, sourceExt, targetExt, settings);
+    return converter(file, sourceExt, targetExt, settings, onProgress);
   }
 
   throw new Error(`Unsupported conversion: ${sourceExt} → ${targetExt}`);

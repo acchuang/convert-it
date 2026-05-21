@@ -4,21 +4,19 @@ import { useState, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  convertFile,
   getFileExtension,
   getTargetFormats,
   FORMATS,
-  DEFAULT_SETTINGS,
   getFormatInfo,
 } from '@/lib/converters';
-import type { ConversionSettings } from '@/lib/types';
 import { JobCard, type FileJob } from './components/JobCard';
 import { HistoryPanel } from './components/HistoryPanel';
-import { getHistory, addHistoryEntry, type HistoryEntry } from '@/lib/history';
+import { getHistory, type HistoryEntry } from '@/lib/history';
 import { useStats, formatCount } from '@/lib/useStats';
 import { useTheme } from './components/ThemeProvider';
 import { LanguageSelector } from './components/LanguageSelector';
 import { useLocale } from './components/LocaleProvider';
+import { useJobManager } from '@/lib/useJobManager';
 
 const CATEGORY_COLORS: Record<string, string> = {
   image: '#FF4D00',
@@ -38,7 +36,20 @@ function formatMB(bytes: number): string {
 const ALL_CATEGORIES = ['image', 'video', 'audio', 'document', 'data'] as const;
 
 export default function HomePage() {
-  const [jobs, setJobs] = useState<FileJob[]>([]);
+  const {
+    jobs,
+    addFiles,
+    updateJob,
+    updateJobSettings,
+    convertJob,
+    downloadJob,
+    downloadAllAsZip,
+    applyBatchFormat: applyBatch,
+    removeJob,
+    convertAll,
+    clearAll,
+    doneCount,
+  } = useJobManager({ onHistoryUpdate: () => setHistory(getHistory()) });
   const [dragging, setDragging] = useState(false);
   const [dragCategory, setDragCategory] = useState<string | null>(null);
   const [batchFormat, setBatchFormat] = useState('');
@@ -55,18 +66,10 @@ export default function HomePage() {
     }), [jobs]
   );
 
-  const addFiles = useCallback((files: FileList | File[]) => {
-    const newJobs: FileJob[] = Array.from(files).map(file => ({
-      id: crypto.randomUUID(),
-      file,
-      sourceExt: getFileExtension(file.name),
-      targetExt: getTargetFormats(getFileExtension(file.name))[0] ?? null,
-      status: 'idle',
-      progress: 0,
-      settings: { ...DEFAULT_SETTINGS },
-    }));
-    setJobs(prev => [...prev, ...newJobs]);
-  }, []);
+  const applyBatchFormat = () => {
+    if (!batchFormat) return;
+    applyBatch(batchFormat);
+  };
 
   const detectDragCategory = useCallback((files: FileList) => {
     if (files.length === 0) return;
@@ -101,100 +104,6 @@ export default function HomePage() {
     },
     [addFiles]
   );
-
-  const updateJob = (id: string, patch: Partial<FileJob>) =>
-    setJobs(prev => prev.map(j => (j.id === id ? { ...j, ...patch } : j)));
-
-  const updateJobSettings = (id: string, patch: Partial<ConversionSettings>) =>
-    setJobs(prev =>
-      prev.map(j =>
-        j.id === id
-          ? { ...j, settings: { ...j.settings, ...patch }, status: 'idle', resultBlob: undefined }
-          : j
-      )
-    );
-
-  const convertJob = async (job: FileJob) => {
-    if (!job.targetExt) return;
-    updateJob(job.id, { status: 'converting', progress: 10 });
-    try {
-      await new Promise(r => setTimeout(r, 300));
-      updateJob(job.id, { progress: 50 });
-      const blob = await convertFile(job.file, job.targetExt, job.settings);
-      updateJob(job.id, { status: 'done', resultBlob: blob, progress: 100 });
-
-      addHistoryEntry({
-        filename: job.file.name,
-        sourceExt: job.sourceExt,
-        targetExt: job.targetExt,
-        convertedAt: new Date().toISOString(),
-        fileSize: job.file.size,
-        resultSize: blob.size,
-      });
-      setHistory(getHistory());
-    } catch (err) {
-      updateJob(job.id, {
-        status: 'error',
-        error: err instanceof Error ? err.message : 'Conversion failed',
-        progress: 0,
-      });
-    }
-  };
-
-  const downloadJob = (job: FileJob) => {
-    if (!job.resultBlob || !job.targetExt) return;
-    const url = URL.createObjectURL(job.resultBlob);
-    const a = document.createElement('a');
-    const base = job.file.name.replace(/\.[^.]+$/, '');
-    a.href = url;
-    a.download = `${base}.${job.targetExt}`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const downloadAllAsZip = async () => {
-    const doneJobs = jobs.filter(j => j.status === 'done' && j.resultBlob && j.targetExt);
-    if (doneJobs.length === 0) return;
-
-    const JSZip = (await import('jszip')).default;
-    const zip = new JSZip();
-
-    for (const job of doneJobs) {
-      const base = job.file.name.replace(/\.[^.]+$/, '');
-      zip.file(`${base}.${job.targetExt}`, job.resultBlob!);
-    }
-
-    const blob = await zip.generateAsync({ type: 'blob' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'converted-files.zip';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const applyBatchFormat = () => {
-    if (!batchFormat) return;
-    setJobs(prev =>
-      prev.map(j => {
-        if (j.status !== 'idle') return j;
-        const targets = getTargetFormats(j.sourceExt);
-        if (!targets.includes(batchFormat)) return j;
-        return { ...j, targetExt: batchFormat, resultBlob: undefined };
-      })
-    );
-  };
-
-  const removeJob = (id: string) =>
-    setJobs(prev => prev.filter(j => j.id !== id));
-
-  const convertAll = () => {
-    jobs.filter(j => j.status === 'idle' && j.targetExt).forEach(convertJob);
-  };
-
-  const clearAll = () => setJobs([]);
-
-  const doneCount = jobs.filter(j => j.status === 'done').length;
 
   return (
     <main className="min-h-screen bg-app" style={{ fontFamily: 'var(--font-body)' }} role="main" aria-label="Convert-it file converter">

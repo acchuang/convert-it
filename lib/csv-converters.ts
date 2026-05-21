@@ -1,7 +1,7 @@
 import Papa from 'papaparse';
 import type { ConversionSettings } from './types';
 
-export function csvToJson(file: File, _s: string, _t: string, settings?: ConversionSettings): Promise<Blob> {
+export function csvToJson(file: File, _s: string, _t: string, settings?: ConversionSettings, _onProgress?: (pct: number) => void): Promise<Blob> {
   const indent = settings?.jsonIndent ?? 2;
   return file.text().then(text => {
     const result = Papa.parse(text, { header: true, skipEmptyLines: true, dynamicTyping: true });
@@ -20,7 +20,7 @@ export function csvToTsv(file: File): Promise<Blob> {
   });
 }
 
-export function csvToXml(file: File, _s: string, _t: string, settings?: ConversionSettings): Promise<Blob> {
+export function csvToXml(file: File, _s: string, _t: string, settings?: ConversionSettings, _onProgress?: (pct: number) => void): Promise<Blob> {
   const rootEl = settings?.xmlRootElement ?? 'root';
   return file.text().then(text => {
     const result = Papa.parse<Record<string, string>>(text, { header: true, skipEmptyLines: true });
@@ -69,7 +69,7 @@ export async function csvToTxt(file: File): Promise<Blob> {
   return new Blob([lines.join('\n')], { type: 'text/plain' });
 }
 
-export function tsvToCsv(file: File, _s: string, _t: string, settings?: ConversionSettings): Promise<Blob> {
+export function tsvToCsv(file: File, _s: string, _t: string, settings?: ConversionSettings, _onProgress?: (pct: number) => void): Promise<Blob> {
   const delimiter = settings?.csvDelimiter ?? ',';
   return file.text().then(text => {
     const result = Papa.parse(text, { header: false, delimiter: '\t', skipEmptyLines: true });
@@ -78,7 +78,7 @@ export function tsvToCsv(file: File, _s: string, _t: string, settings?: Conversi
   });
 }
 
-export function tsvToJson(file: File, _s: string, _t: string, settings?: ConversionSettings): Promise<Blob> {
+export function tsvToJson(file: File, _s: string, _t: string, settings?: ConversionSettings, _onProgress?: (pct: number) => void): Promise<Blob> {
   const indent = settings?.jsonIndent ?? 2;
   return file.text().then(text => {
     const result = Papa.parse(text, { header: true, delimiter: '\t', skipEmptyLines: true, dynamicTyping: true });
@@ -103,7 +103,7 @@ export async function tsvToXml(file: File, _s: string, _t: string, settings?: Co
   return new Blob([xml], { type: 'application/xml' });
 }
 
-export async function tsvToHtml(file: File): Promise<Blob> {
+export async function tsvToHtml(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
   const text = await file.text();
   const result = Papa.parse<Record<string, string>>(text, { header: true, delimiter: '\t', skipEmptyLines: true });
   const headers = result.meta.fields ?? [];
@@ -116,7 +116,7 @@ export async function tsvToHtml(file: File): Promise<Blob> {
   return new Blob([html], { type: 'text/html' });
 }
 
-export function jsonToCsv(file: File, _s: string, _t: string, settings?: ConversionSettings): Promise<Blob> {
+export function jsonToCsv(file: File, _s: string, _t: string, settings?: ConversionSettings, _onProgress?: (pct: number) => void): Promise<Blob> {
   const delimiter = settings?.csvDelimiter ?? ',';
   return file.text().then(text => {
     const data = JSON.parse(text);
@@ -126,7 +126,7 @@ export function jsonToCsv(file: File, _s: string, _t: string, settings?: Convers
   });
 }
 
-export async function jsonToTsv(file: File): Promise<Blob> {
+export async function jsonToTsv(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
   const text = await file.text();
   const data = JSON.parse(text);
   const arr = Array.isArray(data) ? data : [data];
@@ -134,7 +134,7 @@ export async function jsonToTsv(file: File): Promise<Blob> {
   return new Blob([tsv], { type: 'text/tab-separated-values' });
 }
 
-export async function jsonToHtml(file: File): Promise<Blob> {
+export async function jsonToHtml(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
   const text = await file.text();
   const data = JSON.parse(text);
   const arr = Array.isArray(data) ? data : [data];

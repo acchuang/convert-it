@@ -427,7 +427,7 @@ export function JobCard({ job, onTargetChange, onConvert, onDownload, onRemove, 
       )}
 
       {job.status === 'error' && job.error && (
-        <p className="mt-2 text-xs text-[var(--error)]" style={{ fontFamily: 'var(--font-mono)' }}>⚠ {job.error}</p>
+        <p className="mt-2 text-xs text-[var(--error)]" style={{ fontFamily: 'var(--font-mono)' }}>{job.error}</p>
       )}
     </motion.div>
   );

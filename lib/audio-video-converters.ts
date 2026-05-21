@@ -4,21 +4,28 @@ import type { ConversionSettings } from './types';
 
 let ffmpeg: FFmpeg | null = null;
 let ffmpegLoading: Promise<FFmpeg> | null = null;
+let ffmpegError: Error | null = null;
 
 async function getFFmpeg(): Promise<FFmpeg> {
   if (ffmpeg) return ffmpeg;
+  if (ffmpegError) throw new Error(`FFmpeg unavailable: ${ffmpegError.message}`);
   if (ffmpegLoading) return ffmpegLoading;
 
   ffmpegLoading = (async () => {
-    const ff = new FFmpeg();
-    // Load FFmpeg WASM from CDN
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd';
-    await ff.load({
-      coreURL: `${baseURL}/ffmpeg-core.js`,
-      wasmURL: `${baseURL}/ffmpeg-core.wasm`,
-    });
-    ffmpeg = ff;
-    return ff;
+    try {
+      const ff = new FFmpeg();
+      const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd';
+      await ff.load({
+        coreURL: `${baseURL}/ffmpeg-core.js`,
+        wasmURL: `${baseURL}/ffmpeg-core.wasm`,
+      });
+      ffmpeg = ff;
+      return ff;
+    } catch (err) {
+      ffmpegError = err instanceof Error ? err : new Error(String(err));
+      ffmpegLoading = null;
+      throw new Error(`Failed to load FFmpeg: ${ffmpegError.message}`);
+    }
   })();
 
   return ffmpegLoading;
@@ -57,7 +64,8 @@ export async function convertAudioVideo(
   file: File,
   sourceExt: string,
   targetExt: string,
-  settings?: ConversionSettings
+  settings?: ConversionSettings,
+  onProgress?: (pct: number) => void
 ): Promise<Blob> {
   const ff = await getFFmpeg();
   const category = getCategory(sourceExt);
@@ -69,11 +77,17 @@ export async function convertAudioVideo(
   const inputName = `input.${sourceExt}`;
   const outputName = `output.${targetExt}`;
 
-  // Write input file to FFmpeg's virtual filesystem
   const fileData = await fetchFile(file);
   await ff.writeFile(inputName, fileData);
 
-  // Build FFmpeg command arguments
+  ff.on('log', ({ message }) => {
+    const timeMatch = message.match(/time=(\d+):(\d+):(\d+)/);
+    if (timeMatch) {
+      const seconds = parseInt(timeMatch[1]) * 3600 + parseInt(timeMatch[2]) * 60 + parseInt(timeMatch[3]);
+      onProgress?.(Math.min(95, 10 + (seconds / 10) * 85));
+    }
+  });
+
   const args: string[] = [];
 
   if (category === 'video' && VIDEO_CODECS[targetExt]) {
@@ -100,21 +114,18 @@ export async function convertAudioVideo(
       '-y', outputName
     );
   } else {
-    // Generic conversion
     args.push('-i', inputName, '-y', outputName);
   }
 
-  // Run conversion
   await ff.exec(args);
 
-  // Read output file
   const outputData = await ff.readFile(outputName) as Uint8Array;
 
-  // Cleanup
   await ff.deleteFile(inputName);
   await ff.deleteFile(outputName);
 
-  // Determine MIME type
+  onProgress?.(100);
+
   const mimeTypes: Record<string, string> = {
     mp4: 'video/mp4',
     webm: 'video/webm',
@@ -138,7 +149,8 @@ export async function extractAudio(
   file: File,
   sourceExt: string,
   targetExt: string,
-  settings?: ConversionSettings
+  settings?: ConversionSettings,
+  onProgress?: (pct: number) => void
 ): Promise<Blob> {
   const ff = await getFFmpeg();
 
@@ -148,11 +160,19 @@ export async function extractAudio(
   const fileData = await fetchFile(file);
   await ff.writeFile(inputName, fileData);
 
+  ff.on('log', ({ message }) => {
+    const timeMatch = message.match(/time=(\d+):(\d+):(\d+)/);
+    if (timeMatch) {
+      const seconds = parseInt(timeMatch[1]) * 3600 + parseInt(timeMatch[2]) * 60 + parseInt(timeMatch[3]);
+      onProgress?.(Math.min(95, 10 + (seconds / 10) * 85));
+    }
+  });
+
   const config = AUDIO_CODECS[targetExt];
 
   await ff.exec([
     '-i', inputName,
-    '-vn', // no video
+    '-vn',
     '-c:a', config?.codec || 'aac',
     '-b:a', `${settings?.audioBitrate || 192}k`,
     '-ar', '44100',
@@ -163,6 +183,8 @@ export async function extractAudio(
 
   await ff.deleteFile(inputName);
   await ff.deleteFile(outputName);
+
+  onProgress?.(100);
 
   const mimeTypes: Record<string, string> = {
     mp3: 'audio/mpeg',
