@@ -191,7 +191,7 @@ export default function AboutPage() {
               <strong className="text-[var(--text-primary)]">{t('about.privacy1')}</strong>
             </p>
             <p className="text-sm text-[var(--text-muted)] leading-relaxed">
-              {t('about.privacy2')}
+              The only data we collect is anonymous, aggregated usage stats (total visits and active sessions) via Cloudflare KV — no personal information, no tracking, no cookies beyond your theme and language preferences. File size limits (100MB–2GB depending on category) prevent browser memory exhaustion.
             </p>
           </div>
         </section>
@@ -234,6 +234,36 @@ export default function AboutPage() {
                 {t('about.ossSupport')}
               </a>
             </div>
+          </div>
+        </section>
+
+        {/* Recent improvements */}
+        <section className="mb-20">
+          <h2
+            style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}
+            className="text-2xl text-[var(--text-primary)] mb-6"
+          >
+            RECENT IMPROVEMENTS
+          </h2>
+          <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6 space-y-3">
+            {[
+              'Real-time FFmpeg progress tracking for video/audio conversions',
+              'File size limits with early rejection (100MB images, 2GB video, 500MB audio)',
+              'FFmpeg WASM error handling with graceful failure recovery',
+              'Auto-generated conversion map — no manual sync between registry and UI',
+              'Zero type assertions — full TypeScript strict mode compliance',
+              'Extracted job management into reusable useJobManager hook',
+              'i18n support with 5 languages and dynamic locale loading',
+              'Dark/light theme toggle with system preference detection',
+              'Preview panel with copy-to-clipboard for text results',
+              'Conversion history persisted in localStorage',
+              'PWA support with manifest and app icons',
+            ].map((item, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] flex-shrink-0 mt-2" />
+                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{item}</p>
+              </div>
+            ))}
           </div>
         </section>
 
