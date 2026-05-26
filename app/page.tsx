@@ -17,6 +17,7 @@ import { useTheme } from './components/ThemeProvider';
 import { LanguageSelector } from './components/LanguageSelector';
 import { useLocale } from './components/LocaleProvider';
 import { useJobManager } from '@/lib/useJobManager';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const CATEGORY_COLORS: Record<string, string> = {
   image: '#FF4D00',
@@ -194,7 +195,8 @@ export default function HomePage() {
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto px-4 py-8">
+      <ErrorBoundary>
+        <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Drop zone */}
         <AnimatePresence>
           {jobs.length === 0 || dragging ? (
@@ -497,6 +499,7 @@ export default function HomePage() {
           </nav>
         </div>
       </footer>
+      </ErrorBoundary>
     </main>
   );
 }

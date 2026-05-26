@@ -1,10 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { convertImage } from '@/lib/image-converters';
 
-function createTestBlob(data: Uint8Array, type: string): Blob {
-  return new Blob([data], { type });
-}
-
 describe('convertImage', () => {
   it('rejects with invalid input (empty file)', async () => {
     const emptyFile = new File([], 'empty.png', { type: 'image/png' });
