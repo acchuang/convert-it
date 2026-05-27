@@ -59,7 +59,7 @@ export function PreviewPanel({
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          transition={{ duration: 0.25 }}
+          transition={{ type: 'spring', stiffness: 100, damping: 20 }}
           className="overflow-hidden"
         >
           <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--border-primary)' }}>

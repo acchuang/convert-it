@@ -25,7 +25,7 @@ export function LanguageSelector() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs text-[var(--text-dim)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-all"
+        className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-all"
         style={{ fontFamily: 'var(--font-mono)' }}
         aria-label="Select language"
         aria-expanded={open}
@@ -48,8 +48,8 @@ export function LanguageSelector() {
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.15 }}
-            className="absolute right-0 top-full mt-1 bg-[var(--bg-secondary)] border border-[var(--border-secondary)] rounded-lg py-1 shadow-xl z-50 min-w-[140px]"
+            transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+            className="absolute right-0 top-full mt-1 bg-[var(--bg-secondary)] border border-[var(--border-secondary)] rounded-lg py-1 elevation-popover z-50 min-w-[140px]"
           >
             {locales.map(l => (
               <button

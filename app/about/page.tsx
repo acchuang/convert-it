@@ -8,17 +8,17 @@ import { useTheme } from '../components/ThemeProvider';
 const CATEGORY_COLORS: Record<string, string> = {
   image: '#FF4D00',
   document: '#00C2FF',
-  data: '#C8FF00',
+  data: '#AAFF44',
   video: '#FF00C8',
-  audio: '#00FF88',
+  audio: '#00E5A0',
 };
 
 const formats = [
   { catKey: 'image', color: '#FF4D00', exts: 'JPG, PNG, WebP, GIF, BMP, ICO, SVG, HEIC, AVIF' },
   { catKey: 'video', color: '#FF00C8', exts: 'MP4, WebM, AVI, MOV, MKV, FLV, M4V, 3GP, Animated WebP' },
-  { catKey: 'audio', color: '#00FF88', exts: 'MP3, WAV, AAC, OGG, FLAC, M4A, WMA, OPUS' },
+  { catKey: 'audio', color: '#00E5A0', exts: 'MP3, WAV, AAC, OGG, FLAC, M4A, WMA, OPUS' },
   { catKey: 'document', color: '#00C2FF', exts: 'TXT, Markdown, HTML, PDF, ePub' },
-  { catKey: 'data', color: '#C8FF00', exts: 'CSV, JSON, XML, YAML, TSV, Excel' },
+  { catKey: 'data', color: '#AAFF44', exts: 'CSV, JSON, XML, YAML, TSV, Excel' },
 ];
 
 const techStack = [
@@ -28,6 +28,7 @@ const techStack = [
   { labelKey: 'about.techMotion', val: 'Framer Motion' },
   { labelKey: 'about.techVideo', val: 'FFmpeg WASM' },
   { labelKey: 'about.techImages', val: 'Canvas API' },
+  { labelKey: 'about.techHeif', val: 'libheif-js' },
   { labelKey: 'about.techSheets', val: 'SheetJS' },
   { labelKey: 'about.techHosting', val: 'Cloudflare Pages' },
 ];
@@ -64,7 +65,7 @@ export default function AboutPage() {
 
           <button
             onClick={toggleTheme}
-            className="w-9 h-9 flex items-center justify-center rounded-lg text-[var(--text-dim)] hover:text-[var(--accent)] hover:bg-[var(--bg-tertiary)] transition-all"
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--bg-tertiary)] transition-all"
             aria-label={theme === 'dark' ? t('header.themeLight') : t('header.themeDark')}
           >
             {theme === 'dark' ? (
@@ -81,7 +82,7 @@ export default function AboutPage() {
 
           <Link
             href="/"
-            className="text-xs text-[var(--text-dim)] hover:text-[var(--text-primary)] transition-colors"
+            className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             {t('header.home')}
@@ -123,7 +124,7 @@ export default function AboutPage() {
               >
                 <div
                   style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
-                  className="text-4xl text-[var(--accent)] mb-3"
+                  className="text-3xl text-[var(--accent)] mb-3"
                 >
                   0{n}
                 </div>
@@ -191,7 +192,7 @@ export default function AboutPage() {
               <strong className="text-[var(--text-primary)]">{t('about.privacy1')}</strong>
             </p>
             <p className="text-sm text-[var(--text-muted)] leading-relaxed">
-              The only data we collect is anonymous, aggregated usage stats (total visits and active sessions) via Cloudflare KV — no personal information, no tracking, no cookies beyond your theme and language preferences. File size limits (100MB–2GB depending on category) prevent browser memory exhaustion.
+              {t('about.privacy2')}
             </p>
           </div>
         </section>
@@ -243,29 +244,13 @@ export default function AboutPage() {
             style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}
             className="text-2xl text-[var(--text-primary)] mb-6"
           >
-            RECENT IMPROVEMENTS
+            {t('about.improvementsHeading')}
           </h2>
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6 space-y-3">
-            {[
-              'HEIC and AVIF decode — convert iPhone and modern web photos (lazy-loaded WASM)',
-              'ePub export — convert TXT, Markdown, and HTML to e-books',
-              'Animated WebP output from all video formats via FFmpeg',
-              'Error boundary — caught errors show a fallback UI instead of a white screen',
-              'Automated CI pipeline — typecheck, lint, test, and build on every push',
-              'Real-time FFmpeg progress tracking for video/audio conversions',
-              'File size limits with early rejection (100MB images, 2GB video, 500MB audio)',
-              'FFmpeg WASM error handling with graceful failure recovery',
-              'Auto-generated conversion map — no manual sync between registry and UI',
-              'Extracted job management into reusable useJobManager hook',
-              'i18n support with 5 languages and dynamic locale loading',
-              'Dark/light theme toggle with system preference detection',
-              'Preview panel with copy-to-clipboard for text results',
-              'Conversion history persisted in localStorage',
-              'PWA support with manifest and app icons',
-            ].map((item, i) => (
-              <div key={i} className="flex items-start gap-3">
+            {Array.from({ length: 15 }, (_, i) => i + 1).map(n => (
+              <div key={n} className="flex items-start gap-3">
                 <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] flex-shrink-0 mt-2" />
-                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{item}</p>
+                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{t(`about.improvement${n}`)}</p>
               </div>
             ))}
           </div>
@@ -286,7 +271,7 @@ export default function AboutPage() {
                 className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-4 text-center"
               >
                 <div
-                  className="text-xs text-[var(--text-dim)] mb-1 uppercase tracking-wider"
+                  className="text-xs text-[var(--text-muted)] mb-1 uppercase tracking-wider"
                   style={{ fontFamily: 'var(--font-mono)' }}
                 >
                   {t(tech.labelKey)}
@@ -303,10 +288,10 @@ export default function AboutPage() {
       {/* Footer */}
       <footer className="border-t border-[var(--border-primary)] px-6 py-6 mt-16" role="contentinfo">
         <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <span style={{ fontFamily: 'var(--font-mono)' }} className="text-xs text-[var(--text-dim)]">
+          <span style={{ fontFamily: 'var(--font-mono)' }} className="text-xs text-[var(--text-muted)]">
             {t('footer.copyright')}
           </span>
-          <nav className="flex gap-6 text-xs text-[var(--text-dim)]" style={{ fontFamily: 'var(--font-mono)' }} aria-label="Navigation">
+          <nav className="flex gap-6 text-xs text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }} aria-label="Navigation">
             <Link href="/" className="hover:text-[var(--text-primary)] transition-colors">{t('header.home').replace('← ', '')}</Link>
             <a href="https://github.com/acchuang/convert-it" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--text-primary)] transition-colors">{t('footer.github')}</a>
           </nav>

@@ -88,7 +88,8 @@
   },
   "history": {
     "heading": "RECIENTE",
-    "clear": "LIMPIAR"
+    "clear": "LIMPIAR",
+    "empty": "Sin conversiones aún — arrastra un archivo arriba para comenzar"
   },
   "footer": {
     "copyright": "© 2026 Convert-it — Todas las conversiones ocurren en tu navegador",
@@ -110,7 +111,23 @@
     "formatsHeading": "FORMATOS COMPATIBLES",
     "privacyHeading": "PRIVACIDAD",
     "privacy1": "Tus archivos nunca salen de tu navegador. Toda la conversión ocurre localmente usando WebAssembly y la API Canvas. No subimos, almacenamos ni tenemos acceso a tus datos.",
-    "privacy2": "Los únicos datos que recopilamos son estadísticas de uso anónimas y agregadas (visitas totales y sesiones activas) a través de Cloudflare KV — sin información personal, sin rastreo, sin cookies más allá de tu preferencia de tema.",
+    "privacy2": "Los únicos datos que recopilamos son estadísticas de uso anónimas y agregadas (visitas totales y sesiones activas) a través de Cloudflare KV — sin información personal, sin rastreo, sin cookies más allá de tus preferencias de tema e idioma. Los límites de tamaño de archivo (100MB–2GB según la categoría) evitan el agotamiento de la memoria del navegador.",
+    "improvementsHeading": "MEJORAS RECIENTES",
+    "improvement1": "Decodificación HEIC y AVIF — convierte fotos de iPhone y web modernas (WASM de carga diferida)",
+    "improvement2": "Exportación ePub — convierte TXT, Markdown y HTML a e-books",
+    "improvement3": "Salida WebP animado desde todos los formatos de video vía FFmpeg",
+    "improvement4": "Límite de errores — los errores capturados muestran una interfaz de respaldo en lugar de una pantalla blanca",
+    "improvement5": "Pipeline de CI automatizado — verificación de tipos, lint, pruebas y compilación en cada push",
+    "improvement6": "Seguimiento de progreso FFmpeg en tiempo real para conversiones de video/audio",
+    "improvement7": "Límites de tamaño de archivo con rechazo anticipado (100MB imágenes, 2GB video, 500MB audio)",
+    "improvement8": "Manejo de errores FFmpeg WASM con recuperación de fallos graceful",
+    "improvement9": "Mapa de conversión autogenerado — sin sincronización manual entre registro e interfaz",
+    "improvement10": "Extracción de la gestión de tareas en hook reutilizable useJobManager",
+    "improvement11": "Soporte i18n con 5 idiomas y carga dinámica de locale",
+    "improvement12": "Alternancia de tema oscuro/claro con detección de preferencia del sistema",
+    "improvement13": "Panel de vista previa con copiar al portapapeles para resultados de texto",
+    "improvement14": "Historial de conversación persistido en localStorage",
+    "improvement15": "Soporte PWA con manifiesto e íconos de aplicación",
     "ossHeading": "CÓDIGO ABIERTO",
     "oss1": "Convert-it tiene licencia MIT y es de código abierto. El código completo está disponible en GitHub. Las contribuciones, informes de errores y solicitudes de funciones son bienvenidos.",
     "ossGithub": "GITHUB",
@@ -123,6 +140,7 @@
     "techVideo": "Video/Audio",
     "techImages": "Imágenes",
     "techSheets": "Hojas de cálculo",
+    "techHeif": "HEIC/AVIF",
     "techHosting": "Alojamiento"
   },
   "lang": {

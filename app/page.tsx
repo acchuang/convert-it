@@ -22,9 +22,9 @@ import ErrorBoundary from './components/ErrorBoundary';
 const CATEGORY_COLORS: Record<string, string> = {
   image: '#FF4D00',
   document: '#00C2FF',
-  data: '#C8FF00',
+  data: '#AAFF44',
   video: '#FF00C8',
-  audio: '#00FF88',
+  audio: '#00E5A0',
 };
 
 const LARGE_FILE_THRESHOLD_MB = 200;
@@ -117,7 +117,7 @@ export default function HomePage() {
         <motion.div
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4 }}
+          transition={{ type: 'spring', stiffness: 100, damping: 20 }}
           style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
           className="text-3xl tracking-wide"
         >
@@ -128,11 +128,11 @@ export default function HomePage() {
         <div className="flex items-center gap-4">
           {stats && (
             <div className="flex items-center gap-3 text-xs" style={{ fontFamily: 'var(--font-mono)' }} aria-live="polite" aria-label={t('header.online')}>
-              <span className="text-[var(--text-dim)]" title={t('header.totalVisits')}>
+              <span className="text-[var(--text-secondary)]" title={t('header.totalVisits')}>
                 {formatCount(stats.total)} {t('header.totalVisits')}
               </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" title="Active" />
-              <span className="text-[var(--text-dim)]">{formatCount(stats.active)} {t('header.online')}</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)]" title="Active" />
+              <span className="text-[var(--text-secondary)]">{formatCount(stats.active)} {t('header.online')}</span>
             </div>
           )}
 
@@ -140,7 +140,7 @@ export default function HomePage() {
 
           <button
             onClick={toggleTheme}
-            className="w-9 h-9 flex items-center justify-center rounded-lg text-[var(--text-dim)] hover:text-[var(--accent)] hover:bg-[var(--bg-tertiary)] transition-all"
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--bg-tertiary)] transition-all"
             aria-label={theme === 'dark' ? t('header.themeLight') : t('header.themeDark')}
             title={theme === 'dark' ? t('header.themeLight') : t('header.themeDark')}
           >
@@ -159,7 +159,7 @@ export default function HomePage() {
           {/* About */}
           <Link
             href="/about"
-            className="text-xs text-[var(--text-dim)] hover:text-[var(--text-primary)] transition-colors"
+            className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             {t('header.about')}
@@ -170,7 +170,7 @@ export default function HomePage() {
             href="https://buymeacoffee.com/acchuang"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-9 h-9 flex items-center justify-center rounded-lg text-[var(--text-dim)] hover:text-[#FF813F] hover:bg-[var(--bg-tertiary)] transition-all"
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-[var(--text-secondary)] hover:text-[#FF813F] hover:bg-[var(--bg-tertiary)] transition-all"
             aria-label={t('header.buyCoffee')}
             title={t('header.buyCoffee')}
           >
@@ -184,7 +184,7 @@ export default function HomePage() {
             href="https://github.com/acchuang/convert-it"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-9 h-9 flex items-center justify-center rounded-lg text-[var(--text-dim)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-all"
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-all"
             aria-label={t('header.github')}
             title={t('header.github')}
           >
@@ -205,7 +205,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
+              transition={{ type: 'spring', stiffness: 100, damping: 20 }}
               className="mb-10"
               aria-label={t('dropzone.title')}
             >
@@ -258,10 +258,14 @@ export default function HomePage() {
 
                 <div className={dragging ? 'opacity-0' : 'opacity-100 transition-opacity duration-200'}>
                   <div
-                    style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.12em' }}
+                    style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}
                     className="text-6xl text-[var(--accent)] mb-4"
                   >
-                    +
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto">
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
                   </div>
                   <div
                     style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}
@@ -301,7 +305,7 @@ export default function HomePage() {
               key="jobs"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
+              transition={{ type: 'spring', stiffness: 100, damping: 20 }}
               aria-label={t('toolbar.files')}
             >
               {/* File size warning */}
@@ -353,7 +357,7 @@ export default function HomePage() {
                     {t('toolbar.addFiles')}
                   </button>
 
-                  <span className="text-xs text-[var(--text-dim)]" style={{ fontFamily: 'var(--font-mono)' }}>
+                  <span className="text-xs text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }}>
                     {jobs.length} {t('toolbar.files')}
                     {doneCount > 0 && ` · ${doneCount} ${t('toolbar.done')}`}
                   </span>
@@ -374,7 +378,7 @@ export default function HomePage() {
                   {jobs.some(j => j.status === 'idle' && j.targetExt) && (
                     <button
                       onClick={convertAll}
-                      className="px-4 py-2 bg-[var(--accent)] text-[#0A0A0A] text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity"
+                      className="px-4 py-2 bg-[var(--accent)] text-[var(--accent-text)] text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity"
                       style={{ fontFamily: 'var(--font-mono)' }}
                       aria-label={t('toolbar.convertAll')}
                     >
@@ -384,7 +388,7 @@ export default function HomePage() {
 
                   <button
                     onClick={clearAll}
-                    className="px-3 py-2 text-xs text-[var(--text-dim)] hover:text-[var(--error)] transition-colors"
+                    className="px-3 py-2 text-xs text-[var(--text-muted)] hover:text-[var(--error)] transition-colors"
                     style={{ fontFamily: 'var(--font-mono)' }}
                     aria-label={t('toolbar.clear')}
                   >
@@ -396,7 +400,7 @@ export default function HomePage() {
               {/* Batch format selector */}
               {jobs.length > 1 && (
                 <div className="flex items-center gap-2 mb-4" style={{ fontFamily: 'var(--font-mono)' }}>
-                  <span className="text-xs text-[var(--text-dim)] uppercase tracking-wider">{t('toolbar.setAllTo')}</span>
+                  <span className="text-xs text-[var(--text-muted)] uppercase tracking-wider">{t('toolbar.setAllTo')}</span>
                   <select
                     value={batchFormat}
                     onChange={e => setBatchFormat(e.target.value)}
@@ -446,7 +450,7 @@ export default function HomePage() {
             <motion.section
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ type: 'spring', stiffness: 100, damping: 20, delay: 0.3 }}
               className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4"
               aria-label={t('howItWorks.heading')}
             >
@@ -455,12 +459,12 @@ export default function HomePage() {
                   key={n}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + i * 0.1 }}
+                  transition={{ type: 'spring', stiffness: 100, damping: 20, delay: 0.3 + i * 0.1 }}
                   className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6 hover:border-[var(--border-hover)] transition-colors"
                 >
                   <div
                     style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
-                    className="text-5xl text-[var(--accent)] mb-3"
+                    className="text-3xl text-[var(--accent)] mb-3"
                   >
                     {String(n).padStart(2, '0')}
                   </div>
@@ -487,10 +491,10 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-[var(--border-primary)] px-6 py-6 mt-16" role="contentinfo">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <span style={{ fontFamily: 'var(--font-mono)' }} className="text-xs text-[var(--text-dim)]">
+          <span style={{ fontFamily: 'var(--font-mono)' }} className="text-xs text-[var(--text-muted)]">
             {t('footer.copyright')}
           </span>
-          <nav className="flex gap-6 text-xs text-[var(--text-dim)]" style={{ fontFamily: 'var(--font-mono)' }} aria-label={t('footer.images')}>
+          <nav className="flex gap-6 text-xs text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }} aria-label={t('footer.images')}>
             <span>{t('footer.images')}</span>
             <span>{t('footer.video')}</span>
             <span>{t('footer.audio')}</span>

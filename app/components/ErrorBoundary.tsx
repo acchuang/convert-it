@@ -46,7 +46,7 @@ export default class ErrorBoundary extends Component<Props, State> {
           </p>
           <button
             onClick={() => this.setState({ error: null })}
-            className="px-6 py-2.5 bg-[var(--accent)] text-[#0A0A0A] text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
+            className="px-6 py-2.5 bg-[var(--accent)] text-[var(--accent-text)] text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             Try again

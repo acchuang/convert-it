@@ -21,9 +21,9 @@ export interface FileJob {
 const CATEGORY_COLORS: Record<string, string> = {
   image: '#FF4D00',
   document: '#00C2FF',
-  data: '#C8FF00',
+  data: '#AAFF44',
   video: '#FF00C8',
-  audio: '#00FF88',
+  audio: '#00E5A0',
 };
 
 const TEXT_FORMATS = new Set(['json', 'csv', 'xml', 'yaml', 'tsv', 'md', 'html', 'txt']);
@@ -58,11 +58,11 @@ function SettingsPanel({
       initial={{ opacity: 0, height: 0 }}
       animate={{ opacity: 1, height: 'auto' }}
       exit={{ opacity: 0, height: 0 }}
-      transition={{ duration: 0.2 }}
+      transition={{ type: 'spring', stiffness: 100, damping: 20 }}
       className="overflow-hidden"
     >
       <div
-        className="mt-3 pt-3 flex flex-wrap gap-x-6 gap-y-3"
+        className="mt-4 pt-4 flex flex-wrap gap-x-6 gap-y-3"
         style={{ borderColor: 'var(--border-primary)', fontFamily: 'var(--font-mono)' }}
       >
         {showQuality && (
@@ -90,7 +90,7 @@ function SettingsPanel({
                   onClick={() => onChange({ csvDelimiter: d })}
                   className={`px-2 py-1 text-xs rounded transition-colors ${
                     settings.csvDelimiter === d
-                      ? 'bg-[var(--accent)] text-[#0A0A0A]'
+                      ? 'bg-[var(--accent)] text-[var(--accent-text)]'
                       : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
                   }`}
                 >
@@ -111,7 +111,7 @@ function SettingsPanel({
                   onClick={() => onChange({ jsonIndent: n })}
                   className={`px-2 py-1 text-xs rounded transition-colors ${
                     settings.jsonIndent === n
-                      ? 'bg-[var(--accent)] text-[#0A0A0A]'
+                      ? 'bg-[var(--accent)] text-[var(--accent-text)]'
                       : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
                   }`}
                 >
@@ -145,7 +145,7 @@ function SettingsPanel({
                   onClick={() => onChange({ audioBitrate: n })}
                   className={`px-2 py-1 text-xs rounded transition-colors ${
                     settings.audioBitrate === n
-                      ? 'bg-[var(--accent)] text-[#0A0A0A]'
+                      ? 'bg-[var(--accent)] text-[var(--accent-text)]'
                       : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
                   }`}
                 >
@@ -231,7 +231,7 @@ export function JobCard({ job, onTargetChange, onConvert, onDownload, onRemove, 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.2 }}
+      transition={{ type: 'spring', stiffness: 100, damping: 20 }}
       className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-4 hover:border-[var(--border-hover)] transition-colors"
       role="listitem"
       aria-label={`${job.file.name}`}
@@ -261,7 +261,7 @@ export function JobCard({ job, onTargetChange, onConvert, onDownload, onRemove, 
           .{job.sourceExt.toUpperCase()}
         </span>
 
-        <span className="text-[var(--text-dim)] flex-shrink-0" aria-hidden="true">→</span>
+        <span className="text-[var(--text-muted)] flex-shrink-0" aria-hidden="true">→</span>
 
         {targets.length > 0 ? (
           <select
@@ -280,12 +280,12 @@ export function JobCard({ job, onTargetChange, onConvert, onDownload, onRemove, 
           <span className="text-xs text-[var(--text-muted)] flex-shrink-0" style={{ fontFamily: 'var(--font-mono)' }}>—</span>
         )}
 
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div className="flex items-center gap-1.5 flex-shrink-0 ml-1 pl-3 border-l border-[var(--border-secondary)]">
           {job.status === 'idle' && job.targetExt && (
             <motion.button
-              whileHover={{ scale: 1.03 }}
+              whileHover={{ scale: 1.05 }}
               onClick={onConvert}
-              className="px-4 py-2 bg-[var(--accent)] text-[#0A0A0A] text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity"
+              className="px-4 py-2 bg-[var(--accent)] text-[var(--accent-text)] text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity"
               style={{ fontFamily: 'var(--font-mono)' }}
               aria-label={`${t('job.convert')} ${job.file.name}`}
             >
@@ -294,12 +294,12 @@ export function JobCard({ job, onTargetChange, onConvert, onDownload, onRemove, 
           )}
 
           {job.status === 'converting' && (
-            <div className="flex items-center gap-2 px-3 py-2" aria-live="polite">
+            <div className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-tertiary)] rounded-lg" aria-live="polite">
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                className="w-4 h-4 border-2 rounded-full"
-                style={{ borderColor: 'var(--accent)', borderTopColor: 'var(--accent)', opacity: 0.3 }}
+                className="w-3.5 h-3.5 border-2 rounded-full"
+                style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }}
               />
               <span className="text-xs text-[var(--accent)]" style={{ fontFamily: 'var(--font-mono)' }}>
                 {job.progress}%
@@ -313,11 +313,11 @@ export function JobCard({ job, onTargetChange, onConvert, onDownload, onRemove, 
                 <motion.button
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  whileHover={{ scale: 1.03 }}
+                  whileHover={{ scale: 1.05 }}
                   onClick={copyResult}
                   className={`px-3 py-2 text-xs font-semibold rounded-lg border transition-colors flex items-center gap-1.5 ${
                     copied
-                      ? 'border-[var(--success)]/50 text-[var(--success)]'
+                      ? 'border-[var(--accent)]/50 text-[var(--accent)]'
                       : 'border-[var(--border-secondary)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-primary'
                   }`}
                   style={{ fontFamily: 'var(--font-mono)' }}
@@ -341,11 +341,11 @@ export function JobCard({ job, onTargetChange, onConvert, onDownload, onRemove, 
                 <motion.button
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  whileHover={{ scale: 1.03 }}
+                  whileHover={{ scale: 1.05 }}
                   onClick={() => setShowPreview(s => !s)}
                   className={`px-3 py-2 text-xs font-semibold rounded-lg border transition-colors flex items-center gap-1.5 ${
                     showPreview
-                      ? 'border-[var(--accent)]/50 text-[var(--accent)]'
+                      ? 'border-[var(--accent)]/50 text-[var(--accent)] bg-[var(--accent)]/5'
                       : 'border-[var(--border-secondary)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-primary'
                   }`}
                   style={{ fontFamily: 'var(--font-mono)' }}
@@ -360,9 +360,9 @@ export function JobCard({ job, onTargetChange, onConvert, onDownload, onRemove, 
               <motion.button
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                whileHover={{ scale: 1.03 }}
+                whileHover={{ scale: 1.05 }}
                 onClick={onDownload}
-                className="px-4 py-2 bg-[var(--success)] text-white text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1.5"
+                className="px-4 py-2 bg-[var(--success)] text-[var(--success-text)] text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1.5"
                 style={{ fontFamily: 'var(--font-mono)' }}
                 aria-label={t('job.download')}
               >
@@ -389,8 +389,8 @@ export function JobCard({ job, onTargetChange, onConvert, onDownload, onRemove, 
               onClick={() => setShowSettings(s => !s)}
               title={t('job.settings')}
               aria-label={t('job.settings')}
-              className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${
-                showSettings ? 'text-[var(--accent)]' : 'text-[var(--text-dim)] hover:text-[var(--text-secondary)]'
+              className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all hover:bg-[var(--bg-tertiary)] ${
+                showSettings ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
               style={{ backgroundColor: showSettings ? 'color-mix(in srgb, var(--accent) 10%, transparent)' : undefined }}
             >
@@ -400,7 +400,7 @@ export function JobCard({ job, onTargetChange, onConvert, onDownload, onRemove, 
 
           <button
             onClick={onRemove}
-            className="w-8 h-8 flex items-center justify-center text-[var(--text-dim)] hover:text-[var(--error)] rounded-lg transition-all"
+            className="w-9 h-9 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--error)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-all"
             aria-label={t('job.remove')}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>

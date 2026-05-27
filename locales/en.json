@@ -88,7 +88,8 @@
   },
   "history": {
     "heading": "RECENT",
-    "clear": "CLEAR"
+    "clear": "CLEAR",
+    "empty": "No conversions yet — drop a file above to get started."
   },
   "footer": {
     "copyright": "© 2026 Convert-it — All conversions happen in your browser",
@@ -110,7 +111,23 @@
     "formatsHeading": "SUPPORTED FORMATS",
     "privacyHeading": "PRIVACY",
     "privacy1": "Your files never leave your browser. All conversion happens locally using WebAssembly and the Canvas API. We don't upload, store, or have any access to your data.",
-    "privacy2": "The only data we collect is anonymous, aggregated usage stats (total visits and active sessions) via Cloudflare KV — no personal information, no tracking, no cookies beyond your theme preference.",
+    "privacy2": "The only data we collect is anonymous, aggregated usage stats (total visits and active sessions) via Cloudflare KV — no personal information, no tracking, no cookies beyond your theme and language preferences. File size limits (100MB–2GB depending on category) prevent browser memory exhaustion.",
+    "improvementsHeading": "RECENT IMPROVEMENTS",
+    "improvement1": "HEIC and AVIF decode — convert iPhone and modern web photos (lazy-loaded WASM)",
+    "improvement2": "ePub export — convert TXT, Markdown, and HTML to e-books",
+    "improvement3": "Animated WebP output from all video formats via FFmpeg",
+    "improvement4": "Error boundary — caught errors show a fallback UI instead of a white screen",
+    "improvement5": "Automated CI pipeline — typecheck, lint, test, and build on every push",
+    "improvement6": "Real-time FFmpeg progress tracking for video/audio conversions",
+    "improvement7": "File size limits with early rejection (100MB images, 2GB video, 500MB audio)",
+    "improvement8": "FFmpeg WASM error handling with graceful failure recovery",
+    "improvement9": "Auto-generated conversion map — no manual sync between registry and UI",
+    "improvement10": "Extracted job management into reusable useJobManager hook",
+    "improvement11": "i18n support with 5 languages and dynamic locale loading",
+    "improvement12": "Dark/light theme toggle with system preference detection",
+    "improvement13": "Preview panel with copy-to-clipboard for text results",
+    "improvement14": "Conversion history persisted in localStorage",
+    "improvement15": "PWA support with manifest and app icons",
     "ossHeading": "OPEN SOURCE",
     "oss1": "Convert-it is MIT-licensed and open source. The full codebase is available on GitHub. Contributions, bug reports, and feature requests are welcome.",
     "ossGithub": "GITHUB",
@@ -123,6 +140,7 @@
     "techVideo": "Video/Audio",
     "techImages": "Images",
     "techSheets": "Spreadsheets",
+    "techHeif": "HEIC/AVIF",
     "techHosting": "Hosting"
   },
   "lang": {

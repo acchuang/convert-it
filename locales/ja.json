@@ -88,7 +88,8 @@
   },
   "history": {
     "heading": "最近",
-    "clear": "クリア"
+    "clear": "クリア",
+    "empty": "まだ変換履歴がありません — 上部にファイルをドロップして開始"
   },
   "footer": {
     "copyright": "© 2026 Convert-it — すべての変換はブラウザ内で行われます",
@@ -110,7 +111,23 @@
     "formatsHeading": "対応形式",
     "privacyHeading": "プライバシー",
     "privacy1": "ファイルがブラウザから離れることはありません。すべての変換はWebAssemblyとCanvas APIを使用してローカルで行われます。データのアップロード、保存、アクセスは一切行いません。",
-    "privacy2": "収集するデータは、Cloudflare KVを通じた匿名の集計使用統計（総訪問数とアクティブセッション数）のみです。個人情報、追跡、テーマ設定以外のCookieはありません。",
+    "privacy2": "収集するデータは、Cloudflare KVを通じた匿名の集計使用統計（総訪問数とアクティブセッション数）のみです。個人情報、追跡、テーマと言語の設定以外のCookieはありません。ファイルサイズ制限（カテゴリに応じて100MB～2GB）により、ブラウザのメモリ枯渇を防ぎます。",
+    "improvementsHeading": "最近の改善",
+    "improvement1": "HEIC/AVIFデコード — iPhoneとモダンWeb写真の変換（遅延読み込みWASM）",
+    "improvement2": "ePubエクスポート — TXT、Markdown、HTMLをeブックに変換",
+    "improvement3": "FFmpeg経由で全動画形式からのアニメーションWebP出力",
+    "improvement4": "エラーバウンダリ — キャッチされたエラーは白画面の代わりにフォールバックUIを表示",
+    "improvement5": "自動CIパイプライン — プッシュごとに型チェック、lint、テスト、ビルドを実行",
+    "improvement6": "動画/音声変換のリアルタイムFFmpegプログレス追跡",
+    "improvement7": "事前拒否付きファイルサイズ制限（画像100MB、動画2GB、音声500MB）",
+    "improvement8": "グレースフルな障害回復を備えたFFmpeg WASMエラーハンドリング",
+    "improvement9": "自動生成変換マップ — レジストリとUI間の手動同期不要",
+    "improvement10": "再利用可能なuseJobManagerフックへのジョブ管理抽出",
+    "improvement11": "5言語対応のi18nサポートと動的ロケール読み込み",
+    "improvement12": "システム設定検出付きダーク/ライトテーマ切り替え",
+    "improvement13": "テキスト結果のクリップボードコピー付きプレビューパネル",
+    "improvement14": "localStorageに永続化される変換履歴",
+    "improvement15": "マニフェストとアプリアイコン付きPWAサポート",
     "ossHeading": "オープンソース",
     "oss1": "Convert-itはMITライセンスのオープンソースです。完全なコードベースはGitHubで公開されています。貢献、バグ報告、機能リクエストを歓迎します。",
     "ossGithub": "GITHUB",
@@ -123,6 +140,7 @@
     "techVideo": "動画/音声",
     "techImages": "画像",
     "techSheets": "スプレッドシート",
+    "techHeif": "HEIC/AVIF",
     "techHosting": "ホスティング"
   },
   "lang": {

@@ -88,7 +88,8 @@
   },
   "history": {
     "heading": "最近记录",
-    "clear": "清除"
+    "clear": "清除",
+    "empty": "尚无转换记录 — 将文件拖拽至上方即可开始"
   },
   "footer": {
     "copyright": "© 2026 Convert-it — 所有转换均在您的浏览器中完成",
@@ -110,7 +111,23 @@
     "formatsHeading": "支持的格式",
     "privacyHeading": "隐私保护",
     "privacy1": "您的文件永远不会离开浏览器。所有转换均使用 WebAssembly 和 Canvas API 在本地进行。我们不会上传、存储或访问您的任何数据。",
-    "privacy2": "我们收集的唯一数据是通过 Cloudflare KV 的匿名、汇总使用统计（总访问量和活跃会话数）— 不含个人信息、无追踪、除您的主题偏好外不使用 Cookie。",
+    "privacy2": "我们收集的唯一数据是通过 Cloudflare KV 的匿名、汇总使用统计（总访问量和活跃会话数）— 不含个人信息、无追踪、除您的主题和语言偏好外不使用 Cookie。文件大小限制（根据类别为 100MB–2GB）可防止浏览器内存耗尽。",
+    "improvementsHeading": "近期更新",
+    "improvement1": "HEIC 和 AVIF 解码 — 转换 iPhone 和现代网页照片（延迟加载 WASM）",
+    "improvement2": "ePub 导出 — 将 TXT、Markdown 和 HTML 转换为电子书",
+    "improvement3": "通过 FFmpeg 从所有视频格式输出动画 WebP",
+    "improvement4": "错误边界 — 捕获的错误显示回退界面而非白屏",
+    "improvement5": "自动化 CI 流水线 — 每次推送时执行类型检查、lint、测试和构建",
+    "improvement6": "视频/音频转换的实时 FFmpeg 进度追踪",
+    "improvement7": "文件大小限制与提前拒绝（图片 100MB、视频 2GB、音频 500MB）",
+    "improvement8": "FFmpeg WASM 错误处理与优雅失败恢复",
+    "improvement9": "自动生成的转换映射 — 无需手动同步注册表和界面",
+    "improvement10": "将任务管理提取为可复用的 useJobManager hook",
+    "improvement11": "支持 5 种语言的 i18n 与动态语言加载",
+    "improvement12": "深色/浅色主题切换与系统偏好检测",
+    "improvement13": "文本结果支持复制到剪贴板的预览面板",
+    "improvement14": "转换历史记录持久化到 localStorage",
+    "improvement15": "支持 PWA，包含应用清单和图标",
     "ossHeading": "开源",
     "oss1": "Convert-it 采用 MIT 许可并开源。完整代码可在 GitHub 上获取。欢迎贡献、报告问题和提出功能请求。",
     "ossGithub": "GITHUB",
@@ -123,6 +140,7 @@
     "techVideo": "视频/音频",
     "techImages": "图片",
     "techSheets": "电子表格",
+    "techHeif": "HEIC/AVIF",
     "techHosting": "托管"
   },
   "lang": {
