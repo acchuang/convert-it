@@ -39,6 +39,7 @@ const VIDEO_CODECS: Record<string, { codec: string; ext: string }> = {
   mov: { codec: 'libx264', ext: 'mov' },
   mkv: { codec: 'libx264', ext: 'mkv' },
   flv: { codec: 'flv', ext: 'flv' },
+  webp: { codec: 'libwebp', ext: 'webp' },
 };
 
 // Audio codecs
@@ -93,16 +94,28 @@ export async function convertAudioVideo(
   if (category === 'video' && VIDEO_CODECS[targetExt]) {
     const config = VIDEO_CODECS[targetExt];
 
-    args.push(
-      '-i', inputName,
-      '-c:v', config.codec,
-      '-preset', settings?.videoPreset || 'medium',
-      '-crf', String(settings?.videoQuality || 23),
-      '-c:a', 'aac',
-      '-b:a', `${settings?.audioBitrate || 128}k`,
-      '-movflags', '+faststart',
-      '-y', outputName
-    );
+    if (targetExt === 'webp') {
+      args.push(
+        '-i', inputName,
+        '-c:v', 'libwebp',
+        '-loop', '0',
+        '-lossless', '0',
+        '-q:v', '75',
+        '-an',
+        '-y', outputName
+      );
+    } else {
+      args.push(
+        '-i', inputName,
+        '-c:v', config.codec,
+        '-preset', settings?.videoPreset || 'medium',
+        '-crf', String(settings?.videoQuality || 23),
+        '-c:a', 'aac',
+        '-b:a', `${settings?.audioBitrate || 128}k`,
+        '-movflags', '+faststart',
+        '-y', outputName
+      );
+    }
   } else if (category === 'audio' && AUDIO_CODECS[targetExt]) {
     const config = AUDIO_CODECS[targetExt];
 
@@ -133,6 +146,7 @@ export async function convertAudioVideo(
     mov: 'video/quicktime',
     mkv: 'video/x-matroska',
     flv: 'video/x-flv',
+    webp: 'image/webp',
     mp3: 'audio/mpeg',
     wav: 'audio/wav',
     aac: 'audio/aac',

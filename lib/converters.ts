@@ -72,14 +72,14 @@ const IMAGE_CONVERSIONS: Record<string, string[]> = {
 };
 
 const VIDEO_CONVERSIONS: Record<string, string[]> = {
-  mp4:  ['webm', 'avi', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg'],
-  webm: ['mp4', 'avi', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg'],
-  avi:  ['mp4', 'webm', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg'],
-  mov:  ['mp4', 'webm', 'avi', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg'],
-  mkv:  ['mp4', 'webm', 'avi', 'mov', 'flv', 'mp3', 'wav', 'aac', 'ogg'],
-  flv:  ['mp4', 'webm', 'avi', 'mov', 'mkv', 'mp3', 'wav', 'aac', 'ogg'],
-  m4v:  ['mp4', 'webm', 'avi', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg'],
-  '3gp': ['mp4', 'webm', 'avi', 'mov', 'mkv', 'mp3', 'wav', 'aac'],
+  mp4:  ['webm', 'avi', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg', 'webp'],
+  webm: ['mp4', 'avi', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg', 'webp'],
+  avi:  ['mp4', 'webm', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg', 'webp'],
+  mov:  ['mp4', 'webm', 'avi', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg', 'webp'],
+  mkv:  ['mp4', 'webm', 'avi', 'mov', 'flv', 'mp3', 'wav', 'aac', 'ogg', 'webp'],
+  flv:  ['mp4', 'webm', 'avi', 'mov', 'mkv', 'mp3', 'wav', 'aac', 'ogg', 'webp'],
+  m4v:  ['mp4', 'webm', 'avi', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg', 'webp'],
+  '3gp': ['mp4', 'webm', 'avi', 'mov', 'mkv', 'mp3', 'wav', 'aac', 'webp'],
 };
 
 const AUDIO_CONVERSIONS: Record<string, string[]> = {
