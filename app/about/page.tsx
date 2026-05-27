@@ -14,10 +14,10 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 const formats = [
-  { catKey: 'image', color: '#FF4D00', exts: 'JPG, PNG, WebP, GIF, BMP, ICO, SVG' },
-  { catKey: 'video', color: '#FF00C8', exts: 'MP4, WebM, AVI, MOV, MKV, FLV, M4V, 3GP' },
+  { catKey: 'image', color: '#FF4D00', exts: 'JPG, PNG, WebP, GIF, BMP, ICO, SVG, HEIC, AVIF' },
+  { catKey: 'video', color: '#FF00C8', exts: 'MP4, WebM, AVI, MOV, MKV, FLV, M4V, 3GP, Animated WebP' },
   { catKey: 'audio', color: '#00FF88', exts: 'MP3, WAV, AAC, OGG, FLAC, M4A, WMA, OPUS' },
-  { catKey: 'document', color: '#00C2FF', exts: 'TXT, Markdown, HTML, PDF' },
+  { catKey: 'document', color: '#00C2FF', exts: 'TXT, Markdown, HTML, PDF, ePub' },
   { catKey: 'data', color: '#C8FF00', exts: 'CSV, JSON, XML, YAML, TSV, Excel' },
 ];
 
@@ -247,11 +247,15 @@ export default function AboutPage() {
           </h2>
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6 space-y-3">
             {[
+              'HEIC and AVIF decode — convert iPhone and modern web photos (lazy-loaded WASM)',
+              'ePub export — convert TXT, Markdown, and HTML to e-books',
+              'Animated WebP output from all video formats via FFmpeg',
+              'Error boundary — caught errors show a fallback UI instead of a white screen',
+              'Automated CI pipeline — typecheck, lint, test, and build on every push',
               'Real-time FFmpeg progress tracking for video/audio conversions',
               'File size limits with early rejection (100MB images, 2GB video, 500MB audio)',
               'FFmpeg WASM error handling with graceful failure recovery',
               'Auto-generated conversion map — no manual sync between registry and UI',
-              'Zero type assertions — full TypeScript strict mode compliance',
               'Extracted job management into reusable useJobManager hook',
               'i18n support with 5 languages and dynamic locale loading',
               'Dark/light theme toggle with system preference detection',
