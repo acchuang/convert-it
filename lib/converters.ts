@@ -4,6 +4,8 @@ import { xmlToJson, xmlToTxt, jsonToXml, xmlToCsv, xmlToYaml, xmlToTsv } from '.
 import { yamlToJson, jsonToYaml, yamlToCsv, yamlToXml, yamlToTsv } from './yaml-converters';
 import { mdToHtml, htmlToMd, htmlToTxt, txtToHtml, txtToMd, jsonToTxt, jsonToMd } from './markdown-converters';
 import { convertImage } from './image-converters';
+import convertHeic from './heic-converter';
+import convertAvif from './avif-converter';
 import { xlsxToCsv, xlsxToJson, csvToXlsx, jsonToXlsx } from './xlsx-converters';
 import { convertAudioVideo, extractAudio } from './audio-video-converters';
 import { txtToPdf, mdToPdf, htmlToPdf, jsonToPdf } from './pdf-converters';
@@ -21,6 +23,8 @@ export const FORMATS: FormatInfo[] = [
   { ext: 'bmp',  label: 'BMP',   mimeType: 'image/bmp',             category: 'image' },
   { ext: 'ico',  label: 'ICO',   mimeType: 'image/x-icon',          category: 'image' },
   { ext: 'svg',  label: 'SVG',   mimeType: 'image/svg+xml',         category: 'image' },
+  { ext: 'heic', label: 'HEIC',  mimeType: 'image/heic',            category: 'image' },
+  { ext: 'avif', label: 'AVIF',  mimeType: 'image/avif',            category: 'image' },
   // Video
   { ext: 'mp4',  label: 'MP4',   mimeType: 'video/mp4',             category: 'video' },
   { ext: 'webm', label: 'WebM',  mimeType: 'video/webm',            category: 'video' },
@@ -63,6 +67,8 @@ const IMAGE_CONVERSIONS: Record<string, string[]> = {
   bmp:  ['jpg', 'png',  'webp'],
   ico:  ['png', 'jpg',  'webp', 'bmp'],
   svg:  ['png', 'jpg',  'webp'],
+  heic: ['jpg', 'png', 'webp', 'bmp', 'ico'],
+  avif: ['jpg', 'png', 'webp', 'bmp', 'ico'],
 };
 
 const VIDEO_CONVERSIONS: Record<string, string[]> = {
@@ -177,6 +183,10 @@ export async function convertFile(
   onProgress?: (pct: number) => void
 ): Promise<Blob> {
   const sourceExt = getFileExtension(file.name);
+
+  if (sourceExt === 'heic') return convertHeic(file, targetExt, settings);
+  if (sourceExt === 'avif') return convertAvif(file, targetExt, settings);
+
   const category = getFormatInfo(sourceExt)?.category;
 
   if (category === 'image') {

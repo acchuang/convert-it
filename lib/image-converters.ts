@@ -1,7 +1,7 @@
 import { encodeIcoBlob } from 'ico-codec';
 import type { ConversionSettings } from './types';
 
-const IMAGE_MIME_MAP: Record<string, string> = {
+export const IMAGE_MIME_MAP: Record<string, string> = {
   jpg: 'image/jpeg',
   jpeg: 'image/jpeg',
   png: 'image/png',
