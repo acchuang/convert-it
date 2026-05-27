@@ -10,12 +10,12 @@ A bold, modern web app for converting files between popular formats — entirely
 
 ## Features
 
-- **Image conversions**: JPG ↔ PNG ↔ WebP ↔ BMP ↔ ICO ↔ GIF ↔ SVG (canvas-based)
-- **Video conversions**: MP4 ↔ WebM ↔ AVI ↔ MOV ↔ MKV ↔ FLV (FFmpeg WASM)
+- **Image conversions**: JPG ↔ PNG ↔ WebP ↔ BMP ↔ ICO ↔ GIF ↔ SVG (canvas-based), plus **HEIC** and **AVIF** decode
+- **Video conversions**: MP4 ↔ WebM ↔ AVI ↔ MOV ↔ MKV ↔ FLV, plus **animated WebP** output (FFmpeg WASM)
 - **Audio conversions**: MP3 ↔ WAV ↔ AAC ↔ OGG ↔ FLAC ↔ M4A ↔ OPUS (FFmpeg WASM)
 - **Audio extraction**: Extract audio tracks from video files
 - **Data conversions**: CSV ↔ JSON ↔ XML ↔ YAML ↔ TSV ↔ HTML ↔ Excel
-- **Document conversions**: TXT ↔ Markdown ↔ HTML ↔ PDF
+- **Document conversions**: TXT ↔ Markdown ↔ HTML ↔ PDF, plus **ePub export**
 - **Configurable settings**: Quality, bitrate, CRF, delimiter, indentation per conversion
 - **Drag & drop** with auto-detection of file category
 - **Batch conversion** — convert all files at once with bulk format selector
@@ -28,6 +28,7 @@ A bold, modern web app for converting files between popular formats — entirely
 - **Download all as ZIP** for batch results
 - **PWA-ready** with manifest and app icons
 - **Accessibility**: ARIA labels, focus-visible rings, reduced-motion support
+- **Error boundary** — caught errors show a fallback UI instead of a white screen
 - **100% client-side** — your files never leave your browser
 
 ## Design
@@ -62,8 +63,9 @@ The static export is output to the `out/` directory. Deploy it to any static hos
 - **Tailwind CSS** with CSS custom properties for theming
 - **Framer Motion** for animations
 - **FFmpeg WASM** for video/audio conversions
-- **Canvas API** for image conversions
+- **Canvas API** for image conversions (Canvas + HEIC WASM + AVIF native decode)
 - **SheetJS** for Excel read/write
+- **JSZip** for batch downloads and ePub generation
 - **Cloudflare Pages Functions + KV** for anonymous visitor stats
 
 ## Adding More Formats
