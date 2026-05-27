@@ -7,6 +7,7 @@ import { convertImage } from './image-converters';
 import { xlsxToCsv, xlsxToJson, csvToXlsx, jsonToXlsx } from './xlsx-converters';
 import { convertAudioVideo, extractAudio } from './audio-video-converters';
 import { txtToPdf, mdToPdf, htmlToPdf, jsonToPdf } from './pdf-converters';
+import { txtToEpub, mdToEpub, htmlToEpub } from './epub-converter';
 
 export type { FileCategory, FormatInfo, ConverterFn, ConversionSettings } from './types';
 export { DEFAULT_SETTINGS } from './types';
@@ -43,6 +44,7 @@ export const FORMATS: FormatInfo[] = [
   { ext: 'md',   label: 'Markdown', mimeType: 'text/markdown',      category: 'document' },
   { ext: 'html', label: 'HTML',  mimeType: 'text/html',             category: 'document' },
   { ext: 'pdf',  label: 'PDF',   mimeType: 'application/pdf',       category: 'document' },
+  { ext: 'epub', label: 'ePub',  mimeType: 'application/epub+zip', category: 'document' },
   // Data
   { ext: 'csv',  label: 'CSV',   mimeType: 'text/csv',              category: 'data' },
   { ext: 'json', label: 'JSON',  mimeType: 'application/json',      category: 'data' },
@@ -125,6 +127,9 @@ const CONVERTER_REGISTRY: Record<string, ConverterFn> = {
   'txt:pdf':    txtToPdf,
   'xlsx:csv':   xlsxToCsv,
   'xlsx:json':  xlsxToJson,
+  'txt:epub':   txtToEpub,
+  'md:epub':    mdToEpub,
+  'html:epub':  htmlToEpub,
 };
 
 function buildConversionMap(): Record<string, string[]> {

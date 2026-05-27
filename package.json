@@ -29,6 +29,7 @@
     "ico-codec": "^1.0.0",
     "jspdf": "^4.2.1",
     "jszip": "^3.10.1",
+    "libheif-js": "^1.19.8",
     "marked": "^18.0.0",
     "next": "15.1.0",
     "papaparse": "^5.5.3",
