@@ -98,7 +98,8 @@
     "audio": "音频",
     "documents": "文档",
     "data": "数据",
-    "github": "GITHUB"
+    "github": "GITHUB",
+    "totalUsers": "总用户"
   },
   "about": {
     "heading": "关于",

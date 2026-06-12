@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useLocale } from '../components/LocaleProvider';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { useTheme } from '../components/ThemeProvider';
+import Footer from '../components/Footer';
 
 const CATEGORY_COLORS: Record<string, string> = {
   image: '#FF4D00',
@@ -286,17 +287,10 @@ export default function AboutPage() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-[var(--border-primary)] px-6 py-6 mt-16" role="contentinfo">
-        <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <span style={{ fontFamily: 'var(--font-mono)' }} className="text-xs text-[var(--text-muted)]">
-            {t('footer.copyright')}
-          </span>
-          <nav className="flex gap-6 text-xs text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }} aria-label="Navigation">
-            <Link href="/" className="hover:text-[var(--text-primary)] transition-colors">{t('header.home').replace('← ', '')}</Link>
-            <a href="https://github.com/acchuang/convert-it" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--text-primary)] transition-colors">{t('footer.github')}</a>
-          </nav>
-        </div>
-      </footer>
+      <Footer maxWidth="max-w-3xl" navLabel="Navigation">
+        <Link href="/" className="hover:text-[var(--text-primary)] transition-colors">{t('header.home').replace('← ', '')}</Link>
+        <a href="https://github.com/acchuang/convert-it" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--text-primary)] transition-colors">{t('footer.github')}</a>
+      </Footer>
     </main>
   );
 }

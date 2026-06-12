@@ -98,7 +98,8 @@
     "audio": "音声",
     "documents": "文書",
     "data": "データ",
-    "github": "GITHUB"
+    "github": "GITHUB",
+    "totalUsers": "総ユーザー"
   },
   "about": {
     "heading": "概要",

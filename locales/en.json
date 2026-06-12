@@ -98,7 +98,8 @@
     "audio": "Audio",
     "documents": "Documents",
     "data": "Data",
-    "github": "GITHUB"
+    "github": "GITHUB",
+    "totalUsers": "total users"
   },
   "about": {
     "heading": "ABOUT",

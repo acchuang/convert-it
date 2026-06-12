@@ -18,6 +18,7 @@ import { LanguageSelector } from './components/LanguageSelector';
 import { useLocale } from './components/LocaleProvider';
 import { useJobManager } from '@/lib/useJobManager';
 import ErrorBoundary from './components/ErrorBoundary';
+import Footer from './components/Footer';
 
 const CATEGORY_COLORS: Record<string, string> = {
   image: '#FF4D00',
@@ -489,20 +490,13 @@ export default function HomePage() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-[var(--border-primary)] px-6 py-6 mt-16" role="contentinfo">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <span style={{ fontFamily: 'var(--font-mono)' }} className="text-xs text-[var(--text-muted)]">
-            {t('footer.copyright')}
-          </span>
-          <nav className="flex gap-6 text-xs text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }} aria-label={t('footer.images')}>
-            <span>{t('footer.images')}</span>
-            <span>{t('footer.video')}</span>
-            <span>{t('footer.audio')}</span>
-            <span>{t('footer.documents')}</span>
-            <span>{t('footer.data')}</span>
-          </nav>
-        </div>
-      </footer>
+      <Footer navLabel={t('footer.images')}>
+        <span>{t('footer.images')}</span>
+        <span>{t('footer.video')}</span>
+        <span>{t('footer.audio')}</span>
+        <span>{t('footer.documents')}</span>
+        <span>{t('footer.data')}</span>
+      </Footer>
       </ErrorBoundary>
     </main>
   );
