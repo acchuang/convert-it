@@ -34,6 +34,7 @@ interface UseJobManagerReturn {
 
 export function useJobManager(options?: UseJobManagerOptions): UseJobManagerReturn {
   const [jobs, setJobs] = useState<FileJob[]>([]);
+  const convertingRef = useRef(new Set<string>());
 
   const addFiles = useCallback((files: FileList | File[]) => {
     const newJobs: FileJob[] = [];
@@ -83,6 +84,8 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
 
   const convertJob = useCallback(async (job: FileJob) => {
     if (!job.targetExt) return;
+    if (convertingRef.current.has(job.id)) return;
+    convertingRef.current.add(job.id);
     setJobs(prev => prev.map(j => j.id === job.id ? { ...j, status: 'converting', progress: 10 } : j));
     try {
       const blob = await convertFile(
@@ -109,6 +112,8 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
         error: err instanceof Error ? err.message : 'Conversion failed',
         progress: 0,
       } : j));
+    } finally {
+      convertingRef.current.delete(job.id);
     }
   }, []);
 

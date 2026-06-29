@@ -49,7 +49,10 @@ export const onRequestPost = async ({ request, env }: PagesContext): Promise<Res
 
   // Read-modify-write active sessions map, pruning stale entries
   const raw = await env.STATS.get('sessions');
-  const sessions: Record<string, number> = raw ? JSON.parse(raw) : {};
+  let sessions: Record<string, number> = {};
+  if (raw) {
+    try { sessions = JSON.parse(raw); } catch { sessions = {}; }
+  }
 
   const cutoff = now - SESSION_TTL_MS;
   for (const id of Object.keys(sessions)) {

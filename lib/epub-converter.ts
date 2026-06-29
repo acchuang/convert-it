@@ -83,7 +83,7 @@ export async function mdToEpub(
   _targetExt: string,
 ): Promise<Blob> {
   const md = await file.text();
-  const body = await marked.parse(md, { async: false });
+  const body = String(marked.parse(md));
   return buildEpub(getFilename(file), body);
 }
 

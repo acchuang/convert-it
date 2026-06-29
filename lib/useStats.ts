@@ -35,7 +35,10 @@ export function useStats(): Stats | null {
           body: JSON.stringify({ sessionId: sid, isNew: isNewRef.current }),
         });
         if (res.ok) {
-          setStats(await res.json());
+          const ct = res.headers.get('content-type') ?? '';
+          if (ct.includes('application/json')) {
+            setStats(await res.json());
+          }
           isNewRef.current = false;
         }
       } catch {

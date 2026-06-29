@@ -204,6 +204,7 @@ export function JobCard({ job, onTargetChange, onConvert, onDownload, onRemove, 
   const [showSettings, setShowSettings] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
 
   const info = getFormatInfo(job.sourceExt);
   const category = info?.category ?? 'document';
@@ -221,7 +222,8 @@ export function JobCard({ job, onTargetChange, onConvert, onDownload, onRemove, 
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // fallback silently
+      setCopyFailed(true);
+      setTimeout(() => setCopyFailed(false), 2000);
     }
   };
 
@@ -318,6 +320,8 @@ export function JobCard({ job, onTargetChange, onConvert, onDownload, onRemove, 
                   className={`px-3 py-2 text-xs font-semibold rounded-lg border transition-colors flex items-center gap-1.5 ${
                     copied
                       ? 'border-[var(--accent)]/50 text-[var(--accent)]'
+                      : copyFailed
+                      ? 'border-[var(--error)]/50 text-[var(--error)]'
                       : 'border-[var(--border-secondary)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-primary'
                   }`}
                   style={{ fontFamily: 'var(--font-mono)' }}
@@ -327,6 +331,11 @@ export function JobCard({ job, onTargetChange, onConvert, onDownload, onRemove, 
                     <>
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6L9 17l-5-5" /></svg>
                       {t('job.copied')}
+                    </>
+                  ) : copyFailed ? (
+                    <>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                      {t('job.copyFailed') ?? 'Failed'}
                     </>
                   ) : (
                     <>

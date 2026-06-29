@@ -43,7 +43,7 @@ const VIDEO_CODECS: Record<string, { codec: string; ext: string }> = {
 };
 
 // Audio codecs
-const AUDIO_CODECS: Record<string, { codec: string; ext: string }> = {
+export const AUDIO_CODECS: Record<string, { codec: string; ext: string }> = {
   mp3: { codec: 'libmp3lame', ext: 'mp3' },
   wav: { codec: 'pcm_s16le', ext: 'wav' },
   aac: { codec: 'aac', ext: 'aac' },
@@ -81,13 +81,14 @@ export async function convertAudioVideo(
   const fileData = await fetchFile(file);
   await ff.writeFile(inputName, fileData);
 
-  ff.on('log', ({ message }) => {
+  const logHandler = ({ message }: { message: string }) => {
     const timeMatch = message.match(/time=(\d+):(\d+):(\d+)/);
     if (timeMatch) {
       const seconds = parseInt(timeMatch[1]) * 3600 + parseInt(timeMatch[2]) * 60 + parseInt(timeMatch[3]);
       onProgress?.(Math.min(95, 10 + (seconds / 10) * 85));
     }
-  });
+  };
+  ff.on('log', logHandler);
 
   const args: string[] = [];
 
@@ -130,7 +131,11 @@ export async function convertAudioVideo(
     args.push('-i', inputName, '-y', outputName);
   }
 
-  await ff.exec(args);
+  try {
+    await ff.exec(args);
+  } finally {
+    ff.off('log', logHandler);
+  }
 
   const outputData = await ff.readFile(outputName) as Uint8Array;
 
@@ -174,24 +179,29 @@ export async function extractAudio(
   const fileData = await fetchFile(file);
   await ff.writeFile(inputName, fileData);
 
-  ff.on('log', ({ message }) => {
+  const logHandler = ({ message }: { message: string }) => {
     const timeMatch = message.match(/time=(\d+):(\d+):(\d+)/);
     if (timeMatch) {
       const seconds = parseInt(timeMatch[1]) * 3600 + parseInt(timeMatch[2]) * 60 + parseInt(timeMatch[3]);
       onProgress?.(Math.min(95, 10 + (seconds / 10) * 85));
     }
-  });
+  };
+  ff.on('log', logHandler);
 
   const config = AUDIO_CODECS[targetExt];
 
-  await ff.exec([
-    '-i', inputName,
-    '-vn',
-    '-c:a', config?.codec || 'aac',
-    '-b:a', `${settings?.audioBitrate || 192}k`,
-    '-ar', '44100',
-    '-y', outputName,
-  ]);
+  try {
+    await ff.exec([
+      '-i', inputName,
+      '-vn',
+      '-c:a', config?.codec || 'aac',
+      '-b:a', `${settings?.audioBitrate || 192}k`,
+      '-ar', '44100',
+      '-y', outputName,
+    ]);
+  } finally {
+    ff.off('log', logHandler);
+  }
 
   const outputData = await ff.readFile(outputName) as Uint8Array;
 

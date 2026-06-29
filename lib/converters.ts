@@ -7,7 +7,7 @@ import { convertImage } from './image-converters';
 import convertHeic from './heic-converter';
 import convertAvif from './avif-converter';
 import { xlsxToCsv, xlsxToJson, csvToXlsx, jsonToXlsx } from './xlsx-converters';
-import { convertAudioVideo, extractAudio } from './audio-video-converters';
+import { convertAudioVideo, extractAudio, AUDIO_CODECS } from './audio-video-converters';
 import { txtToPdf, mdToPdf, htmlToPdf, jsonToPdf } from './pdf-converters';
 import { txtToEpub, mdToEpub, htmlToEpub } from './epub-converter';
 
@@ -194,7 +194,7 @@ export async function convertFile(
   }
 
   if (category === 'video' || category === 'audio') {
-    if (category === 'video' && ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a'].includes(targetExt)) {
+    if (category === 'video' && Object.keys(AUDIO_CODECS).includes(targetExt)) {
       return extractAudio(file, sourceExt, targetExt, settings, onProgress);
     }
     return convertAudioVideo(file, sourceExt, targetExt, settings, onProgress);
