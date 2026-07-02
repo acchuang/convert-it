@@ -1,6 +1,6 @@
 interface KVNamespace {
   get(key: string): Promise<string | null>;
-  put(key: string, value: string): Promise<void>;
+  put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
 }
 
 interface Env {
@@ -13,6 +13,7 @@ interface PagesContext {
 }
 
 const SESSION_TTL_MS = 60_000; // 60s — a session is "active" if heartbeat within this window
+const NEW_VISIT_RATE_LIMIT_MS = 10_000; // one counted "new visit" per IP per 10s
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -40,11 +41,17 @@ export const onRequestPost = async ({ request, env }: PagesContext): Promise<Res
 
   const now = Date.now();
 
-  // Increment total visits counter for new sessions
+  // Increment total visits counter for new sessions, throttled per IP to blunt spam
   if (isNew === true) {
-    const current = await env.STATS.get('total_visits');
-    const next = (parseInt(current ?? '0') || 0) + 1;
-    await env.STATS.put('total_visits', String(next));
+    const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+    const rateLimitKey = `ratelimit:${ip}`;
+    const lastHit = await env.STATS.get(rateLimitKey);
+    if (!lastHit || now - parseInt(lastHit) >= NEW_VISIT_RATE_LIMIT_MS) {
+      await env.STATS.put(rateLimitKey, String(now), { expirationTtl: 60 });
+      const current = await env.STATS.get('total_visits');
+      const next = (parseInt(current ?? '0') || 0) + 1;
+      await env.STATS.put('total_visits', String(next));
+    }
   }
 
   // Read-modify-write active sessions map, pruning stale entries
