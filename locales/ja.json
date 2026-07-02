@@ -47,6 +47,7 @@
     "download": "ダウンロード",
     "copy": "コピー",
     "copied": "コピー済",
+    "copyFailed": "失敗",
     "view": "表示",
     "hide": "非表示",
     "preview": "プレビュー",

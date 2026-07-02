@@ -47,6 +47,7 @@
     "download": "DOWNLOAD",
     "copy": "COPY",
     "copied": "COPIED",
+    "copyFailed": "FAILED",
     "view": "VIEW",
     "hide": "HIDE",
     "preview": "Preview",

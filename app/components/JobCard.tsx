@@ -325,7 +325,7 @@ export function JobCard({ job, onTargetChange, onConvert, onDownload, onRemove, 
                       : 'border-[var(--border-secondary)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-primary'
                   }`}
                   style={{ fontFamily: 'var(--font-mono)' }}
-                  aria-label={copied ? t('job.copied') : t('job.copy')}
+                  aria-label={copied ? t('job.copied') : copyFailed ? t('job.copyFailed') : t('job.copy')}
                 >
                   {copied ? (
                     <>
@@ -335,7 +335,7 @@ export function JobCard({ job, onTargetChange, onConvert, onDownload, onRemove, 
                   ) : copyFailed ? (
                     <>
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12" /></svg>
-                      {t('job.copyFailed') ?? 'Failed'}
+                      {t('job.copyFailed')}
                     </>
                   ) : (
                     <>

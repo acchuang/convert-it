@@ -47,6 +47,7 @@
     "download": "DESCARGAR",
     "copy": "COPIAR",
     "copied": "COPIADO",
+    "copyFailed": "ERROR",
     "view": "VER",
     "hide": "OCULTAR",
     "preview": "Vista previa",
