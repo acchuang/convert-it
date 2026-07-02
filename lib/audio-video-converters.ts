@@ -61,6 +61,42 @@ function getCategory(sourceExt: string): 'video' | 'audio' | null {
   return null;
 }
 
+const MIME_TYPES: Record<string, string> = {
+  mp4: 'video/mp4',
+  webm: 'video/webm',
+  avi: 'video/x-msvideo',
+  mov: 'video/quicktime',
+  mkv: 'video/x-matroska',
+  flv: 'video/x-flv',
+  webp: 'image/webp',
+  mp3: 'audio/mpeg',
+  wav: 'audio/wav',
+  aac: 'audio/aac',
+  ogg: 'audio/ogg',
+  flac: 'audio/flac',
+  m4a: 'audio/mp4',
+};
+
+function makeProgressLogHandler(onProgress?: (pct: number) => void) {
+  return ({ message }: { message: string }) => {
+    const timeMatch = message.match(/time=(\d+):(\d+):(\d+)/);
+    if (timeMatch) {
+      const seconds = parseInt(timeMatch[1]) * 3600 + parseInt(timeMatch[2]) * 60 + parseInt(timeMatch[3]);
+      onProgress?.(Math.min(95, 10 + (seconds / 10) * 85));
+    }
+  };
+}
+
+async function execWithProgress(ff: FFmpeg, args: string[], onProgress?: (pct: number) => void): Promise<void> {
+  const logHandler = makeProgressLogHandler(onProgress);
+  ff.on('log', logHandler);
+  try {
+    await ff.exec(args);
+  } finally {
+    ff.off('log', logHandler);
+  }
+}
+
 export async function convertAudioVideo(
   file: File,
   sourceExt: string,
@@ -80,15 +116,6 @@ export async function convertAudioVideo(
 
   const fileData = await fetchFile(file);
   await ff.writeFile(inputName, fileData);
-
-  const logHandler = ({ message }: { message: string }) => {
-    const timeMatch = message.match(/time=(\d+):(\d+):(\d+)/);
-    if (timeMatch) {
-      const seconds = parseInt(timeMatch[1]) * 3600 + parseInt(timeMatch[2]) * 60 + parseInt(timeMatch[3]);
-      onProgress?.(Math.min(95, 10 + (seconds / 10) * 85));
-    }
-  };
-  ff.on('log', logHandler);
 
   const args: string[] = [];
 
@@ -131,11 +158,7 @@ export async function convertAudioVideo(
     args.push('-i', inputName, '-y', outputName);
   }
 
-  try {
-    await ff.exec(args);
-  } finally {
-    ff.off('log', logHandler);
-  }
+  await execWithProgress(ff, args, onProgress);
 
   const outputData = await ff.readFile(outputName) as Uint8Array;
 
@@ -144,23 +167,7 @@ export async function convertAudioVideo(
 
   onProgress?.(100);
 
-  const mimeTypes: Record<string, string> = {
-    mp4: 'video/mp4',
-    webm: 'video/webm',
-    avi: 'video/x-msvideo',
-    mov: 'video/quicktime',
-    mkv: 'video/x-matroska',
-    flv: 'video/x-flv',
-    webp: 'image/webp',
-    mp3: 'audio/mpeg',
-    wav: 'audio/wav',
-    aac: 'audio/aac',
-    ogg: 'audio/ogg',
-    flac: 'audio/flac',
-    m4a: 'audio/mp4',
-  };
-
-  return new Blob([outputData.buffer as ArrayBuffer], { type: mimeTypes[targetExt] || 'application/octet-stream' });
+  return new Blob([outputData.buffer as ArrayBuffer], { type: MIME_TYPES[targetExt] || 'application/octet-stream' });
 }
 
 // Extract audio from video
@@ -179,29 +186,16 @@ export async function extractAudio(
   const fileData = await fetchFile(file);
   await ff.writeFile(inputName, fileData);
 
-  const logHandler = ({ message }: { message: string }) => {
-    const timeMatch = message.match(/time=(\d+):(\d+):(\d+)/);
-    if (timeMatch) {
-      const seconds = parseInt(timeMatch[1]) * 3600 + parseInt(timeMatch[2]) * 60 + parseInt(timeMatch[3]);
-      onProgress?.(Math.min(95, 10 + (seconds / 10) * 85));
-    }
-  };
-  ff.on('log', logHandler);
-
   const config = AUDIO_CODECS[targetExt];
 
-  try {
-    await ff.exec([
-      '-i', inputName,
-      '-vn',
-      '-c:a', config?.codec || 'aac',
-      '-b:a', `${settings?.audioBitrate || 192}k`,
-      '-ar', '44100',
-      '-y', outputName,
-    ]);
-  } finally {
-    ff.off('log', logHandler);
-  }
+  await execWithProgress(ff, [
+    '-i', inputName,
+    '-vn',
+    '-c:a', config?.codec || 'aac',
+    '-b:a', `${settings?.audioBitrate || 192}k`,
+    '-ar', '44100',
+    '-y', outputName,
+  ], onProgress);
 
   const outputData = await ff.readFile(outputName) as Uint8Array;
 
@@ -210,14 +204,5 @@ export async function extractAudio(
 
   onProgress?.(100);
 
-  const mimeTypes: Record<string, string> = {
-    mp3: 'audio/mpeg',
-    wav: 'audio/wav',
-    aac: 'audio/aac',
-    ogg: 'audio/ogg',
-    flac: 'audio/flac',
-    m4a: 'audio/mp4',
-  };
-
-  return new Blob([outputData.buffer as ArrayBuffer], { type: mimeTypes[targetExt] || 'audio/mpeg' });
+  return new Blob([outputData.buffer as ArrayBuffer], { type: MIME_TYPES[targetExt] || 'audio/mpeg' });
 }
