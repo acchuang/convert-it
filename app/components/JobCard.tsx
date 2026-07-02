@@ -28,9 +28,23 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 const TEXT_FORMATS = new Set(['json', 'csv', 'xml', 'yaml', 'tsv', 'md', 'html', 'txt']);
 
+const IMAGE_QUALITY_FORMATS = ['jpg', 'jpeg', 'webp', 'png'];
+const CSV_DELIMITER_FORMATS = ['csv', 'xlsx'];
+const JSON_INDENT_FORMATS = ['json', 'xlsx'];
+const AUDIO_BITRATE_FORMATS = ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a'];
+const VIDEO_SETTINGS_FORMATS = ['mp4', 'webm', 'avi', 'mov', 'mkv', 'flv'];
+
+const CONFIGURABLE_FORMATS = new Set([
+  ...IMAGE_QUALITY_FORMATS,
+  ...CSV_DELIMITER_FORMATS,
+  ...JSON_INDENT_FORMATS,
+  'xml',
+  ...AUDIO_BITRATE_FORMATS,
+  ...VIDEO_SETTINGS_FORMATS,
+]);
+
 function hasSettings(targetExt: string | null): boolean {
-  if (!targetExt) return false;
-  return ['jpg', 'jpeg', 'webp', 'png', 'csv', 'json', 'xml', 'xlsx', 'mp4', 'webm', 'avi', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a'].includes(targetExt);
+  return !!targetExt && CONFIGURABLE_FORMATS.has(targetExt);
 }
 
 function SettingsPanel({
@@ -44,12 +58,12 @@ function SettingsPanel({
   onChange: (patch: Partial<ConversionSettings>) => void;
   t: (key: string) => string;
 }) {
-  const showQuality = ['jpg', 'jpeg', 'webp', 'png'].includes(targetExt);
-  const showDelimiter = ['csv', 'xlsx'].includes(targetExt);
-  const showIndent = ['json', 'xlsx'].includes(targetExt);
+  const showQuality = IMAGE_QUALITY_FORMATS.includes(targetExt);
+  const showDelimiter = CSV_DELIMITER_FORMATS.includes(targetExt);
+  const showIndent = JSON_INDENT_FORMATS.includes(targetExt);
   const showRootEl = targetExt === 'xml';
-  const showAudioBitrate = ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a'].includes(targetExt);
-  const showVideoSettings = ['mp4', 'webm', 'avi', 'mov', 'mkv', 'flv'].includes(targetExt);
+  const showAudioBitrate = AUDIO_BITRATE_FORMATS.includes(targetExt);
+  const showVideoSettings = VIDEO_SETTINGS_FORMATS.includes(targetExt);
 
   const qualityPct = Math.round(settings.quality * 100);
 
