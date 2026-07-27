@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   convertFile,
   getFileExtension,
@@ -35,6 +35,13 @@ interface UseJobManagerReturn {
 export function useJobManager(options?: UseJobManagerOptions): UseJobManagerReturn {
   const [jobs, setJobs] = useState<FileJob[]>([]);
   const convertingRef = useRef(new Set<string>());
+
+  // Callers pass an inline options object, so hold the latest callback in a ref
+  // rather than making every returned function change identity each render.
+  const onHistoryUpdateRef = useRef(options?.onHistoryUpdate);
+  useEffect(() => {
+    onHistoryUpdateRef.current = options?.onHistoryUpdate;
+  });
 
   const addFiles = useCallback((files: FileList | File[]) => {
     const newJobs: FileJob[] = [];
@@ -104,7 +111,7 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
         fileSize: job.file.size,
         resultSize: blob.size,
       });
-      options?.onHistoryUpdate?.();
+      onHistoryUpdateRef.current?.();
     } catch (err) {
       setJobs(prev => prev.map(j => j.id === job.id ? {
         ...j,

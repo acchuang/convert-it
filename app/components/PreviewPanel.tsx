@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const TEXT_EXTENSIONS = new Set([
@@ -24,33 +24,35 @@ export function PreviewPanel({
   onClose: () => void;
   t: (key: string) => string;
 }) {
-  const [textContent, setTextContent] = useState<string | null>(null);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const showText = open && !!blob && !!targetExt && isTextPreview(targetExt);
 
-  useEffect(() => {
-    if (!open || !blob || !targetExt) return;
-
-    setLoading(true);
-    setTextContent(null);
-    setImageUrl(null);
-
-    if (isTextPreview(targetExt)) {
-      blob.text().then(txt => {
-        setTextContent(txt);
-        setLoading(false);
-      }).catch(() => setLoading(false));
-    } else {
-      const url = URL.createObjectURL(blob);
-      setImageUrl(url);
-      setLoading(false);
-      return () => URL.revokeObjectURL(url);
-    }
+  const imageUrl = useMemo(() => {
+    if (!open || !blob || !targetExt || isTextPreview(targetExt)) return null;
+    return URL.createObjectURL(blob);
   }, [open, blob, targetExt]);
 
   useEffect(() => {
-    return () => { if (imageUrl) URL.revokeObjectURL(imageUrl); };
+    if (!imageUrl) return;
+    return () => URL.revokeObjectURL(imageUrl);
   }, [imageUrl]);
+
+  // Tagged with its source blob so a new result never shows the previous file's text.
+  // text === null after settling means the read failed.
+  const [loaded, setLoaded] = useState<{ src: Blob; text: string | null } | null>(null);
+  const settled = loaded !== null && loaded.src === blob;
+  const textContent = loaded && loaded.src === blob ? loaded.text : null;
+  const loading = showText && !settled;
+
+  useEffect(() => {
+    if (!showText || !blob) return;
+    let cancelled = false;
+
+    blob.text()
+      .then(text => { if (!cancelled) setLoaded({ src: blob, text }); })
+      .catch(() => { if (!cancelled) setLoaded({ src: blob, text: null }); });
+
+    return () => { cancelled = true; };
+  }, [showText, blob]);
 
   return (
     <AnimatePresence>
