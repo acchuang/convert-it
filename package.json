@@ -18,7 +18,9 @@
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "fixtures": "node scripts/make-fixtures.mjs && node scripts/make-webm.mjs",
+    "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",
@@ -56,6 +58,7 @@
     "eslint-config-next": "^16.2.6",
     "eslint-config-prettier": "^10.1.8",
     "jsdom": "^29.1.1",
+    "playwright": "^1.62.0",
     "postcss": "^8.4.0",
     "prettier": "^3.8.3",
     "tailwindcss": "^3.4.0",

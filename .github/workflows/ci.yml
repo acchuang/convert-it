@@ -18,7 +18,10 @@ jobs:
           node-version: 20
           cache: 'npm'
 
+      # Playwright is only used by scripts/smoke.mjs, which CI does not run.
       - run: npm ci
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
       - run: npm run typecheck
 

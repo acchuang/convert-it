@@ -12,6 +12,14 @@ out/
 .claude/
 skills-lock.json
 
+# env
+.env*.local
+
+# generated
+tsconfig.tsbuildinfo
+.codegraph/
+.smoke-fixtures/
+
 # misc
 .DS_Store
 files/
