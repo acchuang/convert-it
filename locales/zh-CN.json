@@ -1,12 +1,5 @@
 {
-  "site": {
-    "title": "Convert-it — 通用文件转换器",
-    "description": "在浏览器中将任意文件转换为任意格式。"
-  },
   "header": {
-    "free": "免费",
-    "noSignup": "无需注册",
-    "clientSide": "本地端",
     "themeDark": "切换到深色模式",
     "themeLight": "切换到浅色模式",
     "github": "在 GitHub 上查看源码",
@@ -62,12 +55,10 @@
     "indent": "缩进",
     "min": "最小",
     "sp2": "2空格",
-    "sp4": "4空格",
     "root": "根元素",
     "bitrate": "比特率",
     "preset": "预设",
     "targetFormat": "目标格式",
-    "converting": "转换中",
     "truncated": "... （已截断）"
   },
   "howItWorks": {
@@ -104,9 +95,18 @@
     "intro": "Convert-it 是一个免费、开源的通用文件转换器，完全在您的浏览器中运行。无需上传、无需服务器、无需注册 — 您的文件永远不会离开您的设备。",
     "intro2": "为开发者、设计师以及任何需要快速、私密文件转换的人打造，无需繁琐的在线工具或臃肿的桌面软件。",
     "howHeading": "使用方式",
-    "step1": { "title": "拖放", "desc": "将文件拖放或点击浏览。Convert-it 会自动检测格式并建议可用的转换。" },
-    "step2": { "title": "自定义", "desc": "在转换前调整质量、分隔符、比特率或预设配置。" },
-    "step3": { "title": "下载", "desc": "立即获取转换后的文件。可单独下载或将所有结果打包为 ZIP。" },
+    "step1": {
+      "title": "拖放",
+      "desc": "将文件拖放或点击浏览。Convert-it 会自动检测格式并建议可用的转换。"
+    },
+    "step2": {
+      "title": "自定义",
+      "desc": "在转换前调整质量、分隔符、比特率或预设配置。"
+    },
+    "step3": {
+      "title": "下载",
+      "desc": "立即获取转换后的文件。可单独下载或将所有结果打包为 ZIP。"
+    },
     "formatsHeading": "支持的格式",
     "privacyHeading": "隐私保护",
     "privacy1": "您的文件永远不会离开浏览器。所有转换均使用 WebAssembly 和 Canvas API 在本地进行。我们不会上传、存储或访问您的任何数据。",

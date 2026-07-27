@@ -1,12 +1,5 @@
 {
-  "site": {
-    "title": "Convert-it — Universal File Converter",
-    "description": "Convert any file to any format, entirely in your browser."
-  },
   "header": {
-    "free": "Free",
-    "noSignup": "No Signup",
-    "clientSide": "Client-Side",
     "themeDark": "Switch to dark mode",
     "themeLight": "Switch to light mode",
     "github": "View source on GitHub",
@@ -62,12 +55,10 @@
     "indent": "Indent",
     "min": "MIN",
     "sp2": "2SP",
-    "sp4": "4SP",
     "root": "Root",
     "bitrate": "Bitrate",
     "preset": "Preset",
     "targetFormat": "Target format",
-    "converting": "Converting",
     "truncated": "... (truncated)"
   },
   "howItWorks": {
@@ -104,9 +95,18 @@
     "intro": "Convert-it is a free, open-source universal file converter that runs entirely in your browser. No uploads, no servers, no signups — your files never leave your device.",
     "intro2": "Built for developers, designers, and anyone who needs quick, private file conversions without the hassle of sketchy online tools or bloated desktop software.",
     "howHeading": "HOW IT WORKS",
-    "step1": { "title": "Drag & Drop", "desc": "Drop your files or click to browse. Convert-it auto-detects the format and suggests available conversions." },
-    "step2": { "title": "Customize", "desc": "Tweak quality, delimiter, bitrate, or preset settings per file before converting." },
-    "step3": { "title": "Download", "desc": "Get your converted file instantly. Download individually or zip all results at once." },
+    "step1": {
+      "title": "Drag & Drop",
+      "desc": "Drop your files or click to browse. Convert-it auto-detects the format and suggests available conversions."
+    },
+    "step2": {
+      "title": "Customize",
+      "desc": "Tweak quality, delimiter, bitrate, or preset settings per file before converting."
+    },
+    "step3": {
+      "title": "Download",
+      "desc": "Get your converted file instantly. Download individually or zip all results at once."
+    },
     "formatsHeading": "SUPPORTED FORMATS",
     "privacyHeading": "PRIVACY",
     "privacy1": "Your files never leave your browser. All conversion happens locally using WebAssembly and the Canvas API. We don't upload, store, or have any access to your data.",
