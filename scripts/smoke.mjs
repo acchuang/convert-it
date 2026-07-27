@@ -14,14 +14,26 @@ const engine = process.argv[2] === 'webkit' ? 'webkit' : 'chrome';
 
 // [fixture, target format, engine under test, validator]
 const isText = (b) => b.length > 0 && !b.subarray(0, 512).includes(0);
-const magic = (sig, off = 0) => (b) =>
-  b.subarray(off, off + sig.length).toString('latin1') === sig;
+const magic =
+  (sig, off = 0) =>
+  (b) =>
+    b.subarray(off, off + sig.length).toString('latin1') === sig;
 
 const PAIRS = [
   ['img.png', 'webp', 'canvas image', (b) => magic('RIFF')(b) && magic('WEBP', 8)(b)],
   ['clip.webm', 'mp4', 'ffmpeg video', magic('ftyp', 4)],
-  ['audio.wav', 'mp3', 'ffmpeg audio', (b) => magic('ID3')(b) || (b[0] === 0xff && (b[1] & 0xe0) === 0xe0)],
-  ['clip.webm', 'mp3', 'ffmpeg extract', (b) => magic('ID3')(b) || (b[0] === 0xff && (b[1] & 0xe0) === 0xe0)],
+  [
+    'audio.wav',
+    'mp3',
+    'ffmpeg audio',
+    (b) => magic('ID3')(b) || (b[0] === 0xff && (b[1] & 0xe0) === 0xe0),
+  ],
+  [
+    'clip.webm',
+    'mp3',
+    'ffmpeg extract',
+    (b) => magic('ID3')(b) || (b[0] === 0xff && (b[1] & 0xe0) === 0xe0),
+  ],
   ['data.csv', 'json', 'data', (b) => JSON.parse(b.toString()).length === 2],
   ['data.csv', 'xlsx', 'sheetjs', magic('PK')],
   ['data.json', 'yaml', 'yaml', (b) => b.toString().includes('name:')],
@@ -44,14 +56,14 @@ for (const [fixture, target, label, check] of PAIRS) {
   const row = { pair: `${fixture.split('.').pop()} → ${target}`, label, ok: false, note: '' };
 
   try {
-    await page.goto(APP, { waitUntil: 'domcontentloaded' });
+    // Not domcontentloaded: the file input is in the static HTML, so setInputFiles
+    // succeeds before hydration wires up onChange and the drop is silently lost.
+    await page.goto(APP, { waitUntil: 'networkidle' });
     await page.setInputFiles('input[type="file"]', join(DIR, fixture));
     await page.waitForSelector('[role="listitem"]', { timeout: 15000 });
 
     const select = page.locator('select[aria-label="Target format"]').first();
-    const options = await select.locator('option').evaluateAll((els) =>
-      els.map((e) => e.value)
-    );
+    const options = await select.locator('option').evaluateAll((els) => els.map((e) => e.value));
     if (!options.includes(target)) {
       row.note = `target not offered (has: ${options.join(',')})`;
       results.push(row);
@@ -70,8 +82,14 @@ for (const [fixture, target, label, check] of PAIRS) {
     ]);
 
     if (await failed.isVisible()) {
-      row.note = (await page.locator('p.text-\\[var\\(--error\\)\\]').first().textContent().catch(() => null))
-        ?? consoleErrors[0] ?? 'conversion errored';
+      row.note =
+        (await page
+          .locator('p.text-\\[var\\(--error\\)\\]')
+          .first()
+          .textContent()
+          .catch(() => null)) ??
+        consoleErrors[0] ??
+        'conversion errored';
       results.push(row);
       await page.close();
       continue;
@@ -84,7 +102,8 @@ for (const [fixture, target, label, check] of PAIRS) {
     const bytes = readFileSync(await download.path());
 
     if (bytes.length === 0) row.note = 'empty output';
-    else if (!check(bytes)) row.note = `bad signature (${bytes.length}B, starts ${bytes.subarray(0, 8).toString('hex')})`;
+    else if (!check(bytes))
+      row.note = `bad signature (${bytes.length}B, starts ${bytes.subarray(0, 8).toString('hex')})`;
     else {
       row.ok = true;
       row.note = `${bytes.length}B → ${download.suggestedFilename()}`;
