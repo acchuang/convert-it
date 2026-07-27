@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -12,7 +12,6 @@ import {
 import { JobCard, type FileJob } from './components/JobCard';
 import { HistoryPanel } from './components/HistoryPanel';
 import { getHistory, type HistoryEntry } from '@/lib/history';
-import { useStats, formatCount } from '@/lib/useStats';
 import { useTheme } from './components/ThemeProvider';
 import { LanguageSelector } from './components/LanguageSelector';
 import { useLocale } from './components/LocaleProvider';
@@ -28,8 +27,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   audio: '#00E5A0',
 };
 
-const LARGE_FILE_THRESHOLD_MB = 200;
-const WARN_FILE_THRESHOLD_MB = 500;
+const LARGE_FILE_THRESHOLD_MB = 100;
+const WARN_FILE_THRESHOLD_MB = 250;
 
 function formatMB(bytes: number): string {
   return (bytes / (1024 * 1024)).toFixed(0);
@@ -57,7 +56,6 @@ export default function HomePage() {
   const [batchFormat, setBatchFormat] = useState('');
   const [history, setHistory] = useState<HistoryEntry[]>(() => getHistory());
   const inputRef = useRef<HTMLInputElement>(null);
-  const stats = useStats();
   const { theme, toggle: toggleTheme } = useTheme();
   const { t } = useLocale();
 
@@ -73,39 +71,36 @@ export default function HomePage() {
     applyBatch(batchFormat);
   };
 
-  const detectDragCategory = useCallback((files: FileList) => {
+  const detectDragCategory = (files: FileList) => {
     if (files.length === 0) return;
     const ext = getFileExtension(files[0].name);
     const info = getFormatInfo(ext);
     setDragCategory(info?.category ?? null);
-  }, []);
+  };
 
-  const handleDragEnter = useCallback((e: React.DragEvent) => {
+  const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
     setDragging(true);
     if (e.dataTransfer.files.length) detectDragCategory(e.dataTransfer.files);
-  }, [detectDragCategory]);
+  };
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-  }, []);
+  };
 
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
+  const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     if (e.currentTarget.contains(e.relatedTarget as Node)) return;
     setDragging(false);
     setDragCategory(null);
-  }, []);
+  };
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      setDragging(false);
-      setDragCategory(null);
-      if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
-    },
-    [addFiles]
-  );
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    setDragCategory(null);
+    if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+  };
 
   return (
     <main className="min-h-screen bg-app" style={{ fontFamily: 'var(--font-body)' }} role="main" aria-label="Convert-it file converter">
@@ -127,16 +122,6 @@ export default function HomePage() {
         </motion.div>
 
         <div className="flex items-center gap-4">
-          {stats && (
-            <div className="flex items-center gap-3 text-xs" style={{ fontFamily: 'var(--font-mono)' }} aria-live="polite" aria-label={t('header.online')}>
-              <span className="text-[var(--text-secondary)]" title={t('header.totalVisits')}>
-                {formatCount(stats.total)} {t('header.totalVisits')}
-              </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)]" title="Active" />
-              <span className="text-[var(--text-secondary)]">{formatCount(stats.active)} {t('header.online')}</span>
-            </div>
-          )}
-
           <LanguageSelector />
 
           <button
@@ -336,8 +321,8 @@ export default function HomePage() {
                       {largeFiles.map(j => `${j.file.name} (${formatMB(j.file.size)}MB)`).join(', ')}
                       {' — '}
                       {largeFiles.some(j => j.file.size > WARN_FILE_THRESHOLD_MB * 1024 * 1024)
-                        ? t('warning.over500')
-                        : t('warning.over200')}
+                        ? t('warning.mayFail')
+                        : t('warning.slow')}
                     </p>
                   </div>
                 </motion.div>
