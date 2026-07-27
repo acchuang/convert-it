@@ -5,6 +5,7 @@
         "origins": [
           "https://convert-it.oilygold.xyz",
           "https://convert-it.pages.dev",
+          "https://*.convert-it.pages.dev",
           "http://localhost:3000"
         ],
         "methods": ["GET", "HEAD"],
