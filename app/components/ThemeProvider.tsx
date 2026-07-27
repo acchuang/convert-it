@@ -1,8 +1,10 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useCallback, useSyncExternalStore } from 'react';
 
 type Theme = 'dark' | 'light';
+
+const STORAGE_KEY = 'convert-it-theme';
 
 interface ThemeContextValue {
   theme: Theme;
@@ -15,33 +17,41 @@ export function useTheme() {
   return useContext(ThemeContext);
 }
 
+const listeners = new Set<() => void>();
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+function readTheme(): Theme {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored === 'light' || stored === 'dark') return stored;
+  return window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+}
+
+// The static export prerenders without a browser, so the first paint is always dark.
+function serverTheme(): Theme {
+  return 'dark';
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('dark');
-  const [mounted, setMounted] = useState(false);
+  const theme = useSyncExternalStore(subscribe, readTheme, serverTheme);
 
   useEffect(() => {
-    setMounted(true);
-    const stored = localStorage.getItem('convert-it-theme') as Theme | null;
-    if (stored === 'light' || stored === 'dark') {
-      setTheme(stored);
-    } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
-      setTheme('light');
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
     const root = document.documentElement;
     root.classList.toggle('light', theme === 'light');
-    localStorage.setItem('convert-it-theme', theme);
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
       meta.setAttribute('content', theme === 'dark' ? '#0A0A0A' : '#FAFAFA');
     }
-  }, [theme, mounted]);
+  }, [theme]);
 
   const toggle = useCallback(() => {
-    setTheme(t => (t === 'dark' ? 'light' : 'dark'));
+    localStorage.setItem(STORAGE_KEY, readTheme() === 'dark' ? 'light' : 'dark');
+    listeners.forEach(fn => fn());
   }, []);
 
   return (

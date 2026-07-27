@@ -27,7 +27,7 @@ const dmMono = DM_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL('https://convert-it.pages.dev'),
   title: 'Convert-it — Universal File Converter',
-  description: 'Convert any file to any format, entirely in your browser. No uploads, no server, no signup.',
+  description: 'Convert any file to any format, entirely in your browser. Your files never leave your device — no uploads, no accounts.',
   applicationName: 'Convert-it',
   authors: [{ name: 'https://github.com/acchuang' }],
   keywords: ['file converter', 'image converter', 'video converter', 'audio converter', 'document converter', 'online converter', 'browser converter', 'free converter', 'privacy focused', 'no upload'],
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     url: 'https://convert-it.pages.dev',
     siteName: 'Convert-it',
     title: 'Convert-it — Universal File Converter',
-    description: 'Convert any file to any format, entirely in your browser. No uploads, no server, no signup.',
+    description: 'Convert any file to any format, entirely in your browser. Your files never leave your device — no uploads, no accounts.',
     type: 'website',
     locale: 'en_US',
     images: [
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Convert-it — Universal File Converter',
-    description: 'Convert any file to any format, entirely in your browser. No uploads, no server, no signup.',
+    description: 'Convert any file to any format, entirely in your browser. Your files never leave your device — no uploads, no accounts.',
     images: ['/og-image.svg'],
   },
   alternates: {
@@ -74,6 +74,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${bebasNeue.variable} ${dmSans.variable} ${dmMono.variable}`} suppressHydrationWarning>
       <head>
+        {/* Applies the stored theme before first paint. Without it a light-mode user
+            gets a dark frame, because the static export prerenders dark and the
+            provider can only read localStorage after hydration. Must stay in sync
+            with readTheme() in app/components/ThemeProvider.tsx. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('convert-it-theme');if(t==='light'||(t!=='dark'&&matchMedia('(prefers-color-scheme: light)').matches))document.documentElement.classList.add('light')}catch(e){}`,
+          }}
+        />
         <meta name="theme-color" content="#0A0A0A" media="(prefers-color-scheme: dark)" />
         <meta name="theme-color" content="#FAFAFA" media="(prefers-color-scheme: light)" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -95,7 +104,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 priceCurrency: 'USD',
               },
               description:
-                'Convert any file to any format, entirely in your browser. No uploads, no server, no signup.',
+                'Convert any file to any format, entirely in your browser. Your files never leave your device — no uploads, no accounts.',
               url: 'https://convert-it.pages.dev',
               author: {
                 '@type': 'Person',
