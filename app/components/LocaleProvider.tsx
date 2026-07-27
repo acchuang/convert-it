@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, useSyncExternalStore } from 'react';
 import en from '@/locales/en.json';
+import { readStored, writeStored } from '@/lib/storage';
 
 export type Locale = 'en' | 'zh-TW' | 'zh-CN' | 'ja' | 'es';
 
@@ -63,7 +64,7 @@ function subscribe(listener: () => void) {
 }
 
 function readLocale(): Locale {
-  const stored = LOCALES.find(l => l.code === localStorage.getItem(STORAGE_KEY));
+  const stored = LOCALES.find(l => l.code === readStored(STORAGE_KEY));
   if (stored) return stored.code;
 
   const nav = navigator.language;
@@ -101,7 +102,7 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
   }, [locale]);
 
   const setLocale = useCallback((l: Locale) => {
-    localStorage.setItem(STORAGE_KEY, l);
+    writeStored(STORAGE_KEY, l);
     listeners.forEach(fn => fn());
   }, []);
 

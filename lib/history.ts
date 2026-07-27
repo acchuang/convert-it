@@ -1,4 +1,5 @@
 import type { HistoryEntry } from './types';
+import { readStored, writeStored, removeStored } from './storage';
 
 const HISTORY_KEY = 'convert-it-history';
 const MAX_ENTRIES = 30;
@@ -8,7 +9,7 @@ export type { HistoryEntry } from './types';
 export function getHistory(): HistoryEntry[] {
   if (typeof window === 'undefined') return [];
   try {
-    return JSON.parse(localStorage.getItem(HISTORY_KEY) ?? '[]');
+    return JSON.parse(readStored(HISTORY_KEY) ?? '[]');
   } catch {
     return [];
   }
@@ -18,11 +19,11 @@ export function addHistoryEntry(entry: Omit<HistoryEntry, 'id'>): void {
   const history = getHistory();
   history.unshift({ ...entry, id: crypto.randomUUID() });
   if (history.length > MAX_ENTRIES) history.splice(MAX_ENTRIES);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  writeStored(HISTORY_KEY, JSON.stringify(history));
 }
 
 export function clearHistory(): void {
-  localStorage.removeItem(HISTORY_KEY);
+  removeStored(HISTORY_KEY);
 }
 
 export function timeAgo(isoDate: string): string {

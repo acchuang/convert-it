@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useCallback, useSyncExternalStore } from 'react';
+import { readStored, writeStored } from '@/lib/storage';
 
 type Theme = 'dark' | 'light';
 
@@ -27,7 +28,7 @@ function subscribe(listener: () => void) {
 }
 
 function readTheme(): Theme {
-  const stored = localStorage.getItem(STORAGE_KEY);
+  const stored = readStored(STORAGE_KEY);
   if (stored === 'light' || stored === 'dark') return stored;
   return window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
 }
@@ -50,7 +51,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [theme]);
 
   const toggle = useCallback(() => {
-    localStorage.setItem(STORAGE_KEY, readTheme() === 'dark' ? 'light' : 'dark');
+    writeStored(STORAGE_KEY, readTheme() === 'dark' ? 'light' : 'dark');
     listeners.forEach(fn => fn());
   }, []);
 
