@@ -12,9 +12,7 @@
     "github": "GitHubでソースを見る",
     "buyCoffee": "コーヒーをおごる",
     "about": "概要",
-    "home": "← ホーム",
-    "totalVisits": "総訪問",
-    "online": "オンライン"
+    "home": "← ホーム"
   },
   "dropzone": {
     "title": "ドラッグ＆ドロップ",
@@ -38,8 +36,8 @@
   },
   "warning": {
     "largeFile": "大きなファイルを検出",
-    "over200": "大きなファイルは処理に時間がかかる場合があります。",
-    "over500": "500MBを超えるファイルはブラウザのメモリ制限により失敗する可能性があります。"
+    "slow": "大きなファイルは処理に時間がかかります — このタブを開いたままにしてください。",
+    "mayFail": "このサイズのファイルはブラウザのメモリを使い切って失敗する可能性があります。"
   },
   "job": {
     "convert": "変換 →",
@@ -99,8 +97,7 @@
     "audio": "音声",
     "documents": "文書",
     "data": "データ",
-    "github": "GITHUB",
-    "totalUsers": "総ユーザー"
+    "github": "GITHUB"
   },
   "about": {
     "heading": "概要",
@@ -113,7 +110,7 @@
     "formatsHeading": "対応形式",
     "privacyHeading": "プライバシー",
     "privacy1": "ファイルがブラウザから離れることはありません。すべての変換はWebAssemblyとCanvas APIを使用してローカルで行われます。データのアップロード、保存、アクセスは一切行いません。",
-    "privacy2": "収集するデータは、Cloudflare KVを通じた匿名の集計使用統計（総訪問数とアクティブセッション数）のみです。個人情報、追跡、テーマと言語の設定以外のCookieはありません。ファイルサイズ制限（カテゴリに応じて100MB～2GB）により、ブラウザのメモリ枯渇を防ぎます。",
+    "privacy2": "アクセス解析やトラッキングのスクリプトは一切使用していません — Cookieもフィンガープリントもなく、ファイルと紐付くこともありません。デバイスに保存されるのはテーマと言語の設定だけです。動画・音声変換では初回に約31MBのFFmpegエンジンを当サイト自身のCDNからダウンロードします。そのリクエストにファイルが含まれることはありません。ファイルサイズ制限（画像100MB、動画500MB、音声200MB）により、ブラウザのメモリ枯渇を防ぎます。",
     "improvementsHeading": "最近の改善",
     "improvement1": "HEIC/AVIFデコード — iPhoneとモダンWeb写真の変換（遅延読み込みWASM）",
     "improvement2": "ePubエクスポート — TXT、Markdown、HTMLをeブックに変換",
@@ -121,7 +118,7 @@
     "improvement4": "エラーバウンダリ — キャッチされたエラーは白画面の代わりにフォールバックUIを表示",
     "improvement5": "自動CIパイプライン — プッシュごとに型チェック、lint、テスト、ビルドを実行",
     "improvement6": "動画/音声変換のリアルタイムFFmpegプログレス追跡",
-    "improvement7": "事前拒否付きファイルサイズ制限（画像100MB、動画2GB、音声500MB）",
+    "improvement7": "事前拒否付きファイルサイズ制限（画像100MB、動画500MB、音声200MB）",
     "improvement8": "グレースフルな障害回復を備えたFFmpeg WASMエラーハンドリング",
     "improvement9": "自動生成変換マップ — レジストリとUI間の手動同期不要",
     "improvement10": "再利用可能なuseJobManagerフックへのジョブ管理抽出",
@@ -130,9 +127,8 @@
     "improvement13": "テキスト結果のクリップボードコピー付きプレビューパネル",
     "improvement14": "localStorageに永続化される変換履歴",
     "improvement15": "マニフェストとアプリアイコン付きPWAサポート",
-    "improvement16": "カウンター悪用防止のためのIP単位のレート制限を訪問トラッキングに追加",
-    "improvement17": "動画/音声変換のFFmpeg進捗追跡とMIMEタイプロジックの重複を解消",
-    "improvement18": "コンバーター、ジョブ管理、トラッキングAPIをカバーする111件の新規ユニットテスト",
+    "improvement16": "動画/音声変換のFFmpeg進捗追跡とMIMEタイプロジックの重複を解消",
+    "improvement17": "コンバーター、ジョブ管理、i18nをカバーするユニットテストスイート",
     "ossHeading": "オープンソース",
     "oss1": "Convert-itはMITライセンスのオープンソースです。完全なコードベースはGitHubで公開されています。貢献、バグ報告、機能リクエストを歓迎します。",
     "ossGithub": "GITHUB",
@@ -147,13 +143,5 @@
     "techSheets": "スプレッドシート",
     "techHeif": "HEIC/AVIF",
     "techHosting": "ホスティング"
-  },
-  "lang": {
-    "selector": "言語を選択",
-    "en": "English",
-    "zh-TW": "繁體中文",
-    "ja": "日本語",
-    "ko": "한국어",
-    "fr": "Français"
   }
 }

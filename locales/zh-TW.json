@@ -12,9 +12,7 @@
     "github": "在 GitHub 上查看原始碼",
     "buyCoffee": "請我喝杯咖啡",
     "about": "關於",
-    "home": "← 首頁",
-    "totalVisits": "總訪問",
-    "online": "在線"
+    "home": "← 首頁"
   },
   "dropzone": {
     "title": "拖放檔案",
@@ -38,8 +36,8 @@
   },
   "warning": {
     "largeFile": "偵測到大檔案",
-    "over200": "大檔案可能需要較長的處理時間。",
-    "over500": "超過 500MB 的檔案可能因瀏覽器記憶體限制而失敗。"
+    "slow": "大檔案需要較長的處理時間 — 請保持此分頁開啟。",
+    "mayFail": "此大小的檔案可能耗盡瀏覽器記憶體而失敗。"
   },
   "job": {
     "convert": "轉換 →",
@@ -99,8 +97,7 @@
     "audio": "音訊",
     "documents": "文件",
     "data": "資料",
-    "github": "GITHUB",
-    "totalUsers": "總用戶"
+    "github": "GITHUB"
   },
   "about": {
     "heading": "關於",
@@ -113,7 +110,7 @@
     "formatsHeading": "支援的格式",
     "privacyHeading": "隱私保護",
     "privacy1": "您的檔案永遠不會離開瀏覽器。所有轉換均使用 WebAssembly 和 Canvas API 在本地進行。我們不會上傳、儲存或存取您的任何資料。",
-    "privacy2": "我們收集的唯一資料是透過 Cloudflare KV 的匿名、匯總使用統計（總訪問量和活躍會話數）— 不含個人資訊、無追蹤、除了您的主題和語言偏好外不使用 Cookie。檔案大小限制（根據類別為 100MB–2GB）可防止瀏覽器記憶體耗盡。",
+    "privacy2": "我們不執行任何分析或追蹤腳本 — 不使用 Cookie、無指紋追蹤，也不會關聯到您的檔案。裝置上僅儲存您的主題和語言偏好。首次使用影片或音訊轉換時，會從我們自己的 CDN 下載約 31MB 的 FFmpeg 引擎；您的檔案絕不會包含在該請求中。檔案大小限制（圖片 100MB、影片 500MB、音訊 200MB）可防止瀏覽器記憶體耗盡。",
     "improvementsHeading": "近期更新",
     "improvement1": "HEIC 和 AVIF 解碼 — 轉換 iPhone 和現代網頁照片（延遲載入 WASM）",
     "improvement2": "ePub 匯出 — 將 TXT、Markdown 和 HTML 轉換為電子書",
@@ -121,7 +118,7 @@
     "improvement4": "錯誤邊界 — 捕獲的錯誤顯示回退介面而非白畫面",
     "improvement5": "自動化 CI 流水線 — 每次推送時執行類型檢查、lint、測試和建構",
     "improvement6": "影片/音訊轉換的即時 FFmpeg 進度追蹤",
-    "improvement7": "檔案大小限制與提前拒絕（圖片 100MB、影片 2GB、音訊 500MB）",
+    "improvement7": "檔案大小限制與提前拒絕（圖片 100MB、影片 500MB、音訊 200MB）",
     "improvement8": "FFmpeg WASM 錯誤處理與優雅失敗恢復",
     "improvement9": "自動生成的轉換映射 — 無需手動同步登錄檔和介面",
     "improvement10": "將任務管理提取為可複用的 useJobManager hook",
@@ -130,9 +127,8 @@
     "improvement13": "文字結果支援複製到剪貼簿的預覽面板",
     "improvement14": "轉換歷史記錄持久化到 localStorage",
     "improvement15": "支援 PWA，包含應用清單和圖示",
-    "improvement16": "為訪問追蹤新增按 IP 限流，防止計數器遭濫用",
-    "improvement17": "統一影片/音訊轉換中重複的 FFmpeg 進度追蹤與 MIME 類型邏輯",
-    "improvement18": "新增 111 個單元測試，涵蓋轉換器、任務管理與追蹤 API",
+    "improvement16": "統一影片/音訊轉換中重複的 FFmpeg 進度追蹤與 MIME 類型邏輯",
+    "improvement17": "單元測試套件，涵蓋轉換器、任務管理與 i18n",
     "ossHeading": "開源",
     "oss1": "Convert-it 採用 MIT 授權並開源。完整程式碼可在 GitHub 上取得。歡迎貢獻、回報錯誤和提出功能請求。",
     "ossGithub": "GITHUB",
@@ -147,13 +143,5 @@
     "techSheets": "試算表",
     "techHeif": "HEIC/AVIF",
     "techHosting": "託管"
-  },
-  "lang": {
-    "selector": "選擇語言",
-    "en": "English",
-    "zh-TW": "繁體中文",
-    "ja": "日本語",
-    "ko": "한국어",
-    "fr": "Français"
   }
 }

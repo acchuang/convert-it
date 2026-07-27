@@ -12,9 +12,7 @@
     "github": "Ver código en GitHub",
     "buyCoffee": "Invítame un café",
     "about": "ACERCA DE",
-    "home": "← INICIO",
-    "totalVisits": "total",
-    "online": "en línea"
+    "home": "← INICIO"
   },
   "dropzone": {
     "title": "ARRASTRAR Y SOLTAR",
@@ -38,8 +36,8 @@
   },
   "warning": {
     "largeFile": "Archivo grande detectado",
-    "over200": "Los archivos grandes pueden tardar más en procesarse.",
-    "over500": "Los archivos de más de 500MB pueden fallar por límites de memoria del navegador."
+    "slow": "Los archivos grandes tardan más en procesarse — mantén esta pestaña abierta.",
+    "mayFail": "Los archivos de este tamaño pueden agotar la memoria del navegador y fallar."
   },
   "job": {
     "convert": "CONVERTIR →",
@@ -99,8 +97,7 @@
     "audio": "Audio",
     "documents": "Documentos",
     "data": "Datos",
-    "github": "GITHUB",
-    "totalUsers": "usuarios totales"
+    "github": "GITHUB"
   },
   "about": {
     "heading": "ACERCA DE",
@@ -113,7 +110,7 @@
     "formatsHeading": "FORMATOS COMPATIBLES",
     "privacyHeading": "PRIVACIDAD",
     "privacy1": "Tus archivos nunca salen de tu navegador. Toda la conversión ocurre localmente usando WebAssembly y la API Canvas. No subimos, almacenamos ni tenemos acceso a tus datos.",
-    "privacy2": "Los únicos datos que recopilamos son estadísticas de uso anónimas y agregadas (visitas totales y sesiones activas) a través de Cloudflare KV — sin información personal, sin rastreo, sin cookies más allá de tus preferencias de tema e idioma. Los límites de tamaño de archivo (100MB–2GB según la categoría) evitan el agotamiento de la memoria del navegador.",
+    "privacy2": "No ejecutamos ningún script de analítica ni de seguimiento — sin cookies, sin huella digital y sin nada vinculado a tus archivos. Lo único que se guarda en tu dispositivo son tus preferencias de tema e idioma. La conversión de video y audio descarga un motor FFmpeg de ~31MB desde nuestro propio CDN la primera vez que la usas; tus archivos nunca forman parte de esa petición. Los límites de tamaño de archivo (100MB imágenes, 500MB video, 200MB audio) evitan el agotamiento de la memoria del navegador.",
     "improvementsHeading": "MEJORAS RECIENTES",
     "improvement1": "Decodificación HEIC y AVIF — convierte fotos de iPhone y web modernas (WASM de carga diferida)",
     "improvement2": "Exportación ePub — convierte TXT, Markdown y HTML a e-books",
@@ -121,7 +118,7 @@
     "improvement4": "Límite de errores — los errores capturados muestran una interfaz de respaldo en lugar de una pantalla blanca",
     "improvement5": "Pipeline de CI automatizado — verificación de tipos, lint, pruebas y compilación en cada push",
     "improvement6": "Seguimiento de progreso FFmpeg en tiempo real para conversiones de video/audio",
-    "improvement7": "Límites de tamaño de archivo con rechazo anticipado (100MB imágenes, 2GB video, 500MB audio)",
+    "improvement7": "Límites de tamaño de archivo con rechazo anticipado (100MB imágenes, 500MB video, 200MB audio)",
     "improvement8": "Manejo de errores FFmpeg WASM con recuperación de fallos graceful",
     "improvement9": "Mapa de conversión autogenerado — sin sincronización manual entre registro e interfaz",
     "improvement10": "Extracción de la gestión de tareas en hook reutilizable useJobManager",
@@ -130,9 +127,8 @@
     "improvement13": "Panel de vista previa con copiar al portapapeles para resultados de texto",
     "improvement14": "Historial de conversación persistido en localStorage",
     "improvement15": "Soporte PWA con manifiesto e íconos de aplicación",
-    "improvement16": "Limitación de tasa por IP en el seguimiento de visitas para prevenir el abuso del contador",
-    "improvement17": "Lógica de seguimiento de progreso FFmpeg y tipos MIME desduplicada en la conversión de video/audio",
-    "improvement18": "111 nuevas pruebas unitarias que cubren conversores, gestión de tareas y la API de seguimiento",
+    "improvement16": "Lógica de seguimiento de progreso FFmpeg y tipos MIME desduplicada en la conversión de video/audio",
+    "improvement17": "Conjunto de pruebas unitarias que cubre conversores, gestión de tareas e i18n",
     "ossHeading": "CÓDIGO ABIERTO",
     "oss1": "Convert-it tiene licencia MIT y es de código abierto. El código completo está disponible en GitHub. Las contribuciones, informes de errores y solicitudes de funciones son bienvenidos.",
     "ossGithub": "GITHUB",
@@ -147,15 +143,5 @@
     "techSheets": "Hojas de cálculo",
     "techHeif": "HEIC/AVIF",
     "techHosting": "Alojamiento"
-  },
-  "lang": {
-    "selector": "Seleccionar idioma",
-    "en": "English",
-    "zh-TW": "繁體中文",
-    "zh-CN": "简体中文",
-    "ja": "日本語",
-    "es": "Español",
-    "ko": "한국어",
-    "fr": "Français"
   }
 }

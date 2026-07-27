@@ -12,9 +12,7 @@
     "github": "View source on GitHub",
     "buyCoffee": "Buy me a coffee",
     "about": "ABOUT",
-    "home": "← HOME",
-    "totalVisits": "total",
-    "online": "online"
+    "home": "← HOME"
   },
   "dropzone": {
     "title": "DRAG & DROP",
@@ -38,8 +36,8 @@
   },
   "warning": {
     "largeFile": "Large file detected",
-    "over200": "Large files may take longer to process.",
-    "over500": "Files over 500MB may fail due to browser memory limits."
+    "slow": "Large files take longer to process — keep this tab open.",
+    "mayFail": "Files this large may exhaust browser memory and fail."
   },
   "job": {
     "convert": "CONVERT →",
@@ -99,8 +97,7 @@
     "audio": "Audio",
     "documents": "Documents",
     "data": "Data",
-    "github": "GITHUB",
-    "totalUsers": "total users"
+    "github": "GITHUB"
   },
   "about": {
     "heading": "ABOUT",
@@ -113,7 +110,7 @@
     "formatsHeading": "SUPPORTED FORMATS",
     "privacyHeading": "PRIVACY",
     "privacy1": "Your files never leave your browser. All conversion happens locally using WebAssembly and the Canvas API. We don't upload, store, or have any access to your data.",
-    "privacy2": "The only data we collect is anonymous, aggregated usage stats (total visits and active sessions) via Cloudflare KV — no personal information, no tracking, no cookies beyond your theme and language preferences. File size limits (100MB–2GB depending on category) prevent browser memory exhaustion.",
+    "privacy2": "We run no analytics or tracking scripts — no cookies, no fingerprinting, and nothing tied to your files. The only things stored on your device are your theme and language preferences. Video and audio conversion downloads a ~31MB FFmpeg engine from our own CDN the first time you use it; your files are never part of that request. File size limits (100MB images, 500MB video, 200MB audio) prevent browser memory exhaustion.",
     "improvementsHeading": "RECENT IMPROVEMENTS",
     "improvement1": "HEIC and AVIF decode — convert iPhone and modern web photos (lazy-loaded WASM)",
     "improvement2": "ePub export — convert TXT, Markdown, and HTML to e-books",
@@ -121,7 +118,7 @@
     "improvement4": "Error boundary — caught errors show a fallback UI instead of a white screen",
     "improvement5": "Automated CI pipeline — typecheck, lint, test, and build on every push",
     "improvement6": "Real-time FFmpeg progress tracking for video/audio conversions",
-    "improvement7": "File size limits with early rejection (100MB images, 2GB video, 500MB audio)",
+    "improvement7": "File size limits with early rejection (100MB images, 500MB video, 200MB audio)",
     "improvement8": "FFmpeg WASM error handling with graceful failure recovery",
     "improvement9": "Auto-generated conversion map — no manual sync between registry and UI",
     "improvement10": "Extracted job management into reusable useJobManager hook",
@@ -130,9 +127,8 @@
     "improvement13": "Preview panel with copy-to-clipboard for text results",
     "improvement14": "Conversion history persisted in localStorage",
     "improvement15": "PWA support with manifest and app icons",
-    "improvement16": "Per-IP rate limiting on visit tracking to prevent counter abuse",
-    "improvement17": "Deduplicated FFmpeg progress tracking and MIME-type logic across video/audio conversion",
-    "improvement18": "111 new unit tests covering converters, job management, and the tracking API",
+    "improvement16": "Deduplicated FFmpeg progress tracking and MIME-type logic across video/audio conversion",
+    "improvement17": "Unit test suite covering converters, job management, and i18n",
     "ossHeading": "OPEN SOURCE",
     "oss1": "Convert-it is MIT-licensed and open source. The full codebase is available on GitHub. Contributions, bug reports, and feature requests are welcome.",
     "ossGithub": "GITHUB",
@@ -147,13 +143,5 @@
     "techSheets": "Spreadsheets",
     "techHeif": "HEIC/AVIF",
     "techHosting": "Hosting"
-  },
-  "lang": {
-    "selector": "Select language",
-    "en": "English",
-    "zh-TW": "繁體中文",
-    "ja": "日本語",
-    "ko": "한국어",
-    "fr": "Français"
   }
 }
