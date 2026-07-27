@@ -46,10 +46,13 @@ export type ConverterFn = (
   onProgress?: (pct: number) => void
 ) => Promise<Blob>;
 
+// Single-threaded ffmpeg.wasm keeps the input, the output and its working memory
+// in one wasm32 heap, so anything approaching 2GB kills the tab rather than erroring.
+// These ceilings are deliberately conservative — raise them only against measurements.
 export const FILE_SIZE_LIMITS: Record<string, number> = {
   image: 100 * 1024 * 1024,    // 100MB
-  video: 2 * 1024 * 1024 * 1024, // 2GB
-  audio: 500 * 1024 * 1024,    // 500MB
+  video: 500 * 1024 * 1024,    // 500MB
+  audio: 200 * 1024 * 1024,    // 200MB
   document: 50 * 1024 * 1024,  // 50MB
   data: 100 * 1024 * 1024,     // 100MB
 };
