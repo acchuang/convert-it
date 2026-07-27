@@ -22,13 +22,15 @@ A bold, modern web app for converting files between popular formats — entirely
 - **Real-time progress** tracking for FFmpeg-based conversions
 - **Preview panel** for text and image results with copy-to-clipboard
 - **Conversion history** persisted in localStorage
-- **Dark/light theme** with system preference detection
+- **Dark/light theme** with system preference detection, applied before first paint so there is no flash
 - **i18n support** — English, 繁體中文, 简体中文, 日本語, Español
+- **Degrades, doesn't crash** — with browser storage blocked, theme, language, and history fall back to memory for the session
 - **File size limits** with early rejection (100MB images, 500MB video, 200MB audio)
 - **Download all as ZIP** for batch results
 - **PWA-ready** with manifest and app icons
 - **Accessibility**: ARIA labels, focus-visible rings, reduced-motion support
 - **Error boundary** — caught errors show a fallback UI instead of a white screen
+- **No analytics, no tracking scripts, no cookies** — the only things stored on your device are your theme and language preferences
 - **Client-side conversion** — your files never leave your browser. The only network traffic is the app itself plus a one-time ~31MB FFmpeg engine download (self-hosted on R2) the first time you convert video or audio.
 
 ## Design

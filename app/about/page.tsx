@@ -31,7 +31,7 @@ const techStack = [
   { labelKey: 'about.techImages', val: 'Canvas API' },
   { labelKey: 'about.techHeif', val: 'libheif-js' },
   { labelKey: 'about.techSheets', val: 'SheetJS' },
-  { labelKey: 'about.techHosting', val: 'Cloudflare Pages' },
+  { labelKey: 'about.techHosting', val: 'Cloudflare Pages + R2' },
 ];
 
 export default function AboutPage() {
@@ -248,7 +248,7 @@ export default function AboutPage() {
             {t('about.improvementsHeading')}
           </h2>
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6 space-y-3">
-            {Array.from({ length: 17 }, (_, i) => i + 1).map(n => (
+            {Array.from({ length: 22 }, (_, i) => i + 1).map(n => (
               <div key={n} className="flex items-start gap-3">
                 <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] flex-shrink-0 mt-2" />
                 <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{t(`about.improvement${n}`)}</p>
