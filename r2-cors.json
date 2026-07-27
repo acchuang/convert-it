@@ -1,0 +1,17 @@
+{
+  "rules": [
+    {
+      "allowed": {
+        "origins": [
+          "https://convert-it.oilygold.xyz",
+          "https://convert-it.pages.dev",
+          "http://localhost:3000"
+        ],
+        "methods": ["GET", "HEAD"],
+        "headers": ["range"]
+      },
+      "exposeHeaders": ["content-length", "content-range", "content-type"],
+      "maxAgeSeconds": 86400
+    }
+  ]
+}

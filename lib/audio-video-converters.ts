@@ -6,6 +6,13 @@ let ffmpeg: FFmpeg | null = null;
 let ffmpegLoading: Promise<FFmpeg> | null = null;
 let ffmpegError: Error | null = null;
 
+// Self-hosted on R2 rather than unpkg: a third-party CDN is both a single point of
+// failure and an unsigned-wasm supply-chain hole, and Cloudflare Pages rejects files
+// over 25MiB so the 31MB core cannot live in public/. Set this to the R2 custom domain
+// (not the rate-limited *.r2.dev URL) and allow the Pages origin in the bucket's CORS.
+// Inlined at build time by the static export, so a rebuild is needed to change it.
+const FFMPEG_BASE_URL = process.env.NEXT_PUBLIC_FFMPEG_BASE_URL;
+
 async function getFFmpeg(): Promise<FFmpeg> {
   if (ffmpeg) return ffmpeg;
   if (ffmpegError) throw new Error(`FFmpeg unavailable: ${ffmpegError.message}`);
@@ -13,11 +20,13 @@ async function getFFmpeg(): Promise<FFmpeg> {
 
   ffmpegLoading = (async () => {
     try {
+      if (!FFMPEG_BASE_URL) {
+        throw new Error('NEXT_PUBLIC_FFMPEG_BASE_URL is not set');
+      }
       const ff = new FFmpeg();
-      const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd';
       await ff.load({
-        coreURL: `${baseURL}/ffmpeg-core.js`,
-        wasmURL: `${baseURL}/ffmpeg-core.wasm`,
+        coreURL: `${FFMPEG_BASE_URL}/ffmpeg-core.js`,
+        wasmURL: `${FFMPEG_BASE_URL}/ffmpeg-core.wasm`,
       });
       ffmpeg = ff;
       return ff;
