@@ -134,6 +134,8 @@
     "improvement20": "Works with browser storage blocked — theme, language, and history degrade instead of crashing",
     "improvement21": "Browser smoke suite that checks the downloaded bytes, not just that the UI turned green",
     "improvement22": "Removed all server-side code and visit tracking — the app is a pure static export",
+    "improvement23": "Large-file warning before you convert, with limits tuned to what browser memory actually survives",
+    "improvement24": "Fixed stale preview content when switching between converted results",
     "ossHeading": "OPEN SOURCE",
     "oss1": "Convert-it is MIT-licensed and open source. The full codebase is available on GitHub. Contributions, bug reports, and feature requests are welcome.",
     "ossGithub": "GITHUB",

@@ -134,6 +134,8 @@
     "improvement20": "Funciona con el almacenamiento del navegador bloqueado — tema, idioma e historial se degradan en lugar de fallar",
     "improvement21": "Suite de pruebas en navegador que verifica los bytes descargados, no solo que la interfaz se ponga verde",
     "improvement22": "Eliminado todo el código de servidor y el seguimiento de visitas — la app es una exportación estática pura",
+    "improvement23": "Aviso de archivo grande antes de convertir, con límites ajustados a lo que la memoria del navegador soporta de verdad",
+    "improvement24": "Corregido el contenido obsoleto de la vista previa al cambiar entre resultados convertidos",
     "ossHeading": "CÓDIGO ABIERTO",
     "oss1": "Convert-it tiene licencia MIT y es de código abierto. El código completo está disponible en GitHub. Las contribuciones, informes de errores y solicitudes de funciones son bienvenidos.",
     "ossGithub": "GITHUB",
