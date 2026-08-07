@@ -19,6 +19,8 @@ const sources = [
   // Single-thread oxipng only: the multi-thread (pkg-parallel) variant needs
   // SharedArrayBuffer + COOP/COEP, which this static export does not set.
   ['@jsquash/oxipng/codec/pkg/squoosh_oxipng_bg.wasm', 'squoosh_oxipng_bg.wasm'],
+  // resvg ships a generically-named index_bg.wasm; rename to avoid clashes.
+  ['@resvg/resvg-wasm/index_bg.wasm', 'resvg_bg.wasm'],
 ];
 
 await mkdir(dest, { recursive: true });

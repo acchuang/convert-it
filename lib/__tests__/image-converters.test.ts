@@ -20,6 +20,12 @@ vi.mock('@jsquash/oxipng/optimise', () => ({
   init: vi.fn(() => Promise.resolve()),
   default: vi.fn((buf) => Promise.resolve(buf)),
 }));
+// resvg is SVG-only; no SVG test exercises it, but stub it so importing the
+// converter never reaches for the real WASM in jsdom.
+vi.mock('@resvg/resvg-wasm', () => ({
+  initWasm: vi.fn(() => Promise.resolve()),
+  Resvg: vi.fn(),
+}));
 
 describe('convertImage', () => {
   it('rejects with invalid input (empty file)', async () => {

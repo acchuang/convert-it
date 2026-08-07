@@ -9,7 +9,7 @@ import optimiseOxipng, { init as initOxipng } from '@jsquash/oxipng/optimise';
 // never inlined into the JS bundle. Override the base with this env var when
 // hosting the assets elsewhere (e.g. a CDN); default '/wasm' serves them from
 // the static export's public/ directory.
-const ASSET_BASE = process.env.NEXT_PUBLIC_ASSET_BASE ?? '/wasm';
+export const ASSET_BASE = process.env.NEXT_PUBLIC_ASSET_BASE ?? '/wasm';
 
 export const IMAGE_MIME_MAP: Record<string, string> = {
   jpg: 'image/jpeg',
