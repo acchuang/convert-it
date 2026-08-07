@@ -21,6 +21,8 @@ const sources = [
   ['@jsquash/oxipng/codec/pkg/squoosh_oxipng_bg.wasm', 'squoosh_oxipng_bg.wasm'],
   // resvg ships a generically-named index_bg.wasm; rename to avoid clashes.
   ['@resvg/resvg-wasm/index_bg.wasm', 'resvg_bg.wasm'],
+  // PDFium (via @hyzyla/pdfium) for PDF-as-input rendering/text extraction.
+  ['@hyzyla/pdfium/dist/pdfium.wasm', 'pdfium.wasm'],
 ];
 
 await mkdir(dest, { recursive: true });
