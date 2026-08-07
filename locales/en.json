@@ -59,7 +59,11 @@
     "bitrate": "Bitrate",
     "preset": "Preset",
     "targetFormat": "Target format",
-    "truncated": "... (truncated)"
+    "truncated": "... (truncated)",
+    "pdfPages": "Pages",
+    "pdfFirstPage": "First page",
+    "pdfAllPages": "All pages",
+    "pdfScale": "Scale"
   },
   "howItWorks": {
     "heading": "HOW IT WORKS",

@@ -44,22 +44,42 @@ async function loadPdfDocument(file: File) {
   return library.loadDocument(data);
 }
 
-// Render page 1 to png/jpg/webp via pdfium → ImageData → the shared jSquash
-// encode pipeline. (MVP: page 1 only; multi-page image zip is a follow-up.)
+// Render PDF to png/jpg/webp via pdfium → ImageData → the shared jSquash encode
+// pipeline. By default renders page 1 as a single image; when settings.pdfAllPages
+// is set, renders every page at settings.pdfScale and zips them (application/zip).
 export async function pdfToImage(
   file: File,
   _sourceExt: string,
   targetExt: string,
   settings?: ConversionSettings,
+  onProgress?: (pct: number) => void,
 ): Promise<Blob> {
   const quality = settings?.quality ?? 0.92;
+  const scale = settings?.pdfScale ?? 1;
+  const allPages = settings?.pdfAllPages ?? false;
   const doc = await loadPdfDocument(file);
   try {
-    if (doc.getPageCount() < 1) throw new Error('PDF has no pages');
-    const page = doc.getPage(0);
-    const rendered = await page.render();
-    const imageData = bgraToRgba(rendered);
-    return encodeImageData(imageData, targetExt, quality);
+    const pageCount = doc.getPageCount();
+    if (pageCount < 1) throw new Error('PDF has no pages');
+
+    if (!allPages) {
+      const rendered = await doc.getPage(0).render({ scale });
+      const imageData = bgraToRgba(rendered);
+      onProgress?.(100);
+      return encodeImageData(imageData, targetExt, quality);
+    }
+
+    const base = file.name.replace(/\.[^.]+$/, '');
+    const JSZip = (await import('jszip')).default;
+    const zip = new JSZip();
+    for (let i = 0; i < pageCount; i++) {
+      const rendered = await doc.getPage(i).render({ scale });
+      const imageData = bgraToRgba(rendered);
+      const imageBlob = await encodeImageData(imageData, targetExt, quality);
+      zip.file(`${base}-page-${i + 1}.${targetExt}`, imageBlob);
+      onProgress?.(Math.round(((i + 1) / pageCount) * 100));
+    }
+    return zip.generateAsync({ type: 'blob', mimeType: 'application/zip' });
   } finally {
     doc.destroy();
   }

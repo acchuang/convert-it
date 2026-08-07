@@ -35,7 +35,7 @@ function fakePage(text: string, width = 4, height = 4) {
   return {
     number: 0,
     getText: () => text,
-    render: async () => ({ width, height, data }),
+    render: vi.fn(async (opts?: { scale?: number }) => ({ width, height, data })),
   };
 }
 
@@ -79,6 +79,36 @@ describe('pdfToImage (page 1)', () => {
     currentPages = [];
     const file = new File([new Uint8Array([1])], 'empty.pdf', { type: 'application/pdf' });
     await expect(pdfToImage(file, 'pdf', 'png')).rejects.toThrow('PDF has no pages');
+  });
+
+  it('passes pdfScale through to page.render', async () => {
+    currentPages = [fakePage('scaled')];
+    const file = new File([new Uint8Array([1])], 'doc.pdf', { type: 'application/pdf' });
+    await pdfToImage(file, 'pdf', 'png', { quality: 0.9, pdfScale: 2 } as any);
+    expect(currentPages[0].render).toHaveBeenCalledWith({ scale: 2 });
+  });
+});
+
+describe('pdfToImage (all pages → zip)', () => {
+  it('zips every page as <base>-page-<n>.<ext>', async () => {
+    currentPages = [fakePage('one'), fakePage('two')];
+    const file = new File([new Uint8Array([1])], 'report.pdf', { type: 'application/pdf' });
+    const progress: number[] = [];
+    const blob = await pdfToImage(file, 'pdf', 'png', { pdfAllPages: true } as any, (pct) =>
+      progress.push(pct),
+    );
+    expect(blob.type).toBe('application/zip');
+    expect(blob.size).toBeGreaterThan(0);
+    // Both pages rendered, each at the default scale of 1.
+    expect(currentPages[0].render).toHaveBeenCalledWith({ scale: 1 });
+    expect(currentPages[1].render).toHaveBeenCalledWith({ scale: 1 });
+    // Per-page progress reported.
+    expect(progress).toEqual([50, 100]);
+
+    // The zip contains one entry per page, named report-page-<n>.png.
+    const JSZip = (await import('jszip')).default;
+    const zip = await JSZip.loadAsync(blob);
+    expect(Object.keys(zip.files).sort()).toEqual(['report-page-1.png', 'report-page-2.png']);
   });
 });
 

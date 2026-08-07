@@ -1,6 +1,13 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useCallback, useSyncExternalStore } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useSyncExternalStore,
+} from 'react';
 import en from '@/locales/en.json';
 import { readStored, writeStored } from '@/lib/storage';
 
@@ -30,10 +37,7 @@ const LocaleContext = createContext<LocaleContextValue>({
   t: (k) => EN_MESSAGES[k] ?? k,
 });
 
-function flattenJson(
-  obj: Record<string, unknown>,
-  prefix = ''
-): Record<string, string> {
+function flattenJson(obj: Record<string, unknown>, prefix = ''): Record<string, string> {
   const result: Record<string, string> = {};
   for (const [key, value] of Object.entries(obj)) {
     const fullKey = prefix ? `${prefix}.${key}` : key;
@@ -64,7 +68,7 @@ function subscribe(listener: () => void) {
 }
 
 function readLocale(): Locale {
-  const stored = LOCALES.find(l => l.code === readStored(STORAGE_KEY));
+  const stored = LOCALES.find((l) => l.code === readStored(STORAGE_KEY));
   if (stored) return stored.code;
 
   const nav = navigator.language;
@@ -98,17 +102,19 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
     load();
     document.documentElement.lang = locale;
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [locale]);
 
   const setLocale = useCallback((l: Locale) => {
     writeStored(STORAGE_KEY, l);
-    listeners.forEach(fn => fn());
+    listeners.forEach((fn) => fn());
   }, []);
 
   const t = useCallback(
-    (key: string): string => messages[key] ?? key,
-    [messages]
+    (key: string): string => messages[key] ?? EN_MESSAGES[key] ?? key,
+    [messages],
   );
 
   return (

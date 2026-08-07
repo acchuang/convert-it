@@ -74,34 +74,43 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
         settings: { ...DEFAULT_SETTINGS },
       });
     }
-    setJobs(prev => [...prev, ...newJobs]);
+    setJobs((prev) => [...prev, ...newJobs]);
   }, []);
 
-  const updateJob = useCallback((id: string, patch: Partial<FileJob>) =>
-    setJobs(prev => prev.map(j => (j.id === id ? { ...j, ...patch } : j))), []);
+  const updateJob = useCallback(
+    (id: string, patch: Partial<FileJob>) =>
+      setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, ...patch } : j))),
+    [],
+  );
 
-  const updateJobSettings = useCallback((id: string, patch: Partial<ConversionSettings>) =>
-    setJobs(prev =>
-      prev.map(j =>
-        j.id === id
-          ? { ...j, settings: { ...j.settings, ...patch }, status: 'idle', resultBlob: undefined }
-          : j
-      )
-    ), []);
+  const updateJobSettings = useCallback(
+    (id: string, patch: Partial<ConversionSettings>) =>
+      setJobs((prev) =>
+        prev.map((j) =>
+          j.id === id
+            ? { ...j, settings: { ...j.settings, ...patch }, status: 'idle', resultBlob: undefined }
+            : j,
+        ),
+      ),
+    [],
+  );
 
   const convertJob = useCallback(async (job: FileJob) => {
     if (!job.targetExt) return;
     if (convertingRef.current.has(job.id)) return;
     convertingRef.current.add(job.id);
-    setJobs(prev => prev.map(j => j.id === job.id ? { ...j, status: 'converting', progress: 10 } : j));
+    setJobs((prev) =>
+      prev.map((j) => (j.id === job.id ? { ...j, status: 'converting', progress: 10 } : j)),
+    );
     try {
-      const blob = await convertFile(
-        job.file,
-        job.targetExt,
-        job.settings,
-        (pct) => setJobs(prev => prev.map(j => j.id === job.id ? { ...j, progress: pct } : j))
+      const blob = await convertFile(job.file, job.targetExt, job.settings, (pct) =>
+        setJobs((prev) => prev.map((j) => (j.id === job.id ? { ...j, progress: pct } : j))),
       );
-      setJobs(prev => prev.map(j => j.id === job.id ? { ...j, status: 'done', resultBlob: blob, progress: 100 } : j));
+      setJobs((prev) =>
+        prev.map((j) =>
+          j.id === job.id ? { ...j, status: 'done', resultBlob: blob, progress: 100 } : j,
+        ),
+      );
 
       addHistoryEntry({
         filename: job.file.name,
@@ -113,12 +122,18 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
       });
       onHistoryUpdateRef.current?.();
     } catch (err) {
-      setJobs(prev => prev.map(j => j.id === job.id ? {
-        ...j,
-        status: 'error',
-        error: err instanceof Error ? err.message : 'Conversion failed',
-        progress: 0,
-      } : j));
+      setJobs((prev) =>
+        prev.map((j) =>
+          j.id === job.id
+            ? {
+                ...j,
+                status: 'error',
+                error: err instanceof Error ? err.message : 'Conversion failed',
+                progress: 0,
+              }
+            : j,
+        ),
+      );
     } finally {
       convertingRef.current.delete(job.id);
     }
@@ -129,14 +144,16 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
     const url = URL.createObjectURL(job.resultBlob);
     const a = document.createElement('a');
     const base = job.file.name.replace(/\.[^.]+$/, '');
+    // Multi-page PDF output comes back as a zip blob; name it .zip instead of the image ext.
+    const ext = job.resultBlob.type === 'application/zip' ? 'zip' : job.targetExt;
     a.href = url;
-    a.download = `${base}.${job.targetExt}`;
+    a.download = `${base}.${ext}`;
     a.click();
     URL.revokeObjectURL(url);
   }, []);
 
   const downloadAllAsZip = useCallback(async () => {
-    const doneJobs = jobs.filter(j => j.status === 'done' && j.resultBlob && j.targetExt);
+    const doneJobs = jobs.filter((j) => j.status === 'done' && j.resultBlob && j.targetExt);
     if (doneJobs.length === 0) return;
 
     const JSZip = (await import('jszip')).default;
@@ -158,26 +175,28 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
 
   const applyBatchFormat = useCallback((format: string) => {
     if (!format) return;
-    setJobs(prev =>
-      prev.map(j => {
+    setJobs((prev) =>
+      prev.map((j) => {
         if (j.status !== 'idle') return j;
         const targets = getTargetFormats(j.sourceExt);
         if (!targets.includes(format)) return j;
         return { ...j, targetExt: format, resultBlob: undefined };
-      })
+      }),
     );
   }, []);
 
-  const removeJob = useCallback((id: string) =>
-    setJobs(prev => prev.filter(j => j.id !== id)), []);
+  const removeJob = useCallback(
+    (id: string) => setJobs((prev) => prev.filter((j) => j.id !== id)),
+    [],
+  );
 
   const convertAll = useCallback(() => {
-    jobs.filter(j => j.status === 'idle' && j.targetExt).forEach(convertJob);
+    jobs.filter((j) => j.status === 'idle' && j.targetExt).forEach(convertJob);
   }, [jobs, convertJob]);
 
   const clearAll = useCallback(() => setJobs([]), []);
 
-  const doneCount = jobs.filter(j => j.status === 'done').length;
+  const doneCount = jobs.filter((j) => j.status === 'done').length;
 
   return {
     jobs,

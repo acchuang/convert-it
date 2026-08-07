@@ -38,8 +38,8 @@ Independent Next.js project deployed via Cloudflare Pages.
 ## PDF
 
 - PDF output (txt/md/html/json → PDF) uses `jspdf` (pure JS) in `lib/pdf-converters.ts`.
-- PDF input (PDF → PNG/JPG/WebP page 1, PDF → TXT/HTML all pages) uses `@hyzyla/pdfium` (MIT wrapper over BSD-3 PDFium; not AGPL mupdf). Page render → RGBA → existing `encodeImageData` pipeline. Text extraction is layout-naive (reading order, no OCR).
-- MVP: page-1 image, all-page text. Multi-page image zip and a render-scale/DPI setting are open follow-ups.
+- PDF input (PDF → PNG/JPG/WebP, PDF → TXT/HTML) uses `@hyzyla/pdfium` (MIT wrapper over BSD-3 PDFium; not AGPL mupdf). Page render → RGBA → existing `encodeImageData` pipeline. Text extraction is layout-naive (reading order, no OCR).
+- PDF → image defaults to page 1 as a single image. With `ConversionSettings.pdfAllPages` it renders every page at `pdfScale` (1×/2×/3×) and returns a `application/zip` Blob (one `<base>-page-<n>.<ext>` per page via jszip); `downloadJob` names zip outputs `.zip` and `JobCard.canPreview` skips zip blobs. Default (`pdfAllPages=false`) keeps the single-page behaviour.
 
 ## Webpack
 
