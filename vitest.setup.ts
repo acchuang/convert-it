@@ -1,4 +1,4 @@
-import { Image as CanvasImage, createCanvas } from 'canvas';
+import { Image as CanvasImage, ImageData as CanvasImageData, createCanvas } from 'canvas';
 
 const blobStore = new Map<string, Blob>();
 
@@ -24,11 +24,15 @@ function blobToDataUrl(blob: Blob): Promise<string> {
       }, 0);
       return;
     }
-    blobToDataUrl(blob).then(dataUrl => {
+    blobToDataUrl(blob).then((dataUrl) => {
       super.src = dataUrl;
     });
   }
 };
+
+// jsdom ships no ImageData constructor; borrow node-canvas's so code paths that
+// build ImageData directly (e.g. white-flattening in lib/image-encode) work in tests.
+(globalThis as any).ImageData = CanvasImageData;
 
 const _createObjectURL = URL.createObjectURL.bind(URL);
 URL.createObjectURL = function (blob: Blob) {

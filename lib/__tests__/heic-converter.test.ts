@@ -12,6 +12,20 @@ vi.mock('libheif-js', () => ({
   },
 }));
 
+// jsdom can't fetch the jSquash WASM at runtime; stub the encode/init surface.
+vi.mock('@jsquash/jpeg/encode', () => ({
+  init: vi.fn(() => Promise.resolve()),
+  default: vi.fn(() => Promise.resolve(new ArrayBuffer(16))),
+}));
+vi.mock('@jsquash/png/encode', () => ({
+  init: vi.fn(() => Promise.resolve()),
+  default: vi.fn(() => Promise.resolve(new ArrayBuffer(16))),
+}));
+vi.mock('@jsquash/webp/encode', () => ({
+  init: vi.fn(() => Promise.resolve()),
+  default: vi.fn(() => Promise.resolve(new ArrayBuffer(16))),
+}));
+
 import convertHeic from '@/lib/heic-converter';
 
 describe('convertHeic', () => {
@@ -20,13 +34,15 @@ describe('convertHeic', () => {
   });
 
   it('converts HEIC to JPEG', async () => {
-    mockDecode.mockReturnValue([{
-      get_width: () => 100,
-      get_height: () => 100,
-      display: vi.fn().mockImplementation((imageData: ImageData) => {
-        imageData.data.set(new Uint8Array(40000).fill(128));
-      }),
-    }]);
+    mockDecode.mockReturnValue([
+      {
+        get_width: () => 100,
+        get_height: () => 100,
+        display: vi.fn().mockImplementation((imageData: ImageData) => {
+          imageData.data.set(new Uint8Array(40000).fill(128));
+        }),
+      },
+    ]);
 
     const blob = new Blob(['fake-heic-data'], { type: 'image/heic' });
     const file = new File([blob], 'test.heic', { type: 'image/heic' });
@@ -36,13 +52,15 @@ describe('convertHeic', () => {
   });
 
   it('converts HEIC to ICO', async () => {
-    mockDecode.mockReturnValue([{
-      get_width: () => 64,
-      get_height: () => 64,
-      display: vi.fn().mockImplementation((imageData: ImageData) => {
-        imageData.data.set(new Uint8Array(16384).fill(128));
-      }),
-    }]);
+    mockDecode.mockReturnValue([
+      {
+        get_width: () => 64,
+        get_height: () => 64,
+        display: vi.fn().mockImplementation((imageData: ImageData) => {
+          imageData.data.set(new Uint8Array(16384).fill(128));
+        }),
+      },
+    ]);
 
     const blob = new Blob(['fake-heic-data'], { type: 'image/heic' });
     const file = new File([blob], 'test.heic', { type: 'image/heic' });
@@ -52,7 +70,9 @@ describe('convertHeic', () => {
   });
 
   it('throws on corrupt HEIC', async () => {
-    mockDecode.mockImplementation(() => { throw new Error('corrupt'); });
+    mockDecode.mockImplementation(() => {
+      throw new Error('corrupt');
+    });
 
     const file = new File(['bad-data'], 'corrupt.heic', { type: 'image/heic' });
     await expect(convertHeic(file, 'png')).rejects.toThrow('HEIC decode failed');

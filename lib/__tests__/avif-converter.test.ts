@@ -1,6 +1,20 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import convertAvif from '@/lib/avif-converter';
 
+// jsdom can't fetch the jSquash WASM at runtime; stub the encode/init surface.
+vi.mock('@jsquash/jpeg/encode', () => ({
+  init: vi.fn(() => Promise.resolve()),
+  default: vi.fn(() => Promise.resolve(new ArrayBuffer(16))),
+}));
+vi.mock('@jsquash/png/encode', () => ({
+  init: vi.fn(() => Promise.resolve()),
+  default: vi.fn(() => Promise.resolve(new ArrayBuffer(16))),
+}));
+vi.mock('@jsquash/webp/encode', () => ({
+  init: vi.fn(() => Promise.resolve()),
+  default: vi.fn(() => Promise.resolve(new ArrayBuffer(16))),
+}));
+
 describe('convertAvif', () => {
   afterEach(() => {
     vi.restoreAllMocks();

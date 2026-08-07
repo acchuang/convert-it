@@ -1,41 +1,22 @@
 import type { ConversionSettings } from './types';
 import { encodeIcoBlob } from 'ico-codec';
-import { IMAGE_MIME_MAP } from './image-converters';
+import { encodeImageData, encodePngBytes } from './image-encode';
 
-function rasterizeBitmap(
-  bitmap: ImageBitmap,
-  targetExt: string,
-  quality: number
-): Promise<Blob> {
+// Draws the decoded bitmap to a canvas and reads the pixels once; the shared
+// encode helper dispatches to jSquash (jpg/png/webp) or canvas (bmp).
+function drawToImageData(bitmap: ImageBitmap): ImageData {
   const canvas = document.createElement('canvas');
   canvas.width = bitmap.width;
   canvas.height = bitmap.height;
   const ctx = canvas.getContext('2d')!;
-
-  if (['jpg', 'jpeg', 'bmp'].includes(targetExt)) {
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }
   ctx.drawImage(bitmap, 0, 0);
-
-  const mimeType = IMAGE_MIME_MAP[targetExt] ?? 'image/png';
-
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      blob => {
-        if (blob) resolve(blob);
-        else reject(new Error('Canvas export failed'));
-      },
-      mimeType,
-      quality
-    );
-  });
+  return ctx.getImageData(0, 0, bitmap.width, bitmap.height);
 }
 
 export default async function convertAvif(
   file: File,
   targetExt: string,
-  settings?: ConversionSettings
+  settings?: ConversionSettings,
 ): Promise<Blob> {
   const quality = settings?.quality ?? 0.92;
 
@@ -46,15 +27,16 @@ export default async function convertAvif(
     throw new Error(`AVIF decode failed: ${err instanceof Error ? err.message : 'unknown error'}`);
   }
 
-  if (targetExt === 'ico') {
-    const pngBlob = await rasterizeBitmap(bitmap, 'png', 1);
-    const pngBuffer = new Uint8Array(await pngBlob.arrayBuffer());
-    const result = encodeIcoBlob([{ size: Math.min(bitmap.width, 256), data: pngBuffer }]);
-    bitmap.close();
-    return result;
-  }
+  try {
+    const imageData = drawToImageData(bitmap);
 
-  const result = await rasterizeBitmap(bitmap, targetExt, quality);
-  bitmap.close();
-  return result;
+    if (targetExt === 'ico') {
+      const pngBuffer = await encodePngBytes(imageData);
+      return encodeIcoBlob([{ size: Math.min(bitmap.width, 256), data: pngBuffer }]);
+    }
+
+    return encodeImageData(imageData, targetExt, quality);
+  } finally {
+    bitmap.close();
+  }
 }

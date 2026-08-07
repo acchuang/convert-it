@@ -1,5 +1,21 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { convertImage } from '@/lib/image-converters';
+
+// The WASM codecs are fetched at runtime (see lib/image-encode); in jsdom there
+// is no server to serve them, so stub the encode/init surface and exercise the
+// converter orchestration instead.
+vi.mock('@jsquash/jpeg/encode', () => ({
+  init: vi.fn(() => Promise.resolve()),
+  default: vi.fn(() => Promise.resolve(new ArrayBuffer(16))),
+}));
+vi.mock('@jsquash/png/encode', () => ({
+  init: vi.fn(() => Promise.resolve()),
+  default: vi.fn(() => Promise.resolve(new ArrayBuffer(16))),
+}));
+vi.mock('@jsquash/webp/encode', () => ({
+  init: vi.fn(() => Promise.resolve()),
+  default: vi.fn(() => Promise.resolve(new ArrayBuffer(16))),
+}));
 
 describe('convertImage', () => {
   it('rejects with invalid input (empty file)', async () => {

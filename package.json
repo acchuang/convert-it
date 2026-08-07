@@ -20,11 +20,15 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "fixtures": "node scripts/make-fixtures.mjs && node scripts/make-webm.mjs",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "copy-wasm": "node scripts/copy-wasm.mjs"
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",
+    "@jsquash/jpeg": "^1.6.0",
+    "@jsquash/png": "^3.1.1",
+    "@jsquash/webp": "^1.5.0",
     "@types/jszip": "^3.4.0",
     "fast-xml-parser": "^5.8.0",
     "framer-motion": "^11.0.0",

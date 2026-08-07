@@ -1,13 +1,8 @@
 import { encodeIcoBlob } from 'ico-codec';
 import type { ConversionSettings } from './types';
+import { encodeImageData, encodePngBytes } from './image-encode';
 
-export const IMAGE_MIME_MAP: Record<string, string> = {
-  jpg: 'image/jpeg',
-  jpeg: 'image/jpeg',
-  png: 'image/png',
-  webp: 'image/webp',
-  bmp: 'image/bmp',
-};
+export { IMAGE_MIME_MAP } from './image-encode';
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -29,43 +24,23 @@ async function svgToImage(svgText: string): Promise<HTMLImageElement> {
   }
 }
 
-function rasterizeImage(
-  source: HTMLImageElement,
-  targetExt: string,
-  width: number,
-  height: number,
-  quality: number
-): Promise<Blob> {
+// Draws the source to a canvas and reads the pixels exactly once; the shared
+// encode helper dispatches to the right codec (jSquash for jpg/png/webp, canvas
+// for bmp) and handles white-flattening for opaque formats.
+function drawToImageData(source: HTMLImageElement, width: number, height: number): ImageData {
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d')!;
-
-  if (['jpg', 'jpeg', 'bmp'].includes(targetExt)) {
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }
   ctx.drawImage(source, 0, 0, width, height);
-
-  const mimeType = IMAGE_MIME_MAP[targetExt] ?? 'image/png';
-
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      blob => {
-        if (blob) resolve(blob);
-        else reject(new Error('Canvas export failed'));
-      },
-      mimeType,
-      quality
-    );
-  });
+  return ctx.getImageData(0, 0, width, height);
 }
 
 export async function convertImage(
   file: File,
   sourceExt: string,
   targetExt: string,
-  settings?: ConversionSettings
+  settings?: ConversionSettings,
 ): Promise<Blob> {
   const quality = settings?.quality ?? 0.92;
   const isSvg = sourceExt === 'svg';
@@ -83,12 +58,15 @@ export async function convertImage(
     }
   }
 
+  const width = img.naturalWidth;
+  const height = img.naturalHeight;
+
   if (targetExt === 'ico') {
-    const size = Math.min(img.naturalWidth, 256);
-    const pngBlob = await rasterizeImage(img, 'png', img.naturalWidth, img.naturalHeight, 1);
-    const pngBuffer = new Uint8Array(await pngBlob.arrayBuffer());
-    return encodeIcoBlob([{ size, data: pngBuffer }]);
+    const imageData = drawToImageData(img, width, height);
+    const pngBuffer = await encodePngBytes(imageData);
+    return encodeIcoBlob([{ size: Math.min(width, 256), data: pngBuffer }]);
   }
 
-  return rasterizeImage(img, targetExt, img.naturalWidth, img.naturalHeight, quality);
+  const imageData = drawToImageData(img, width, height);
+  return encodeImageData(imageData, targetExt, quality);
 }
