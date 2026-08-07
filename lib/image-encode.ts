@@ -1,6 +1,7 @@
 import encodeJpeg, { init as initJpeg } from '@jsquash/jpeg/encode';
 import encodePng, { init as initPng } from '@jsquash/png/encode';
 import encodeWebp, { init as initWebp } from '@jsquash/webp/encode';
+import optimiseOxipng, { init as initOxipng } from '@jsquash/oxipng/optimise';
 
 // jSquash ships its .wasm beside its JS in node_modules. We copy those files
 // into public/wasm/ (see scripts/copy-wasm.mjs) and point each codec at them via
@@ -21,11 +22,12 @@ export const IMAGE_MIME_MAP: Record<string, string> = {
 const FLATTEN_EXTS = new Set(['jpg', 'jpeg', 'bmp']);
 
 // Each codec initialises once and is reused. jSquash's emscripten glue
-// (jpeg/webp) resolves the wasm through locateFile; the png codec (wasm-bindgen)
-// takes the wasm URL directly. Both fetch lazily on first encode.
+// (jpeg/webp) resolves the wasm through locateFile; the png and oxipng codecs
+// (wasm-bindgen) take the wasm URL directly. All fetch lazily on first use.
 let jpegReady: Promise<void> | null = null;
 let pngReady: Promise<unknown> | null = null;
 let webpReady: Promise<unknown> | null = null;
+let oxipngReady: Promise<unknown> | null = null;
 
 function ensureJpeg(): Promise<void> {
   if (!jpegReady) {
@@ -46,6 +48,21 @@ function ensureWebp(): Promise<unknown> {
     webpReady = initWebp({ locateFile: (path: string) => `${ASSET_BASE}/${path}` });
   }
   return webpReady;
+}
+
+function ensureOxipng(): Promise<unknown> {
+  if (!oxipngReady) {
+    oxipngReady = initOxipng(`${ASSET_BASE}/squoosh_oxipng_bg.wasm`);
+  }
+  return oxipngReady;
+}
+
+// Lossless PNG optimisation post-pass via oxipng (level 2 — the codec's default).
+// Runs after the libpng encode so standalone PNG and ICO inner-PNG output are
+// smaller without any quality loss.
+async function optimisePngBytes(buffer: ArrayBuffer): Promise<ArrayBuffer> {
+  await ensureOxipng();
+  return optimiseOxipng(buffer);
 }
 
 // JPEG and BMP have no alpha channel. canvas.toBlob composites transparent
@@ -85,7 +102,8 @@ export async function encodeImageData(
   if (ext === 'png') {
     await ensurePng();
     const buffer = await encodePng(input);
-    return new Blob([buffer], { type: mime });
+    const optimised = await optimisePngBytes(buffer);
+    return new Blob([optimised], { type: mime });
   }
   if (ext === 'webp') {
     await ensureWebp();
@@ -113,5 +131,6 @@ export async function encodeImageData(
 export async function encodePngBytes(imageData: ImageData): Promise<Uint8Array> {
   await ensurePng();
   const buffer = await encodePng(imageData);
-  return new Uint8Array(buffer);
+  const optimised = await optimisePngBytes(buffer);
+  return new Uint8Array(optimised);
 }

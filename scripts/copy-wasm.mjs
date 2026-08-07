@@ -16,6 +16,9 @@ const sources = [
   ['@jsquash/png/codec/pkg/squoosh_png_bg.wasm', 'squoosh_png_bg.wasm'],
   ['@jsquash/webp/codec/enc/webp_enc.wasm', 'webp_enc.wasm'],
   ['@jsquash/webp/codec/enc/webp_enc_simd.wasm', 'webp_enc_simd.wasm'],
+  // Single-thread oxipng only: the multi-thread (pkg-parallel) variant needs
+  // SharedArrayBuffer + COOP/COEP, which this static export does not set.
+  ['@jsquash/oxipng/codec/pkg/squoosh_oxipng_bg.wasm', 'squoosh_oxipng_bg.wasm'],
 ];
 
 await mkdir(dest, { recursive: true });

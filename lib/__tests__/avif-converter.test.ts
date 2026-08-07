@@ -14,6 +14,10 @@ vi.mock('@jsquash/webp/encode', () => ({
   init: vi.fn(() => Promise.resolve()),
   default: vi.fn(() => Promise.resolve(new ArrayBuffer(16))),
 }));
+vi.mock('@jsquash/oxipng/optimise', () => ({
+  init: vi.fn(() => Promise.resolve()),
+  default: vi.fn((buf) => Promise.resolve(buf)),
+}));
 
 describe('convertAvif', () => {
   afterEach(() => {
