@@ -30,7 +30,7 @@ Independent Next.js project deployed via Cloudflare Pages.
 
 - Image output (JPEG/PNG/WebP) is encoded via `@jsquash/*` WASM codecs (mozjpeg/libpng/libwebp), not `canvas.toBlob`. Shared helper: `lib/image-encode.ts`.
 - PNG (and the inner PNG of ICO) is losslessly optimized by `@jsquash/oxipng` (Rust) as a post-pass.
-- SVG source is rasterized via `@resvg/resvg-wasm` (Rust resvg) in `lib/image-converters.ts`, not `<img>`+canvas (fixes fonts/foreignObject/browser variance). Known gap: no bundled font buffer yet, so SVG `<text>` may miss glyphs.
+- SVG source is rasterized via `@resvg/resvg-wasm` (Rust resvg) in `lib/image-converters.ts`, not `<img>`+canvas (fixes fonts/foreignObject/browser variance). SVG `<text>` renders real glyphs via a bundled Noto Sans (OFL) font at `public/fonts/noto-sans-regular.ttf`, passed to resvg through `font.fontBuffers` (system fonts stay off).
 - BMP output keeps `canvas.toBlob` (no jSquash codec). ICO output uses `ico-codec` over PNG bytes from `@jsquash/png`.
 - Decode stays native: `createImageBitmap` (AVIF), `HTMLImageElement` (raster), `libheif-js` (HEIC).
 - Codec `.wasm` files live under `public/wasm/` and are lazy-fetched at runtime via `NEXT_PUBLIC_ASSET_BASE` (default `/wasm`), mirroring the `NEXT_PUBLIC_FFMPEG_BASE_URL` + R2 pattern used for FFmpeg core. They are small enough to ship from the static export, not R2.
@@ -47,6 +47,6 @@ Independent Next.js project deployed via Cloudflare Pages.
 
 ## Child DOX Index
 
-| Path | Purpose |
-|---|---|
+| Path   | Purpose                             |
+| ------ | ----------------------------------- |
 | `lib/` | Core conversion logic and utilities |

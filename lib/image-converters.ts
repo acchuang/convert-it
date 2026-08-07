@@ -31,10 +31,30 @@ function ensureResvg(): Promise<void> {
   return resvgReady;
 }
 
+// SVG `<text>` needs a real font or resvg renders missing glyphs. Bundle Noto
+// Sans (OFL) under public/fonts/ and pass its bytes via resvg's `fontBuffers`;
+// system fonts stay off (the wasm sandbox can't read them). Fetched once per
+// page load and cached. Hosted at a literal /fonts/ path (served by the static
+// export from public/fonts/); operators who move wasm off-origin via
+// NEXT_PUBLIC_ASSET_BASE must also serve /fonts/ (e.g. from the same CDN).
+let defaultFontBytes: Promise<Uint8Array> | null = null;
+function loadDefaultFont(): Promise<Uint8Array> {
+  if (!defaultFontBytes) {
+    defaultFontBytes = fetch('/fonts/noto-sans-regular.ttf')
+      .then((r) => r.arrayBuffer())
+      .then((b) => new Uint8Array(b));
+  }
+  return defaultFontBytes;
+}
+
 // Default render width for SVGs that declare neither intrinsic width/height nor
 // a viewBox. resvg resolves a viewBox to dimensions natively, so the fallback is
 // only needed for the rare size-less SVG.
 const DEFAULT_SVG_WIDTH = 1024;
+
+async function resvgFontOptions() {
+  return { fontBuffers: [await loadDefaultFont()], defaultFontFamily: 'Noto Sans' };
+}
 
 // Renders SVG source via resvg (Rust→wasm) to an ImageData, independent of the
 // browser's SVG engine. Replaces the old <img>+canvas rasterization, which had
@@ -42,14 +62,12 @@ const DEFAULT_SVG_WIDTH = 1024;
 async function renderSvgToImageData(svgText: string): Promise<ImageData> {
   const { Resvg } = await loadResvg();
   await ensureResvg();
-  let resvg = new Resvg(svgText, { font: { loadSystemFonts: false } });
+  const font = await resvgFontOptions();
+  let resvg = new Resvg(svgText, { font });
   try {
     if (resvg.width <= 0 || resvg.height <= 0) {
       resvg.free();
-      resvg = new Resvg(svgText, {
-        font: { loadSystemFonts: false },
-        fitTo: { mode: 'width', value: DEFAULT_SVG_WIDTH },
-      });
+      resvg = new Resvg(svgText, { font, fitTo: { mode: 'width', value: DEFAULT_SVG_WIDTH } });
     }
     const rendered = resvg.render();
     try {
