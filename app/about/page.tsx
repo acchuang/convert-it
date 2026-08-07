@@ -28,7 +28,10 @@ const techStack = [
   { labelKey: 'about.techCSS', val: 'Tailwind CSS' },
   { labelKey: 'about.techMotion', val: 'Framer Motion' },
   { labelKey: 'about.techVideo', val: 'FFmpeg WASM' },
-  { labelKey: 'about.techImages', val: 'Canvas API' },
+  { labelKey: 'about.techImages', val: 'jSquash WASM' },
+  { labelKey: 'about.techSvg', val: 'resvg WASM' },
+  { labelKey: 'about.techPng', val: 'oxipng' },
+  { labelKey: 'about.techPdf', val: 'PDFium WASM' },
   { labelKey: 'about.techHeif', val: 'libheif-js' },
   { labelKey: 'about.techSheets', val: 'SheetJS' },
   { labelKey: 'about.techHosting', val: 'Cloudflare Pages + R2' },
@@ -248,7 +251,7 @@ export default function AboutPage() {
             {t('about.improvementsHeading')}
           </h2>
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6 space-y-3">
-            {Array.from({ length: 24 }, (_, i) => i + 1).map(n => (
+            {Array.from({ length: 29 }, (_, i) => i + 1).map(n => (
               <div key={n} className="flex items-start gap-3">
                 <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] flex-shrink-0 mt-2" />
                 <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{t(`about.improvement${n}`)}</p>

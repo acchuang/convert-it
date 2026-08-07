@@ -10,12 +10,13 @@ A bold, modern web app for converting files between popular formats — entirely
 
 ## Features
 
-- **Image conversions**: JPG ↔ PNG ↔ WebP ↔ BMP ↔ ICO ↔ GIF ↔ SVG (canvas-based), plus **HEIC** and **AVIF** decode
+- **Image conversions**: JPG ↔ PNG ↔ WebP ↔ BMP ↔ ICO ↔ GIF ↔ SVG, plus **HEIC** and **AVIF** decode. Output (JPEG/PNG/WebP) is encoded via **jSquash WASM** codecs, PNG is losslessly optimized with **oxipng**, and SVG is rasterized with **resvg-wasm** (bundled Noto Sans font) — no `canvas.toBlob` or `<img>`+canvas in the image path
 - **Video conversions**: MP4 ↔ WebM ↔ AVI ↔ MOV ↔ MKV ↔ FLV, plus **animated WebP** output (FFmpeg WASM)
 - **Audio conversions**: MP3 ↔ WAV ↔ AAC ↔ OGG ↔ FLAC ↔ M4A ↔ OPUS (FFmpeg WASM)
 - **Audio extraction**: Extract audio tracks from video files
 - **Data conversions**: CSV ↔ JSON ↔ XML ↔ YAML ↔ TSV ↔ HTML ↔ Excel
 - **Document conversions**: TXT ↔ Markdown ↔ HTML ↔ PDF, plus **ePub export**
+- **PDF as input**: convert PDF pages to PNG/JPG/WebP (single page, or all pages as a ZIP at 1×/2×/3× render scale) and extract text to TXT/HTML via **pdfium-wasm**
 - **Configurable settings**: Quality, bitrate, CRF, delimiter, indentation per conversion
 - **Drag & drop** with auto-detection of file category
 - **Batch conversion** — convert all files at once with bulk format selector
@@ -114,9 +115,11 @@ there and reapplied, or the core fetch fails in the browser while still working 
 - **Tailwind CSS** with CSS custom properties for theming
 - **Framer Motion** for animations
 - **FFmpeg WASM** for video/audio conversions
-- **Canvas API** for image conversions (Canvas + HEIC WASM + AVIF native decode)
+- **jSquash WASM** codecs (mozjpeg/libpng/libwebp) for image encoding, **oxipng** for lossless PNG optimization, **resvg-wasm** for SVG rasterization
+- **pdfium-wasm** for PDF input (page render and text extraction)
+- **libheif-js** for HEIC decode, native `createImageBitmap` for AVIF decode
 - **SheetJS** for Excel read/write
-- **JSZip** for batch downloads and ePub generation
+- **JSZip** for batch downloads, ePub generation, and multi-page PDF image zips
 - **Cloudflare Pages** for static hosting, **R2** for the self-hosted FFmpeg core — no analytics or tracking scripts
 
 ## Adding More Formats
