@@ -323,6 +323,16 @@ export function JobCard({
     job.resultBlob.type !== 'application/zip';
   const isTextResult = job.targetExt ? TEXT_FORMATS.has(job.targetExt) : false;
 
+  // A converter that silently doubles a file is a bug the user can only see if
+  // we show the delta, so this renders for growth as well as shrinkage.
+  const sizeDelta =
+    job.status === 'done' && job.resultBlob && job.file.size > 0
+      ? {
+          resultSize: job.resultBlob.size,
+          pct: Math.round((job.resultBlob.size / job.file.size - 1) * 100),
+        }
+      : null;
+
   const copyResult = async () => {
     if (!job.resultBlob) return;
     try {
@@ -361,6 +371,17 @@ export function JobCard({
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             {formatFileSize(job.file.size)}
+            {sizeDelta && (
+              <>
+                {' → '}
+                <span className="text-primary">{formatFileSize(sizeDelta.resultSize)}</span>
+                {' · '}
+                <span style={{ color: sizeDelta.pct < 0 ? 'var(--success)' : undefined }}>
+                  {sizeDelta.pct > 0 ? '+' : ''}
+                  {sizeDelta.pct}%
+                </span>
+              </>
+            )}
           </p>
         </div>
 
