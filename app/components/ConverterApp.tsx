@@ -51,6 +51,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
     updateJob,
     updateJobSettings,
     convertJob,
+    cancelJob,
     downloadJob,
     downloadAllAsZip,
     applyBatchFormat: applyBatch,
@@ -428,6 +429,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                       job={job}
                       onTargetChange={ext => updateJob(job.id, { targetExt: ext, status: 'idle', resultBlob: undefined })}
                       onConvert={() => convertJob(job)}
+                      onCancel={() => cancelJob(job.id)}
                       onDownload={() => downloadJob(job)}
                       onRemove={() => removeJob(job.id)}
                       onSettingsChange={patch => updateJobSettings(job.id, patch)}

@@ -34,6 +34,7 @@
   },
   "job": {
     "convert": "轉換 →",
+    "cancel": "取消",
     "retry": "重試",
     "download": "下載",
     "copy": "複製",

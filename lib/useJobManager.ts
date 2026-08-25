@@ -10,6 +10,8 @@ import {
 } from '@/lib/converters';
 import type { ConversionSettings } from '@/lib/types';
 import { FILE_SIZE_LIMITS } from '@/lib/types';
+import { CancelledError, cancelInWorker, runInWorker, runsOnMainThread } from '@/lib/worker-pool';
+import { terminateFFmpeg } from '@/lib/audio-video-converters';
 import type { FileJob } from '@/app/components/JobCard';
 import { addHistoryEntry, getHistory, type HistoryEntry } from '@/lib/history';
 
@@ -26,6 +28,7 @@ interface UseJobManagerReturn {
   updateJob: (id: string, patch: Partial<FileJob>) => void;
   updateJobSettings: (id: string, patch: Partial<ConversionSettings>) => void;
   convertJob: (job: FileJob) => Promise<void>;
+  cancelJob: (id: string) => void;
   downloadJob: (job: FileJob) => void;
   downloadAllAsZip: () => Promise<void>;
   applyBatchFormat: (format: string) => void;
@@ -38,6 +41,11 @@ interface UseJobManagerReturn {
 export function useJobManager(options?: UseJobManagerOptions): UseJobManagerReturn {
   const [jobs, setJobs] = useState<FileJob[]>([]);
   const convertingRef = useRef(new Set<string>());
+  const cancelledRef = useRef(new Set<string>());
+  // ffmpeg runs one job at a time in call order (see the queue in
+  // audio-video-converters), so the head of this list is the job actually
+  // executing — the only one it makes sense to kill the instance for.
+  const mediaQueueRef = useRef<string[]>([]);
   const preferredTarget = options?.preferredTarget;
 
   // Callers pass an inline options object, so hold the latest callback in a ref
@@ -109,13 +117,25 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
     if (!job.targetExt) return;
     if (convertingRef.current.has(job.id)) return;
     convertingRef.current.add(job.id);
+    cancelledRef.current.delete(job.id);
+
+    const category = getFormatInfo(job.sourceExt)?.category;
+    const onMainThread = runsOnMainThread(job.sourceExt, job.targetExt, category);
+    const isMedia = category === 'video' || category === 'audio';
+    if (isMedia) mediaQueueRef.current.push(job.id);
+
     setJobs((prev) =>
       prev.map((j) => (j.id === job.id ? { ...j, status: 'converting', progress: 10 } : j)),
     );
+    const onProgress = (pct: number) =>
+      setJobs((prev) => prev.map((j) => (j.id === job.id ? { ...j, progress: pct } : j)));
+
     try {
-      const blob = await convertFile(job.file, job.targetExt, job.settings, (pct) =>
-        setJobs((prev) => prev.map((j) => (j.id === job.id ? { ...j, progress: pct } : j))),
-      );
+      const blob = onMainThread
+        ? await convertFile(job.file, job.targetExt, job.settings, onProgress)
+        : await runInWorker(job.id, job.file, job.targetExt, job.settings, onProgress);
+
+      if (cancelledRef.current.delete(job.id)) return;
       setJobs((prev) =>
         prev.map((j) =>
           j.id === job.id ? { ...j, status: 'done', resultBlob: blob, progress: 100 } : j,
@@ -132,6 +152,9 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
       });
       onHistoryUpdateRef.current?.();
     } catch (err) {
+      // A cancelled job already went back to idle, and killing ffmpeg mid-exec
+      // surfaces as a generic wasm abort — neither is an error worth showing.
+      if (cancelledRef.current.delete(job.id) || err instanceof CancelledError) return;
       setJobs((prev) =>
         prev.map((j) =>
           j.id === job.id
@@ -146,7 +169,26 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
       );
     } finally {
       convertingRef.current.delete(job.id);
+      if (isMedia) {
+        mediaQueueRef.current = mediaQueueRef.current.filter((id) => id !== job.id);
+      }
     }
+  }, []);
+
+  const cancelJob = useCallback((id: string) => {
+    if (!cancelInWorker(id)) {
+      // Main-thread job: only the head of the ffmpeg queue is actually running,
+      // so that is the only one worth killing the instance for. Anything else
+      // has its result discarded when it lands.
+      if (mediaQueueRef.current[0] === id) terminateFFmpeg();
+      cancelledRef.current.add(id);
+      mediaQueueRef.current = mediaQueueRef.current.filter((queued) => queued !== id);
+    }
+    setJobs((prev) =>
+      prev.map((j) =>
+        j.id === id ? { ...j, status: 'idle', progress: 0, error: undefined } : j,
+      ),
+    );
   }, []);
 
   const downloadJob = useCallback((job: FileJob) => {
@@ -214,6 +256,7 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
     updateJob,
     updateJobSettings,
     convertJob,
+    cancelJob,
     downloadJob,
     downloadAllAsZip,
     applyBatchFormat,

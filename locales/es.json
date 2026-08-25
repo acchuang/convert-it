@@ -34,6 +34,7 @@
   },
   "job": {
     "convert": "CONVERTIR →",
+    "cancel": "Cancelar",
     "retry": "REINTENTAR",
     "download": "DESCARGAR",
     "copy": "COPIAR",

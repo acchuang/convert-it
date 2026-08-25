@@ -40,6 +40,31 @@ async function getFFmpeg(): Promise<FFmpeg> {
   return ffmpegLoading;
 }
 
+// One FFmpeg instance backs every job, and every job writes to the same
+// input.<ext> / output.<ext> pair in its virtual FS. "Convert all" fires jobs
+// concurrently, so without this queue two videos would overwrite each other's
+// files mid-exec and both come back wrong. Serialising also matches what the
+// single wasm heap can actually do.
+let ffmpegQueue: Promise<unknown> = Promise.resolve();
+
+function enqueue<T>(work: () => Promise<T>): Promise<T> {
+  const run = ffmpegQueue.then(work, work);
+  ffmpegQueue = run.catch(() => {});
+  return run;
+}
+
+/**
+ * Kills the shared instance. wasm cannot be interrupted, so this is the only
+ * way to stop an exec in flight; the next conversion reloads the core.
+ */
+export function terminateFFmpeg(): void {
+  ffmpeg?.terminate();
+  ffmpeg = null;
+  ffmpegLoading = null;
+  ffmpegError = null;
+  ffmpegQueue = Promise.resolve();
+}
+
 // Video codecs and presets
 const VIDEO_CODECS: Record<string, { codec: string; ext: string }> = {
   mp4: { codec: 'libx264', ext: 'mp4' },
@@ -106,7 +131,17 @@ async function execWithProgress(ff: FFmpeg, args: string[], onProgress?: (pct: n
   }
 }
 
-export async function convertAudioVideo(
+export function convertAudioVideo(
+  file: File,
+  sourceExt: string,
+  targetExt: string,
+  settings?: ConversionSettings,
+  onProgress?: (pct: number) => void
+): Promise<Blob> {
+  return enqueue(() => runConvertAudioVideo(file, sourceExt, targetExt, settings, onProgress));
+}
+
+async function runConvertAudioVideo(
   file: File,
   sourceExt: string,
   targetExt: string,
@@ -180,7 +215,17 @@ export async function convertAudioVideo(
 }
 
 // Extract audio from video
-export async function extractAudio(
+export function extractAudio(
+  file: File,
+  sourceExt: string,
+  targetExt: string,
+  settings?: ConversionSettings,
+  onProgress?: (pct: number) => void
+): Promise<Blob> {
+  return enqueue(() => runExtractAudio(file, sourceExt, targetExt, settings, onProgress));
+}
+
+async function runExtractAudio(
   file: File,
   sourceExt: string,
   targetExt: string,

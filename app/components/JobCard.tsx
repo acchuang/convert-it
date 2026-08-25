@@ -291,6 +291,7 @@ interface JobCardProps {
   job: FileJob;
   onTargetChange: (ext: string) => void;
   onConvert: () => void;
+  onCancel: () => void;
   onDownload: () => void;
   onRemove: () => void;
   onSettingsChange: (patch: Partial<ConversionSettings>) => void;
@@ -301,6 +302,7 @@ export function JobCard({
   job,
   onTargetChange,
   onConvert,
+  onCancel,
   onDownload,
   onRemove,
   onSettingsChange,
@@ -454,6 +456,23 @@ export function JobCard({
               >
                 {job.progress}%
               </span>
+              <button
+                onClick={onCancel}
+                className="text-[var(--text-secondary)] hover:text-[var(--error)] transition-colors"
+                aria-label={`${t('job.cancel')} ${job.file.name}`}
+                title={t('job.cancel')}
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           )}
 

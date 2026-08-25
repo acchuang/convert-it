@@ -12,9 +12,33 @@ vi.mock('@/lib/converters', async () => {
   };
 });
 
+// jsdom has no Worker, so the pool path is routed back through the mocked
+// convertFile: these tests cover the job state machine, not the transport.
+vi.mock('@/lib/worker-pool', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/worker-pool')>('@/lib/worker-pool');
+  return {
+    ...actual,
+    runInWorker: vi.fn(async (
+      _id: string,
+      file: File,
+      targetExt: string,
+      settings: ConversionSettings,
+      onProgress?: (pct: number) => void,
+    ) => {
+      const { convertFile } = await import('@/lib/converters');
+      return convertFile(file, targetExt, settings, onProgress);
+    }),
+    cancelInWorker: vi.fn(() => false),
+  };
+});
+
 import { convertFile } from '@/lib/converters';
+import { cancelInWorker, runInWorker, CancelledError } from '@/lib/worker-pool';
+import type { ConversionSettings } from '@/lib/types';
 
 const mockConvertFile = vi.mocked(convertFile);
+const mockRunInWorker = vi.mocked(runInWorker);
+const mockCancelInWorker = vi.mocked(cancelInWorker);
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -157,6 +181,81 @@ describe('useJobManager: convertJob', () => {
     });
 
     expect(mockConvertFile).not.toHaveBeenCalled();
+  });
+});
+
+describe('useJobManager: worker routing and cancel', () => {
+  it('sends a worker-safe conversion to the pool', async () => {
+    mockConvertFile.mockResolvedValue(new Blob(['ok']));
+
+    const { result } = renderHook(() => useJobManager());
+    act(() => result.current.addFiles([new File(['a,b\n1,2'], 'data.csv', { type: 'text/csv' })]));
+
+    await act(async () => {
+      await result.current.convertJob(result.current.jobs[0]);
+    });
+
+    expect(mockRunInWorker).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps a DOM-bound conversion on the main thread', async () => {
+    mockConvertFile.mockResolvedValue(new Blob(['ok']));
+
+    const { result } = renderHook(() => useJobManager());
+    act(() => result.current.addFiles([new File(['<p>x</p>'], 'page.html', { type: 'text/html' })]));
+
+    await act(async () => {
+      await result.current.convertJob(result.current.jobs[0]);
+    });
+
+    expect(mockRunInWorker).not.toHaveBeenCalled();
+    expect(mockConvertFile).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns a cancelled worker job to idle instead of error', async () => {
+    mockCancelInWorker.mockReturnValueOnce(true);
+    mockRunInWorker.mockRejectedValueOnce(new CancelledError());
+
+    const { result } = renderHook(() => useJobManager());
+    act(() => result.current.addFiles([new File(['a,b\n1,2'], 'data.csv', { type: 'text/csv' })]));
+    const job = result.current.jobs[0];
+
+    let convertPromise!: Promise<void>;
+    act(() => {
+      convertPromise = result.current.convertJob(job);
+    });
+    act(() => result.current.cancelJob(job.id));
+    await act(async () => {
+      await convertPromise;
+    });
+
+    expect(mockCancelInWorker).toHaveBeenCalledWith(job.id);
+    expect(result.current.jobs[0].status).toBe('idle');
+    expect(result.current.jobs[0].error).toBeUndefined();
+  });
+
+  it('discards the result of a cancelled main-thread job', async () => {
+    let resolveConvert!: (blob: Blob) => void;
+    mockConvertFile.mockImplementation(
+      () => new Promise<Blob>(resolve => { resolveConvert = resolve; })
+    );
+
+    const { result } = renderHook(() => useJobManager());
+    act(() => result.current.addFiles([new File(['<p>x</p>'], 'page.html', { type: 'text/html' })]));
+    const job = result.current.jobs[0];
+
+    let convertPromise!: Promise<void>;
+    act(() => {
+      convertPromise = result.current.convertJob(job);
+    });
+    act(() => result.current.cancelJob(job.id));
+    await act(async () => {
+      resolveConvert(new Blob(['too late']));
+      await convertPromise;
+    });
+
+    expect(result.current.jobs[0].status).toBe('idle');
+    expect(result.current.jobs[0].resultBlob).toBeUndefined();
   });
 });
 
