@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useMemo, type ReactNode } from 'react';
+import { useState, useRef, useMemo, useEffect, type ReactNode } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -63,10 +63,15 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
   const [dragging, setDragging] = useState(false);
   const [dragCategory, setDragCategory] = useState<string | null>(null);
   const [batchFormat, setBatchFormat] = useState('');
-  const [history, setHistory] = useState<HistoryEntry[]>(() => getHistory());
+  // Seeded empty, filled after mount: the prerender has no localStorage, so
+  // reading it during the first render makes hydration disagree with the
+  // server HTML (React #418) for anyone who has converted something before.
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const { theme, toggle: toggleTheme } = useTheme();
   const { t } = useLocale();
+
+  useEffect(() => setHistory(getHistory()), []);
 
   const largeFiles = useMemo(() =>
     jobs.filter(j => {
