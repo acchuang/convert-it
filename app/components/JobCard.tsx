@@ -34,6 +34,13 @@ const JSON_INDENT_FORMATS = ['json', 'xlsx'];
 const AUDIO_BITRATE_FORMATS = ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a'];
 const VIDEO_SETTINGS_FORMATS = ['mp4', 'webm', 'avi', 'mov', 'mkv', 'flv'];
 
+// Resize and crop apply to every image target, including the two with no
+// quality knob of their own.
+const IMAGE_TRANSFORM_FORMATS = [...IMAGE_QUALITY_FORMATS, 'bmp', 'ico'];
+const TARGET_SIZE_FORMATS = ['jpg', 'jpeg', 'webp'];
+const RESIZE_PRESETS = [25, 50, 75, 100];
+const CROP_ASPECTS = ['none', '1:1', '4:3', '16:9', '3:2'];
+
 const CONFIGURABLE_FORMATS = new Set([
   ...IMAGE_QUALITY_FORMATS,
   ...CSV_DELIMITER_FORMATS,
@@ -43,8 +50,12 @@ const CONFIGURABLE_FORMATS = new Set([
   ...VIDEO_SETTINGS_FORMATS,
 ]);
 
-function hasSettings(targetExt: string | null): boolean {
-  return !!targetExt && CONFIGURABLE_FORMATS.has(targetExt);
+function hasSettings(targetExt: string | null, sourceExt: string): boolean {
+  if (!targetExt) return false;
+  if (getFormatInfo(sourceExt)?.category === 'image' && IMAGE_TRANSFORM_FORMATS.includes(targetExt)) {
+    return true;
+  }
+  return CONFIGURABLE_FORMATS.has(targetExt);
 }
 
 function SettingsPanel({
@@ -67,8 +78,14 @@ function SettingsPanel({
   const showAudioBitrate = AUDIO_BITRATE_FORMATS.includes(targetExt);
   const showVideoSettings = VIDEO_SETTINGS_FORMATS.includes(targetExt);
   const showPdfImage = sourceExt === 'pdf' && IMAGE_QUALITY_FORMATS.includes(targetExt);
+  // The toolbox runs on decoded pixels, which only the image pipeline produces —
+  // pdf→png goes through the PDF renderer instead, so it is excluded here.
+  const showImageTools =
+    getFormatInfo(sourceExt)?.category === 'image' && IMAGE_TRANSFORM_FORMATS.includes(targetExt);
+  const showTargetSize = showImageTools && TARGET_SIZE_FORMATS.includes(targetExt);
 
   const qualityPct = Math.round(settings.quality * 100);
+  const usingExactSize = settings.imageResizeWidth > 0 || settings.imageResizeHeight > 0;
 
   return (
     <motion.div
@@ -282,6 +299,93 @@ function SettingsPanel({
             </div>
           </>
         )}
+
+        {showImageTools && (
+          <>
+            <div className="flex items-center gap-3">
+              <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider">
+                {t('job.resize')}
+              </span>
+              <div className="flex gap-1">
+                {RESIZE_PRESETS.map((n) => (
+                  <button
+                    key={n}
+                    onClick={() =>
+                      onChange({ imageResizePercent: n, imageResizeWidth: 0, imageResizeHeight: 0 })
+                    }
+                    className={`px-2 py-1 text-xs rounded transition-colors ${
+                      !usingExactSize && settings.imageResizePercent === n
+                        ? 'bg-[var(--accent)] text-[var(--accent-text)]'
+                        : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
+                    }`}
+                  >
+                    {n}%
+                  </button>
+                ))}
+              </div>
+              <input
+                type="number"
+                min={0}
+                value={settings.imageResizeWidth || ''}
+                onChange={(e) => onChange({ imageResizeWidth: Math.max(0, Number(e.target.value)) })}
+                className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] text-primary text-xs rounded px-2 py-1 w-16 focus:outline-none focus:border-[var(--accent)] transition-colors"
+                placeholder={t('job.width')}
+                aria-label={t('job.width')}
+              />
+              <span className="text-[var(--text-muted)] text-xs">×</span>
+              <input
+                type="number"
+                min={0}
+                value={settings.imageResizeHeight || ''}
+                onChange={(e) => onChange({ imageResizeHeight: Math.max(0, Number(e.target.value)) })}
+                className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] text-primary text-xs rounded px-2 py-1 w-16 focus:outline-none focus:border-[var(--accent)] transition-colors"
+                placeholder={t('job.height')}
+                aria-label={t('job.height')}
+              />
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider">
+                {t('job.crop')}
+              </span>
+              <div className="flex gap-1">
+                {CROP_ASPECTS.map((aspect) => (
+                  <button
+                    key={aspect}
+                    onClick={() => onChange({ imageCropAspect: aspect })}
+                    className={`px-2 py-1 text-xs rounded transition-colors ${
+                      settings.imageCropAspect === aspect
+                        ? 'bg-[var(--accent)] text-[var(--accent-text)]'
+                        : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
+                    }`}
+                  >
+                    {aspect === 'none' ? t('job.cropOff') : aspect}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {showTargetSize && (
+              <div className="flex items-center gap-3">
+                <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider">
+                  {t('job.maxSize')}
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  value={settings.imageTargetSizeKb || ''}
+                  onChange={(e) =>
+                    onChange({ imageTargetSizeKb: Math.max(0, Number(e.target.value)) })
+                  }
+                  className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] text-primary text-xs rounded px-2 py-1 w-20 focus:outline-none focus:border-[var(--accent)] transition-colors"
+                  placeholder={t('job.maxSizeOff')}
+                  aria-label={t('job.maxSize')}
+                />
+                <span className="text-[var(--text-muted)] text-xs">KB</span>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </motion.div>
   );
@@ -317,7 +421,7 @@ export function JobCard({
   const category = info?.category ?? 'document';
   const categoryColor = CATEGORY_COLORS[category] ?? '#666';
   const targets = getTargetFormats(job.sourceExt);
-  const canConfigure = job.targetExt ? hasSettings(job.targetExt) : false;
+  const canConfigure = hasSettings(job.targetExt, job.sourceExt);
   const canPreview =
     job.status === 'done' &&
     !!job.resultBlob &&

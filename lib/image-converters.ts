@@ -1,6 +1,5 @@
-import { encodeIcoBlob } from 'ico-codec';
 import type { ConversionSettings } from './types';
-import { ASSET_BASE, decodeToImageData, encodeImageData, encodePngBytes } from './image-encode';
+import { ASSET_BASE, decodeToImageData, finishImage } from './image-encode';
 
 export { IMAGE_MIME_MAP } from './image-encode';
 
@@ -75,18 +74,12 @@ export async function convertImage(
   sourceExt: string,
   targetExt: string,
   settings?: ConversionSettings,
+  onProgress?: (pct: number) => void,
 ): Promise<Blob> {
-  const quality = settings?.quality ?? 0.92;
-
   const imageData =
     sourceExt === 'svg'
       ? await renderSvgToImageData(await file.text())
       : await decodeToImageData(file);
 
-  if (targetExt === 'ico') {
-    const pngBuffer = await encodePngBytes(imageData);
-    return encodeIcoBlob([{ size: Math.min(imageData.width, 256), data: pngBuffer }]);
-  }
-
-  return encodeImageData(imageData, targetExt, quality);
+  return finishImage(imageData, targetExt, settings, onProgress);
 }

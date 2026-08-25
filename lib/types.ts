@@ -19,6 +19,12 @@ export interface ConversionSettings {
   // PDF input settings
   pdfAllPages: boolean; // pdf→image: render all pages (zip) vs page 1 (single image)
   pdfScale: number; // pdf→image render scale (1 | 2 | 3)
+  // Image toolbox — applied to any image output before encoding
+  imageCropAspect: string; // 'none' | '1:1' | '4:3' | '16:9' | '3:2' (centre crop)
+  imageResizePercent: number; // 100 = original; ignored when a width/height is set
+  imageResizeWidth: number; // 0 = derive from height, or from the percent
+  imageResizeHeight: number; // 0 = derive from width, or from the percent
+  imageTargetSizeKb: number; // 0 = off; jpg/webp only — quality is searched to fit
 }
 
 export const DEFAULT_SETTINGS: ConversionSettings = {
@@ -31,6 +37,11 @@ export const DEFAULT_SETTINGS: ConversionSettings = {
   videoPreset: 'medium',
   pdfAllPages: false,
   pdfScale: 1,
+  imageCropAspect: 'none',
+  imageResizePercent: 100,
+  imageResizeWidth: 0,
+  imageResizeHeight: 0,
+  imageTargetSizeKb: 0,
 };
 
 export interface HistoryEntry {

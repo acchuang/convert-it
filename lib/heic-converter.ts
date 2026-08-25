@@ -1,14 +1,12 @@
 import type { ConversionSettings } from './types';
-import { encodeIcoBlob } from 'ico-codec';
-import { encodeImageData, encodePngBytes } from './image-encode';
+import { finishImage } from './image-encode';
 
 export default async function convertHeic(
   file: File,
   targetExt: string,
   settings?: ConversionSettings,
+  onProgress?: (pct: number) => void,
 ): Promise<Blob> {
-  const quality = settings?.quality ?? 0.92;
-
   const libheif = await import('libheif-js');
   const data = new Uint8Array(await file.arrayBuffer());
   const decoder = new libheif.default.HeifDecoder();
@@ -30,10 +28,5 @@ export default async function convertHeic(
   const imageData = new ImageData(width, height);
   await image.display(imageData, () => {});
 
-  if (targetExt === 'ico') {
-    const pngBuffer = await encodePngBytes(imageData);
-    return encodeIcoBlob([{ size: Math.min(width, 256), data: pngBuffer }]);
-  }
-
-  return encodeImageData(imageData, targetExt, quality);
+  return finishImage(imageData, targetExt, settings, onProgress);
 }

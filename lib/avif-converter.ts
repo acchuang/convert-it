@@ -1,14 +1,12 @@
 import type { ConversionSettings } from './types';
-import { encodeIcoBlob } from 'ico-codec';
-import { bitmapToImageData, encodeImageData, encodePngBytes } from './image-encode';
+import { bitmapToImageData, finishImage } from './image-encode';
 
 export default async function convertAvif(
   file: File,
   targetExt: string,
   settings?: ConversionSettings,
+  onProgress?: (pct: number) => void,
 ): Promise<Blob> {
-  const quality = settings?.quality ?? 0.92;
-
   let bitmap: ImageBitmap;
   try {
     bitmap = await createImageBitmap(file);
@@ -18,13 +16,7 @@ export default async function convertAvif(
 
   try {
     const imageData = bitmapToImageData(bitmap);
-
-    if (targetExt === 'ico') {
-      const pngBuffer = await encodePngBytes(imageData);
-      return encodeIcoBlob([{ size: Math.min(bitmap.width, 256), data: pngBuffer }]);
-    }
-
-    return encodeImageData(imageData, targetExt, quality);
+    return await finishImage(imageData, targetExt, settings, onProgress);
   } finally {
     bitmap.close();
   }

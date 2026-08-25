@@ -224,13 +224,13 @@ export async function convertFile(
 ): Promise<Blob> {
   const sourceExt = getFileExtension(file.name);
 
-  if (sourceExt === 'heic') return convertHeic(file, targetExt, settings);
-  if (sourceExt === 'avif') return convertAvif(file, targetExt, settings);
+  if (sourceExt === 'heic') return convertHeic(file, targetExt, settings, onProgress);
+  if (sourceExt === 'avif') return convertAvif(file, targetExt, settings, onProgress);
 
   const category = getFormatInfo(sourceExt)?.category;
 
   if (category === 'image') {
-    return convertImage(file, sourceExt, targetExt, settings);
+    return convertImage(file, sourceExt, targetExt, settings, onProgress);
   }
 
   if (category === 'video' || category === 'audio') {

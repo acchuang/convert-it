@@ -110,7 +110,7 @@ describe('convertFile dispatch', () => {
     const file = new File(['x'], 'photo.heic', { type: 'image/heic' });
     const blob = await convertFile(file, 'png');
     expect(convertHeic).toHaveBeenCalledTimes(1);
-    expect(convertHeic).toHaveBeenCalledWith(file, 'png', undefined);
+    expect(convertHeic).toHaveBeenCalledWith(file, 'png', undefined, undefined);
     expect(await blob.text()).toBe('heic-result');
   });
 
@@ -118,7 +118,7 @@ describe('convertFile dispatch', () => {
     const file = new File(['x'], 'photo.avif', { type: 'image/avif' });
     const blob = await convertFile(file, 'jpg');
     expect(convertAvif).toHaveBeenCalledTimes(1);
-    expect(convertAvif).toHaveBeenCalledWith(file, 'jpg', undefined);
+    expect(convertAvif).toHaveBeenCalledWith(file, 'jpg', undefined, undefined);
     expect(await blob.text()).toBe('avif-result');
   });
 
@@ -126,7 +126,7 @@ describe('convertFile dispatch', () => {
     const file = new File(['x'], 'photo.png', { type: 'image/png' });
     const blob = await convertFile(file, 'jpg');
     expect(convertImage).toHaveBeenCalledTimes(1);
-    expect(convertImage).toHaveBeenCalledWith(file, 'png', 'jpg', undefined);
+    expect(convertImage).toHaveBeenCalledWith(file, 'png', 'jpg', undefined, undefined);
     expect(await blob.text()).toBe('image-result');
     expect(convertHeic).not.toHaveBeenCalled();
     expect(convertAvif).not.toHaveBeenCalled();

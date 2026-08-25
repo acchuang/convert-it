@@ -2,6 +2,8 @@ import encodeJpeg, { init as initJpeg } from '@jsquash/jpeg/encode';
 import encodePng, { init as initPng } from '@jsquash/png/encode';
 import encodeWebp, { init as initWebp } from '@jsquash/webp/encode';
 import optimiseOxipng, { init as initOxipng } from '@jsquash/oxipng/optimise';
+import { encodeIcoBlob } from 'ico-codec';
+import type { ConversionSettings } from './types';
 
 // jSquash ships its .wasm beside its JS in node_modules. We copy those files
 // into public/wasm/ (see scripts/copy-wasm.mjs) and point each codec at them via
@@ -185,4 +187,160 @@ export async function encodePngBytes(imageData: ImageData): Promise<Uint8Array> 
   const buffer = await encodePng(imageData);
   const optimised = await optimisePngBytes(buffer);
   return new Uint8Array(optimised);
+}
+
+export interface ImageTransform {
+  crop?: { x: number; y: number; width: number; height: number };
+  width: number;
+  height: number;
+}
+
+const CROP_ASPECTS: Record<string, number> = {
+  '1:1': 1,
+  '4:3': 4 / 3,
+  '16:9': 16 / 9,
+  '3:2': 3 / 2,
+};
+
+/**
+ * Turns the toolbox settings into concrete pixel geometry, or null when they
+ * amount to "leave it alone". Crop is a centre crop to an aspect ratio: it is
+ * what the ratio presets people actually ask for need, and it needs no
+ * interactive UI. Resize runs on the cropped image, so the two compose.
+ *
+ * ponytail: no free-form crop rectangle — that means a drag UI over a preview.
+ * The geometry here already takes an arbitrary crop, so that is a UI change only.
+ */
+export function planImageTransform(
+  width: number,
+  height: number,
+  settings: Partial<ConversionSettings>,
+): ImageTransform | null {
+  const aspect = CROP_ASPECTS[settings.imageCropAspect ?? 'none'];
+  let crop: ImageTransform['crop'];
+  let w = width;
+  let h = height;
+
+  if (aspect) {
+    let cw = width;
+    let ch = Math.round(width / aspect);
+    if (ch > height) {
+      ch = height;
+      cw = Math.round(height * aspect);
+    }
+    crop = { x: Math.round((width - cw) / 2), y: Math.round((height - ch) / 2), width: cw, height: ch };
+    w = cw;
+    h = ch;
+  }
+
+  const percent = settings.imageResizePercent ?? 100;
+  const wantW = Math.max(0, Math.round(settings.imageResizeWidth ?? 0));
+  const wantH = Math.max(0, Math.round(settings.imageResizeHeight ?? 0));
+  const resizing = wantW > 0 || wantH > 0 || percent !== 100;
+  if (!crop && !resizing) return null;
+
+  let outW = w;
+  let outH = h;
+
+  if (wantW > 0 || wantH > 0) {
+    // One dimension given: the other follows the (cropped) aspect ratio.
+    outW = wantW > 0 ? wantW : Math.round((w * wantH) / h);
+    outH = wantH > 0 ? wantH : Math.round((h * wantW) / w);
+  } else if (percent !== 100) {
+    const scale = percent / 100;
+    outW = Math.round(w * scale);
+    outH = Math.round(h * scale);
+  }
+
+  outW = Math.max(1, outW);
+  outH = Math.max(1, outH);
+
+  if (!crop && outW === width && outH === height) return null;
+  return { crop, width: outW, height: outH };
+
+}
+
+// ponytail: one drawImage does crop and resize in a single step. Browsers use a
+// bilinear filter, which is soft below roughly a 1/3 downscale — step-halve here
+// if that ever shows up in output people complain about.
+export function transformImageData(imageData: ImageData, transform: ImageTransform): ImageData {
+  const crop = transform.crop ?? { x: 0, y: 0, width: imageData.width, height: imageData.height };
+  const source = new OffscreenCanvas(imageData.width, imageData.height);
+  source.getContext('2d')!.putImageData(imageData, 0, 0);
+
+  const target = new OffscreenCanvas(transform.width, transform.height);
+  const ctx = target.getContext('2d')!;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(
+    source,
+    crop.x, crop.y, crop.width, crop.height,
+    0, 0, transform.width, transform.height,
+  );
+  return ctx.getImageData(0, 0, transform.width, transform.height);
+}
+
+// Only the lossy codecs have a quality knob to trade against a size budget.
+const TARGET_SIZE_FORMATS = new Set(['jpg', 'jpeg', 'webp']);
+
+const TARGET_SIZE_STEPS = 7;
+
+/**
+ * Encodes to the largest quality that still fits the byte budget. Size is not a
+ * closed form of quality for either codec, so it is a binary search over real
+ * encodes — 7 steps lands within ~1% of the quality ceiling.
+ */
+async function encodeToTargetSize(
+  imageData: ImageData,
+  targetExt: string,
+  targetBytes: number,
+  onProgress?: (pct: number) => void,
+): Promise<Blob> {
+  let low = 0.05;
+  let high = 0.98;
+  let best: Blob | null = null;
+  let smallest: Blob | null = null;
+
+  for (let step = 0; step < TARGET_SIZE_STEPS; step++) {
+    const quality = (low + high) / 2;
+    const blob = await encodeImageData(imageData, targetExt, quality);
+    if (!smallest || blob.size < smallest.size) smallest = blob;
+    if (blob.size <= targetBytes) {
+      best = blob;
+      low = quality;
+    } else {
+      high = quality;
+    }
+    onProgress?.(10 + Math.round(((step + 1) / TARGET_SIZE_STEPS) * 85));
+  }
+
+  // Budget unreachable even at the floor: hand back the smallest we produced
+  // rather than failing — the result card shows the size it actually landed on.
+  return best ?? smallest!;
+}
+
+/**
+ * Shared tail of every image conversion: apply the toolbox, then encode. HEIC,
+ * AVIF and the ordinary image path all decode differently and finish identically.
+ */
+export async function finishImage(
+  imageData: ImageData,
+  targetExt: string,
+  settings?: ConversionSettings,
+  onProgress?: (pct: number) => void,
+): Promise<Blob> {
+  const transform = settings ? planImageTransform(imageData.width, imageData.height, settings) : null;
+  const output = transform ? transformImageData(imageData, transform) : imageData;
+
+  if (targetExt === 'ico') {
+    const pngBuffer = await encodePngBytes(output);
+    return encodeIcoBlob([{ size: Math.min(output.width, 256), data: pngBuffer }]);
+  }
+
+  const targetBytes = (settings?.imageTargetSizeKb ?? 0) * 1024;
+  if (targetBytes > 0 && TARGET_SIZE_FORMATS.has(targetExt)) {
+    return encodeToTargetSize(output, targetExt, targetBytes, onProgress);
+  }
+
+  return encodeImageData(output, targetExt, settings?.quality ?? 0.92);
 }
