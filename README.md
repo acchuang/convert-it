@@ -4,7 +4,7 @@
 
 A bold, modern web app for converting files between popular formats — entirely in the browser. Your files never leave your device: no uploads, no accounts.
 
-[![deploy](https://img.shields.io/github/deployments/acchuang/convert-it/production?label=cloudflare%20pages&style=flat-square)](https://convert-it.oilygold.xyz)
+[![ci](https://img.shields.io/github/actions/workflow/status/acchuang/convert-it/ci.yml?branch=main&label=ci%20%2B%20deploy&style=flat-square)](https://github.com/acchuang/convert-it/actions/workflows/ci.yml)
 [![repo](https://img.shields.io/badge/source-github-blue?style=flat-square)](https://github.com/acchuang/convert-it)
 [![issues](https://img.shields.io/github/issues/acchuang/convert-it?style=flat-square)](https://github.com/acchuang/convert-it/issues)
 
@@ -65,6 +65,26 @@ npm run build
 
 The static export is output to the `out/` directory. Deploy it to any static host (Cloudflare Pages, Vercel, Netlify, etc.).
 
+## Deploying
+
+The Cloudflare Pages project is **direct upload** — it is not connected to this Git repo, so
+pushing alone builds nothing on Cloudflare's side. Pushing to `main` runs
+[`ci.yml`](.github/workflows/ci.yml), which typechecks, lints, tests, builds, and then uploads
+`out/` with `wrangler pages deploy`. It needs two repo secrets:
+
+| Secret | Value |
+| --- | --- |
+| `CLOUDFLARE_API_TOKEN` | API token with **Account → Cloudflare Pages → Edit** |
+| `CLOUDFLARE_ACCOUNT_ID` | `d583c243261fbfe8d012005d5b59bfeb` |
+
+To deploy by hand, build with `NEXT_PUBLIC_FFMPEG_BASE_URL` set — it is inlined at build
+time, and a build without it ships an app whose audio/video conversion throws:
+
+```bash
+NEXT_PUBLIC_FFMPEG_BASE_URL=https://cdn.oilygold.xyz/ffmpeg-core/0.12.10 npm run build
+npx wrangler pages deploy out --project-name convert-it --branch main
+```
+
 ## Smoke Test
 
 `npm test` covers the converters in isolation; the smoke run drives one pair per engine
@@ -102,8 +122,9 @@ production. The zone ID is on the Cloudflare dashboard under the zone's Overview
 npx wrangler r2 bucket domain add convert-it-assets --domain cdn.oilygold.xyz --zone-id <zone-id>
 ```
 
-Finally set `NEXT_PUBLIC_FFMPEG_BASE_URL=https://cdn.oilygold.xyz/ffmpeg-core/0.12.10` in the
-Pages build environment. It is inlined at build time, so this needs a redeploy to take effect.
+Finally point `NEXT_PUBLIC_FFMPEG_BASE_URL` at the new domain in [`ci.yml`](.github/workflows/ci.yml),
+which is where the deployed build gets it. It is inlined at build time, so this needs a redeploy
+to take effect.
 
 Allowed origins live in [`r2-cors.json`](r2-cors.json) — a new deploy origin must be added
 there and reapplied, or the core fetch fails in the browser while still working locally.

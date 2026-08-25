@@ -29,4 +29,18 @@ jobs:
 
       - run: npm run test
 
+      # Public CDN URL, inlined into the bundle at build time — not a secret.
+      # Must match the value in the Pages project's env vars.
       - run: npm run build
+        env:
+          NEXT_PUBLIC_FFMPEG_BASE_URL: https://cdn.oilygold.xyz/ffmpeg-core/0.12.10
+
+      # The Pages project is direct-upload (no Git integration), so main is
+      # deployed from the artifact this job just built and verified.
+      - name: Deploy to Cloudflare Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy out --project-name convert-it --branch main
