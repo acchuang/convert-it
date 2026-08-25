@@ -15,6 +15,9 @@ import { addHistoryEntry, getHistory, type HistoryEntry } from '@/lib/history';
 
 interface UseJobManagerOptions {
   onHistoryUpdate?: () => void;
+  /** Preselected on any added file that supports it; falls back to the first
+   *  registered target otherwise. Set by the /convert/[pair] landing pages. */
+  preferredTarget?: string;
 }
 
 interface UseJobManagerReturn {
@@ -35,6 +38,7 @@ interface UseJobManagerReturn {
 export function useJobManager(options?: UseJobManagerOptions): UseJobManagerReturn {
   const [jobs, setJobs] = useState<FileJob[]>([]);
   const convertingRef = useRef(new Set<string>());
+  const preferredTarget = options?.preferredTarget;
 
   // Callers pass an inline options object, so hold the latest callback in a ref
   // rather than making every returned function change identity each render.
@@ -44,6 +48,12 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
   });
 
   const addFiles = useCallback((files: FileList | File[]) => {
+    const pickTarget = (ext: string) => {
+      const targets = getTargetFormats(ext);
+      if (preferredTarget && targets.includes(preferredTarget)) return preferredTarget;
+      return targets[0] ?? null;
+    };
+
     const newJobs: FileJob[] = [];
     for (const file of Array.from(files)) {
       const ext = getFileExtension(file.name);
@@ -68,14 +78,14 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
         id: crypto.randomUUID(),
         file,
         sourceExt: ext,
-        targetExt: getTargetFormats(ext)[0] ?? null,
+        targetExt: pickTarget(ext),
         status: 'idle',
         progress: 0,
         settings: { ...DEFAULT_SETTINGS },
       });
     }
     setJobs((prev) => [...prev, ...newJobs]);
-  }, []);
+  }, [preferredTarget]);
 
   const updateJob = useCallback(
     (id: string, patch: Partial<FileJob>) =>

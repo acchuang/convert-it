@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, type ReactNode } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -9,15 +9,15 @@ import {
   FORMATS,
   getFormatInfo,
 } from '@/lib/converters';
-import { JobCard, type FileJob } from './components/JobCard';
-import { HistoryPanel } from './components/HistoryPanel';
+import { JobCard, type FileJob } from './JobCard';
+import { HistoryPanel } from './HistoryPanel';
 import { getHistory, type HistoryEntry } from '@/lib/history';
-import { useTheme } from './components/ThemeProvider';
-import { LanguageSelector } from './components/LanguageSelector';
-import { useLocale } from './components/LocaleProvider';
+import { useTheme } from './ThemeProvider';
+import { LanguageSelector } from './LanguageSelector';
+import { useLocale } from './LocaleProvider';
 import { useJobManager } from '@/lib/useJobManager';
-import ErrorBoundary from './components/ErrorBoundary';
-import Footer from './components/Footer';
+import ErrorBoundary from './ErrorBoundary';
+import Footer from './Footer';
 
 const CATEGORY_COLORS: Record<string, string> = {
   image: '#FF4D00',
@@ -36,7 +36,15 @@ function formatMB(bytes: number): string {
 
 const ALL_CATEGORIES = ['image', 'video', 'audio', 'document', 'data'] as const;
 
-export default function HomePage() {
+interface ConverterAppProps {
+  /** Landing pages preselect the pair they rank for, so a dropped file lands
+   *  on the format the visitor searched for instead of the registry default. */
+  preferredTarget?: string;
+  /** SEO copy rendered above the drop zone on /convert/[pair] routes. */
+  intro?: ReactNode;
+}
+
+export default function ConverterApp({ preferredTarget, intro }: ConverterAppProps = {}) {
   const {
     jobs,
     addFiles,
@@ -50,7 +58,7 @@ export default function HomePage() {
     convertAll,
     clearAll,
     doneCount,
-  } = useJobManager({ onHistoryUpdate: () => setHistory(getHistory()) });
+  } = useJobManager({ preferredTarget, onHistoryUpdate: () => setHistory(getHistory()) });
   const [dragging, setDragging] = useState(false);
   const [dragCategory, setDragCategory] = useState<string | null>(null);
   const [batchFormat, setBatchFormat] = useState('');
@@ -183,6 +191,8 @@ export default function HomePage() {
 
       <ErrorBoundary>
         <div className="max-w-5xl mx-auto px-4 py-8">
+        {intro}
+
         {/* Drop zone */}
         <AnimatePresence>
           {jobs.length === 0 || dragging ? (

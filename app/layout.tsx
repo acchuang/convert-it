@@ -3,6 +3,7 @@ import { Bebas_Neue, DM_Sans, DM_Mono } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from './components/ThemeProvider';
 import { LocaleProvider } from './components/LocaleProvider';
+import { SITE_URL } from '@/lib/site';
 
 const bebasNeue = Bebas_Neue({
   weight: '400',
@@ -25,7 +26,7 @@ const dmMono = DM_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://convert-it.pages.dev'),
+  metadataBase: new URL(SITE_URL),
   title: 'Convert-it — Universal File Converter',
   description: 'Convert any file to any format, entirely in your browser. Your files never leave your device — no uploads, no accounts.',
   applicationName: 'Convert-it',
@@ -39,7 +40,7 @@ export const metadata: Metadata = {
     'max-video-preview': -1,
   },
   openGraph: {
-    url: 'https://convert-it.pages.dev',
+    url: SITE_URL,
     siteName: 'Convert-it',
     title: 'Convert-it — Universal File Converter',
     description: 'Convert any file to any format, entirely in your browser. Your files never leave your device — no uploads, no accounts.',
@@ -105,7 +106,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               },
               description:
                 'Convert any file to any format, entirely in your browser. Your files never leave your device — no uploads, no accounts.',
-              url: 'https://convert-it.pages.dev',
+              url: SITE_URL,
               author: {
                 '@type': 'Person',
                 url: 'https://github.com/acchuang',

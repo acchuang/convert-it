@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://convert-it.pages.dev/sitemap.xml
+Sitemap: https://convert-it.oilygold.xyz/sitemap.xml
