@@ -1,18 +1,8 @@
 import { encodeIcoBlob } from 'ico-codec';
 import type { ConversionSettings } from './types';
-import { ASSET_BASE, encodeImageData, encodePngBytes } from './image-encode';
+import { ASSET_BASE, decodeToImageData, encodeImageData, encodePngBytes } from './image-encode';
 
 export { IMAGE_MIME_MAP } from './image-encode';
-
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('Image load failed'));
-    img.src = src;
-  });
-}
 
 // resvg's JS glue is small but the wasm is ~2.4 MB, so both load lazily: the
 // module is dynamically imported only when an SVG is actually converted (non-SVG
@@ -80,18 +70,6 @@ async function renderSvgToImageData(svgText: string): Promise<ImageData> {
   }
 }
 
-// Draws a raster source to a canvas and reads the pixels exactly once; the
-// shared encode helper dispatches to the right codec (jSquash for jpg/png/webp,
-// canvas for bmp) and handles white-flattening for opaque formats.
-function drawToImageData(source: HTMLImageElement, width: number, height: number): ImageData {
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d')!;
-  ctx.drawImage(source, 0, 0, width, height);
-  return ctx.getImageData(0, 0, width, height);
-}
-
 export async function convertImage(
   file: File,
   sourceExt: string,
@@ -100,18 +78,10 @@ export async function convertImage(
 ): Promise<Blob> {
   const quality = settings?.quality ?? 0.92;
 
-  let imageData: ImageData;
-  if (sourceExt === 'svg') {
-    imageData = await renderSvgToImageData(await file.text());
-  } else {
-    const url = URL.createObjectURL(file);
-    try {
-      const img = await loadImage(url);
-      imageData = drawToImageData(img, img.naturalWidth, img.naturalHeight);
-    } finally {
-      URL.revokeObjectURL(url);
-    }
-  }
+  const imageData =
+    sourceExt === 'svg'
+      ? await renderSvgToImageData(await file.text())
+      : await decodeToImageData(file);
 
   if (targetExt === 'ico') {
     const pngBuffer = await encodePngBytes(imageData);

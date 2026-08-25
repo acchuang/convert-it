@@ -21,6 +21,66 @@ export const IMAGE_MIME_MAP: Record<string, string> = {
 
 const FLATTEN_EXTS = new Set(['jpg', 'jpeg', 'bmp']);
 
+// Decoding goes through createImageBitmap + OffscreenCanvas rather than
+// `new Image()` + a DOM canvas: same browser decoders, no object-URL round
+// trip, and — the reason it matters — both exist inside a Web Worker, so the
+// whole image path can run off the main thread.
+export function bitmapToImageData(bitmap: ImageBitmap): ImageData {
+  const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+  const ctx = canvas.getContext('2d')!;
+  ctx.drawImage(bitmap, 0, 0);
+  return ctx.getImageData(0, 0, bitmap.width, bitmap.height);
+}
+
+export async function decodeToImageData(source: Blob): Promise<ImageData> {
+  const bitmap = await createImageBitmap(source);
+  try {
+    return bitmapToImageData(bitmap);
+  } finally {
+    bitmap.close();
+  }
+}
+
+// BMP has no jSquash codec, and canvas.toBlob('image/bmp') is not a thing —
+// the spec tells the browser to silently emit PNG for any unsupported type, so
+// the old fallback wrote PNG bytes into a .bmp file. Uncompressed 24-bit BGR
+// bottom-up is a handful of lines and is what every BMP reader accepts.
+// Callers flatten alpha first (bmp is in FLATTEN_EXTS), so alpha is dropped.
+export function encodeBmp(imageData: ImageData): Uint8Array<ArrayBuffer> {
+  const { width, height, data } = imageData;
+  const rowSize = Math.ceil((width * 3) / 4) * 4;
+  const pixelBytes = rowSize * height;
+  const buffer = new ArrayBuffer(14 + 40 + pixelBytes);
+  const out = new Uint8Array(buffer);
+  const view = new DataView(buffer);
+
+  out[0] = 0x42; // 'B'
+  out[1] = 0x4d; // 'M'
+  view.setUint32(2, out.length, true);
+  view.setUint32(10, 54, true); // pixel data offset
+  view.setUint32(14, 40, true); // DIB header size
+  view.setInt32(18, width, true);
+  view.setInt32(22, height, true);
+  view.setUint16(26, 1, true); // planes
+  view.setUint16(28, 24, true); // bits per pixel
+  view.setUint32(34, pixelBytes, true);
+  view.setInt32(38, 2835, true); // 72 DPI
+  view.setInt32(42, 2835, true);
+
+  for (let y = 0; y < height; y++) {
+    // BMP rows run bottom-up.
+    let out_i = 54 + (height - 1 - y) * rowSize;
+    let src = y * width * 4;
+    for (let x = 0; x < width; x++) {
+      out[out_i++] = data[src + 2];
+      out[out_i++] = data[src + 1];
+      out[out_i++] = data[src];
+      src += 4;
+    }
+  }
+  return out;
+}
+
 // Each codec initialises once and is reused. jSquash's emscripten glue
 // (jpeg/webp) resolves the wasm through locateFile; the png and oxipng codecs
 // (wasm-bindgen) take the wasm URL directly. All fetch lazily on first use.
@@ -82,8 +142,8 @@ function flattenOverWhite(imageData: ImageData): ImageData {
   return new ImageData(out, width, height);
 }
 
-// Encodes ImageData to a Blob using jSquash WASM codecs for jpg/png/webp and
-// canvas.toBlob (the only available encoder) for BMP, which has no jSquash codec.
+// Encodes ImageData to a Blob using jSquash WASM codecs for jpg/png/webp and a
+// small hand-rolled encoder for BMP, which has no jSquash codec.
 // `quality` is the app's 0–1 value; it is mapped to each codec's 0–100 scale.
 export async function encodeImageData(
   imageData: ImageData,
@@ -111,19 +171,11 @@ export async function encodeImageData(
     return new Blob([buffer], { type: mime });
   }
 
-  // BMP (and anything unmapped): no WASM codec — fall back to the browser.
-  const canvas = document.createElement('canvas');
-  canvas.width = input.width;
-  canvas.height = input.height;
-  const ctx = canvas.getContext('2d')!;
-  ctx.putImageData(input, 0, 0);
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error('Canvas export failed'))),
-      mime,
-      quality,
-    );
-  });
+  if (ext === 'bmp') {
+    return new Blob([encodeBmp(input)], { type: mime });
+  }
+
+  throw new Error(`No encoder for .${ext}`);
 }
 
 // PNG bytes for ICO embedding. ico-codec wraps PNG-encoded frames in an ICO

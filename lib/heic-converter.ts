@@ -27,11 +27,7 @@ export default async function convertHeic(
 
   // libheif renders straight into an ImageData buffer; pass it directly to the
   // encode helper, which flattens to white for opaque targets (jpg/bmp).
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d')!;
-  const imageData = ctx.createImageData(width, height);
+  const imageData = new ImageData(width, height);
   await image.display(imageData, () => {});
 
   if (targetExt === 'ico') {

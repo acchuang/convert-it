@@ -1,17 +1,6 @@
 import type { ConversionSettings } from './types';
 import { encodeIcoBlob } from 'ico-codec';
-import { encodeImageData, encodePngBytes } from './image-encode';
-
-// Draws the decoded bitmap to a canvas and reads the pixels once; the shared
-// encode helper dispatches to jSquash (jpg/png/webp) or canvas (bmp).
-function drawToImageData(bitmap: ImageBitmap): ImageData {
-  const canvas = document.createElement('canvas');
-  canvas.width = bitmap.width;
-  canvas.height = bitmap.height;
-  const ctx = canvas.getContext('2d')!;
-  ctx.drawImage(bitmap, 0, 0);
-  return ctx.getImageData(0, 0, bitmap.width, bitmap.height);
-}
+import { bitmapToImageData, encodeImageData, encodePngBytes } from './image-encode';
 
 export default async function convertAvif(
   file: File,
@@ -28,7 +17,7 @@ export default async function convertAvif(
   }
 
   try {
-    const imageData = drawToImageData(bitmap);
+    const imageData = bitmapToImageData(bitmap);
 
     if (targetExt === 'ico') {
       const pngBuffer = await encodePngBytes(imageData);

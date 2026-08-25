@@ -34,6 +34,51 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 // build ImageData directly (e.g. white-flattening in lib/image-encode) work in tests.
 (globalThis as any).ImageData = CanvasImageData;
 
+// jsdom has neither createImageBitmap nor OffscreenCanvas, which the image path
+// now uses so it can run inside a Web Worker. Back both with node-canvas: the
+// decode is real, so a corrupt or empty file still rejects the way it does in a
+// browser.
+(globalThis as any).createImageBitmap = (source: Blob) =>
+  source
+    .arrayBuffer()
+    .then((buf) => Buffer.from(buf))
+    .then(
+      (buf) =>
+        new Promise((resolve, reject) => {
+          if (buf.length === 0) {
+            reject(new Error('Image load failed'));
+            return;
+          }
+          const img = new CanvasImage();
+          img.onload = () => resolve(Object.assign(img, { close: () => {} }));
+          img.onerror = () => reject(new Error('Image load failed'));
+          img.src = buf;
+        }),
+    );
+
+(globalThis as any).OffscreenCanvas = class {
+  private canvas: ReturnType<typeof createCanvas>;
+  constructor(width: number, height: number) {
+    this.canvas = createCanvas(width, height);
+  }
+  getContext(type: string) {
+    const ctx = this.canvas.getContext(type as '2d');
+    const drawImage = ctx.drawImage.bind(ctx);
+    // Tests that stub createImageBitmap hand back a plain {width, height, close}
+    // object which node-canvas cannot draw. The encoders are mocked in those
+    // tests, so the pixels are irrelevant — swallow it rather than make every
+    // caller construct a real bitmap.
+    ctx.drawImage = ((...args: unknown[]) => {
+      try {
+        (drawImage as (...a: unknown[]) => void)(...args);
+      } catch {
+        /* stubbed bitmap */
+      }
+    }) as typeof ctx.drawImage;
+    return ctx;
+  }
+};
+
 const _createObjectURL = URL.createObjectURL.bind(URL);
 URL.createObjectURL = function (blob: Blob) {
   const url = _createObjectURL(blob);
