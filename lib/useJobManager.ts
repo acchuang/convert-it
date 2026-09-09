@@ -55,45 +55,48 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
     onHistoryUpdateRef.current = options?.onHistoryUpdate;
   });
 
-  const addFiles = useCallback((files: FileList | File[]) => {
-    const pickTarget = (ext: string) => {
-      const targets = getTargetFormats(ext);
-      if (preferredTarget && targets.includes(preferredTarget)) return preferredTarget;
-      return targets[0] ?? null;
-    };
+  const addFiles = useCallback(
+    (files: FileList | File[]) => {
+      const pickTarget = (ext: string) => {
+        const targets = getTargetFormats(ext);
+        if (preferredTarget && targets.includes(preferredTarget)) return preferredTarget;
+        return targets[0] ?? null;
+      };
 
-    const newJobs: FileJob[] = [];
-    for (const file of Array.from(files)) {
-      const ext = getFileExtension(file.name);
-      const category = getFormatInfo(ext)?.category;
-      const limit = category ? FILE_SIZE_LIMITS[category] : FILE_SIZE_LIMITS.document;
+      const newJobs: FileJob[] = [];
+      for (const file of Array.from(files)) {
+        const ext = getFileExtension(file.name);
+        const category = getFormatInfo(ext)?.category;
+        const limit = category ? FILE_SIZE_LIMITS[category] : FILE_SIZE_LIMITS.document;
 
-      if (file.size > limit) {
+        if (file.size > limit) {
+          newJobs.push({
+            id: crypto.randomUUID(),
+            file,
+            sourceExt: ext,
+            targetExt: null,
+            status: 'error',
+            progress: 0,
+            error: `File too large (${(file.size / (1024 * 1024)).toFixed(0)}MB exceeds ${limit / (1024 * 1024)}MB limit)`,
+            settings: { ...DEFAULT_SETTINGS },
+          });
+          continue;
+        }
+
         newJobs.push({
           id: crypto.randomUUID(),
           file,
           sourceExt: ext,
-          targetExt: null,
-          status: 'error',
+          targetExt: pickTarget(ext),
+          status: 'idle',
           progress: 0,
-          error: `File too large (${(file.size / (1024 * 1024)).toFixed(0)}MB exceeds ${limit / (1024 * 1024)}MB limit)`,
           settings: { ...DEFAULT_SETTINGS },
         });
-        continue;
       }
-
-      newJobs.push({
-        id: crypto.randomUUID(),
-        file,
-        sourceExt: ext,
-        targetExt: pickTarget(ext),
-        status: 'idle',
-        progress: 0,
-        settings: { ...DEFAULT_SETTINGS },
-      });
-    }
-    setJobs((prev) => [...prev, ...newJobs]);
-  }, [preferredTarget]);
+      setJobs((prev) => [...prev, ...newJobs]);
+    },
+    [preferredTarget],
+  );
 
   const updateJob = useCallback(
     (id: string, patch: Partial<FileJob>) =>
@@ -125,10 +128,29 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
     if (isMedia) mediaQueueRef.current.push(job.id);
 
     setJobs((prev) =>
-      prev.map((j) => (j.id === job.id ? { ...j, status: 'converting', progress: 10 } : j)),
+      prev.map((j) =>
+        j.id === job.id
+          ? {
+              ...j,
+              status: 'converting',
+              progress: 10,
+              stage: isMedia ? 'Initializing WebAssembly engine...' : 'Converting locally...',
+            }
+          : j,
+      ),
     );
     const onProgress = (pct: number) =>
-      setJobs((prev) => prev.map((j) => (j.id === job.id ? { ...j, progress: pct } : j)));
+      setJobs((prev) =>
+        prev.map((j) =>
+          j.id === job.id
+            ? {
+                ...j,
+                progress: pct,
+                stage: pct >= 100 ? 'Finalizing output...' : `Processing ${pct}%`,
+              }
+            : j,
+        ),
+      );
 
     try {
       const blob = onMainThread
@@ -138,7 +160,9 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
       if (cancelledRef.current.delete(job.id)) return;
       setJobs((prev) =>
         prev.map((j) =>
-          j.id === job.id ? { ...j, status: 'done', resultBlob: blob, progress: 100 } : j,
+          j.id === job.id
+            ? { ...j, status: 'done', resultBlob: blob, progress: 100, stage: 'Complete' }
+            : j,
         ),
       );
 
@@ -185,9 +209,7 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
       mediaQueueRef.current = mediaQueueRef.current.filter((queued) => queued !== id);
     }
     setJobs((prev) =>
-      prev.map((j) =>
-        j.id === id ? { ...j, status: 'idle', progress: 0, error: undefined } : j,
-      ),
+      prev.map((j) => (j.id === id ? { ...j, status: 'idle', progress: 0, error: undefined } : j)),
     );
   }, []);
 
