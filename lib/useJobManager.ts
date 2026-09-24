@@ -13,8 +13,9 @@ import { FILE_SIZE_LIMITS } from '@/lib/types';
 import { CancelledError, cancelInWorker, runInWorker, runsOnMainThread } from '@/lib/worker-pool';
 import { terminateFFmpeg } from '@/lib/audio-video-converters';
 import type { FileJob } from '@/app/components/JobCard';
-import { uniqueName } from './filenames';
-import { classifyError } from './errors';
+import { classifyError, type ConversionFailure } from './errors';
+import { canMerge } from './pdf-options';
+import { safeFileStem, uniqueName } from './filenames';
 import { addHistoryEntry, getHistory, type HistoryEntry } from '@/lib/history';
 
 /**
@@ -64,6 +65,11 @@ interface UseJobManagerReturn {
   convertAll: () => void;
   clearAll: () => void;
   doneCount: number;
+  moveJob: (id: string, delta: -1 | 1) => void;
+  merge: MergeState;
+  /** PDFs and images in the list: what "merge into PDF" would take. */
+  mergeableCount: number;
+  mergeToPdf: () => Promise<void>;
 }
 
 export function useJobManager(options?: UseJobManagerOptions): UseJobManagerReturn {
@@ -280,6 +286,43 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
     );
   }, []);
 
+  const moveJob = useCallback(
+    (id: string, delta: -1 | 1) =>
+      setJobs((prev) => {
+        const from = prev.findIndex((j) => j.id === id);
+        const to = from + delta;
+        if (from < 0 || to < 0 || to >= prev.length) return prev;
+        const next = [...prev];
+        [next[from], next[to]] = [next[to], next[from]];
+        return next;
+      }),
+    [],
+  );
+
+  // Merge: every PDF and image in the list, in list order, into one PDF. A
+  // batch action rather than a route, since it takes many inputs.
+  const [merge, setMerge] = useState<MergeState>({ status: 'idle' });
+  const mergeable = jobs.filter((j) => canMerge(j.sourceExt));
+  const mergeToPdf = useCallback(async () => {
+    const sources = jobs.filter((j) => canMerge(j.sourceExt));
+    if (sources.length < 2) return;
+    setMerge({ status: 'running', progress: 0 });
+    try {
+      const { mergePdf } = await import('@/lib/pdf-tools');
+      // Images use the page size set on the first image job (A4 by default).
+      const pageSize = sources.find((j) => j.sourceExt !== 'pdf')?.settings.pdfPageSize;
+      const blob = await mergePdf(
+        sources.map((j) => j.file),
+        { pdfPageSize: pageSize ?? 'a4' },
+        (progress) => setMerge({ status: 'running', progress }),
+      );
+      saveBlob(blob, `${safeFileStem(sources[0].file.name.replace(/\.[^.]+$/, ''))}-merged.pdf`);
+      setMerge({ status: 'idle' });
+    } catch (err) {
+      setMerge({ status: 'error', error: classifyError(err) });
+    }
+  }, [jobs]);
+
   const removeJob = useCallback(
     (id: string) => setJobs((prev) => prev.filter((j) => j.id !== id)),
     [],
@@ -307,5 +350,14 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
     convertAll,
     clearAll,
     doneCount,
+    moveJob,
+    merge,
+    mergeableCount: mergeable.length,
+    mergeToPdf,
   };
 }
+
+export type MergeState =
+  | { status: 'idle' }
+  | { status: 'running'; progress: number }
+  | { status: 'error'; error: ConversionFailure };

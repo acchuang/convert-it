@@ -25,7 +25,11 @@
     "clear": "LIMPIAR",
     "setAllTo": "Establecer todo como",
     "pickFormat": "— elegir formato —",
-    "apply": "APLICAR"
+    "apply": "APLICAR",
+    "mergePdf": "UNIR EN PDF",
+    "merging": "UNIENDO…",
+    "moveUp": "Subir",
+    "moveDown": "Bajar"
   },
   "warning": {
     "largeFile": "Archivo grande detectado",
@@ -81,7 +85,20 @@
     "trim": "Recortar",
     "trimStart": "Inicio",
     "trimEnd": "Fin",
-    "trimHint": "p. ej. 0:05 → 0:12.5 · vacío = clip completo"
+    "trimHint": "p. ej. 0:05 → 0:12.5 · vacío = clip completo",
+    "pdfPages2": "Páginas",
+    "pdfPagesHint": "p. ej. 1-3, 5, 8- · reordenar: 3,1,2 · vacío = todas",
+    "pdfRotate": "Girar",
+    "pdfSplitLabel": "Salida",
+    "pdfOneFile": "Un PDF",
+    "pdfPerPage": "Un PDF por página",
+    "pdfCompress": "Comprimir",
+    "pdfCompressOff": "No",
+    "pdfCompressMedium": "Media",
+    "pdfCompressStrong": "Fuerte",
+    "pdfCompressHint": "Convierte las páginas en imágenes: mucho más ligero para escaneos, pero el texto deja de ser seleccionable",
+    "pdfPageSize": "Tamaño de página",
+    "pdfPageFit": "Ajustar a la imagen"
   },
   "howItWorks": {
     "heading": "CÓMO FUNCIONA",
@@ -216,6 +233,10 @@
     "unknown": {
       "title": "La conversión falló",
       "hint": "Algo inesperado salió mal. Pulsa Reintentar; si sigue fallando, los detalles técnicos de abajo nos ayudarán a corregirlo."
+    },
+    "invalidSettings": {
+      "title": "Este ajuste no encaja con el archivo",
+      "hint": "Un ajuste de esta tarea no funciona con este archivo; los detalles indican cuál. Cámbialo y pulsa Reintentar."
     },
     "details": "Detalles técnicos"
   },

@@ -25,7 +25,11 @@
     "clear": "清除",
     "setAllTo": "全部设为",
     "pickFormat": "— 选择格式 —",
-    "apply": "应用"
+    "apply": "应用",
+    "mergePdf": "合并为 PDF",
+    "merging": "合并中…",
+    "moveUp": "上移",
+    "moveDown": "下移"
   },
   "warning": {
     "largeFile": "检测到大文件",
@@ -81,7 +85,20 @@
     "trim": "裁剪时长",
     "trimStart": "开始",
     "trimEnd": "结束",
-    "trimHint": "例如 0:05 → 0:12.5 · 留空 = 整段"
+    "trimHint": "例如 0:05 → 0:12.5 · 留空 = 整段",
+    "pdfPages2": "页面",
+    "pdfPagesHint": "例如 1-3, 5, 8- · 重新排序：3,1,2 · 留空 = 全部",
+    "pdfRotate": "旋转",
+    "pdfSplitLabel": "输出",
+    "pdfOneFile": "一个 PDF",
+    "pdfPerPage": "每页一个 PDF",
+    "pdfCompress": "压缩",
+    "pdfCompressOff": "关",
+    "pdfCompressMedium": "中",
+    "pdfCompressStrong": "强",
+    "pdfCompressHint": "将页面重新渲染为图片：扫描件会小很多，但文字将无法选择",
+    "pdfPageSize": "页面尺寸",
+    "pdfPageFit": "适应图片"
   },
   "howItWorks": {
     "heading": "使用方式",
@@ -216,6 +233,10 @@
     "unknown": {
       "title": "转换失败",
       "hint": "发生了意外错误。请重试；如果仍然失败，下面的技术细节可帮助我们修复。"
+    },
+    "invalidSettings": {
+      "title": "此设置不适用于该文件",
+      "hint": "此任务的某项设置不适用于该文件，详情中写明了是哪一项。修改后点击重试。"
     },
     "details": "技术细节"
   },

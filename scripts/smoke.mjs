@@ -75,6 +75,8 @@ const PAIRS = [
   ['data.csv', 'xlsx', 'xlsx writer', magic('PK')],
   ['data.json', 'yaml', 'yaml', (b) => b.toString().includes('name:')],
   ['doc.md', 'html', 'document', (b) => /<(h1|strong|a)\b/i.test(b.toString())],
+  ['doc.pdf', 'pdf', 'pdf-lib edit', magic('%PDF')],
+  ['img.png', 'pdf', 'pdf-lib image', magic('%PDF')],
   ['doc.txt', 'pdf', 'jspdf (worker)', magic('%PDF')],
   ['data.json', 'pdf', 'jspdf json (worker)', magic('%PDF')],
   ['doc.md', 'pdf', 'jspdf md (main)', magic('%PDF')],
@@ -214,6 +216,34 @@ for (const [fixture, target, label, check] of PAIRS) {
     row.note = `${err.message.split('\n')[0]}${consoleErrors.length ? ` | ${consoleErrors[0]}` : ''}`;
   }
 
+  results.push(row);
+  await page.close();
+}
+
+// Merge: a batch action, not a pair. Three files through the toolbar button,
+// in list order, must come back as one PDF with a page each.
+{
+  const row = { pair: 'pdf+png+pdf', label: 'merge into PDF', ok: false, note: '' };
+  const page = await browser.newPage();
+  try {
+    await page.goto(APP, { waitUntil: 'networkidle' });
+    await page.setInputFiles(
+      'input[type="file"]',
+      ['doc.pdf', 'img.png', 'blue.pdf'].map((f) => join(DIR, f)),
+    );
+    await page.waitForSelector('[role="listitem"]');
+    const [download] = await Promise.all([
+      page.waitForEvent('download', { timeout: 60000 }),
+      page.locator('button[aria-label="MERGE INTO PDF"]').click(),
+    ]);
+    const bytes = readFileSync(await download.path());
+    const { PDFDocument } = await import('pdf-lib');
+    const pages = (await PDFDocument.load(bytes)).getPageCount();
+    row.ok = pages === 3;
+    row.note = `${bytes.length}B, ${pages} pages → ${download.suggestedFilename()}`;
+  } catch (err) {
+    row.note = err.message.split('\n')[0];
+  }
   results.push(row);
   await page.close();
 }

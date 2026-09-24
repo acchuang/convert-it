@@ -74,6 +74,28 @@ describe('declared settings match what data and document converters read', () =>
   });
 });
 
+describe('declared settings match what the PDF tools read', async () => {
+  const { PDFDocument } = await import('pdf-lib');
+  const { createCanvas } = await import('canvas');
+  const doc = await PDFDocument.create();
+  doc.addPage([100, 100]);
+  doc.addPage([120, 100]);
+  const pdf = await doc.save();
+  const canvas = createCanvas(8, 8);
+  const samples: Record<string, () => File> = {
+    pdf: () => new File([pdf], 's.pdf'),
+    png: () => new File([canvas.toBuffer('image/png')], 's.png'),
+    jpg: () => new File([canvas.toBuffer('image/jpeg')], 's.jpg'),
+  };
+  const routes = allRoutes().filter((r) => r.to === 'pdf' && samples[r.from]);
+  it.each(routes.map((r) => [`${r.from} → ${r.to}`, r] as const))('%s', async (_name, route) => {
+    const { settings, read } = recording();
+    await route.run(samples[route.from](), route.from, route.to, settings);
+    const declared = new Set(route.settings.flatMap((k: SettingKey) => SETTING_FIELDS[k]));
+    expect([...read].sort()).toEqual([...declared].sort());
+  });
+});
+
 describe('declared settings match the ffmpeg command line', () => {
   // Same rule as above, applied to the command line: every field the ffmpeg
   // args read is declared, and every declared field is read.

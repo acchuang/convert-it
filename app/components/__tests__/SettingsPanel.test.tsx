@@ -29,6 +29,9 @@ const groups = (source: string, target: string) => {
     sheets: has('job.xlsxSheets'),
     fps: has('job.fps'),
     trim: has('job.trim'),
+    pdfEdit: has('job.pdfPages2'),
+    pdfCompress: has('job.pdfCompress'),
+    pageSize: has('job.pdfPageSize'),
   };
 };
 
@@ -69,6 +72,16 @@ describe('SettingsPanel shows what the route reads', () => {
     expect(groups('mp4', 'mkv').trim).toBe(true);
     expect(groups('wav', 'mp3').trim).toBe(true);
     expect(groups('png', 'jpg').trim).toBe(false);
+  });
+
+  it('PDF tools: pages/rotate/split and compress for PDF → PDF, page size for image → PDF', () => {
+    expect(groups('pdf', 'pdf')).toMatchObject({
+      pdfEdit: true,
+      pdfCompress: true,
+      pageSize: false,
+    });
+    expect(groups('heic', 'pdf')).toMatchObject({ pageSize: true, pdfEdit: false, quality: false });
+    expect(groups('pdf', 'png').pdfEdit).toBe(false);
   });
 
   it('lossless audio targets have no bitrate', () => {

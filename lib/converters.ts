@@ -42,6 +42,10 @@ import {
   pdfToHtml,
 } from './pdf-converters';
 import { txtToEpub, mdToEpub, htmlToEpub } from './epub-converter';
+// pdf-lib is ~700 KB: loaded when a PDF tool first runs, not with the page.
+const editPdf: ConverterFn = async (...args) => (await import('./pdf-tools')).editPdf(...args);
+const imageToPdf: ConverterFn = async (...args) =>
+  (await import('./pdf-tools')).imageToPdf(...args);
 
 export type { FileCategory, FormatInfo, ConverterFn, ConversionSettings } from './types';
 export { DEFAULT_SETTINGS } from './types';
@@ -70,6 +74,9 @@ export type SettingKey =
   | 'trim' // trimStart, trimEnd
   | 'pdfPages' // pdfAllPages
   | 'pdfScale' // pdfScale
+  | 'pdfEdit' // pdfPageRange, pdfRotate, pdfSplit
+  | 'pdfCompress' // pdfCompress
+  | 'pdfPageSize' // pdfPageSize
   | 'xlsxSheets'; // xlsxAllSheets
 
 export const SETTING_FIELDS: Record<SettingKey, (keyof ConversionSettings)[]> = {
@@ -91,6 +98,9 @@ export const SETTING_FIELDS: Record<SettingKey, (keyof ConversionSettings)[]> = 
   trim: ['trimStart', 'trimEnd'],
   pdfPages: ['pdfAllPages'],
   pdfScale: ['pdfScale'],
+  pdfEdit: ['pdfPageRange', 'pdfRotate', 'pdfSplit'],
+  pdfCompress: ['pdfCompress'],
+  pdfPageSize: ['pdfPageSize'],
   xlsxSheets: ['xlsxAllSheets'],
 };
 
@@ -263,6 +273,13 @@ for (const to of ['png', 'jpg', 'webp']) {
 }
 add('pdf', 'txt', pdfToText);
 add('pdf', 'html', pdfToHtml);
+// PDF tools: pick/reorder/rotate/split pages and compress (pdf-lib, + PDFium
+// to render when compressing); every image format onto a page. Merging
+// several files is a batch action (mergePdf), not a route.
+add('pdf', 'pdf', editPdf, ['pdfEdit', 'pdfCompress']);
+for (const from of ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg', 'heic', 'avif', 'jxl']) {
+  add(from, 'pdf', imageToPdf, ['pdfPageSize']);
+}
 
 // --- Queries -------------------------------------------------------------------------
 

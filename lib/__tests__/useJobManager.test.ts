@@ -388,3 +388,38 @@ describe('downloadJob', () => {
     }
   });
 });
+
+describe('reorder and merge', () => {
+  const files = () => [
+    new File(['%PDF-1.4'], 'a.pdf'),
+    new File(['x'], 'b.csv'),
+    new File(['png'], 'c.png'),
+  ];
+
+  it('moveJob swaps neighbours and ignores moves past either end', () => {
+    const { result } = renderHook(() => useJobManager());
+    act(() => result.current.addFiles(files()));
+    const names = () => result.current.jobs.map((j) => j.file.name);
+    act(() => result.current.moveJob(result.current.jobs[2].id, -1));
+    expect(names()).toEqual(['a.pdf', 'c.png', 'b.csv']);
+    act(() => result.current.moveJob(result.current.jobs[0].id, -1));
+    act(() => result.current.moveJob(result.current.jobs[2].id, 1));
+    expect(names()).toEqual(['a.pdf', 'c.png', 'b.csv']);
+  });
+
+  it('counts only PDFs and images as mergeable', () => {
+    const { result } = renderHook(() => useJobManager());
+    act(() => result.current.addFiles(files()));
+    expect(result.current.mergeableCount).toBe(2);
+  });
+
+  it('a failed merge is reported, not thrown', async () => {
+    const { result } = renderHook(() => useJobManager());
+    act(() => result.current.addFiles(files())); // a.pdf is not a real PDF
+    await act(() => result.current.mergeToPdf());
+    expect(result.current.merge).toMatchObject({
+      status: 'error',
+      error: { code: 'corrupt-input' },
+    });
+  });
+});

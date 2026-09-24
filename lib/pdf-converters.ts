@@ -32,7 +32,7 @@ export function pdfRenderToImageData(render: {
   return new ImageData(new Uint8ClampedArray(data), width, height);
 }
 
-async function loadPdfDocument(file: File) {
+export async function loadPdfDocument(file: Blob) {
   const library = await ensurePdfium();
   const data = new Uint8Array(await file.arrayBuffer());
   return library.loadDocument(data);

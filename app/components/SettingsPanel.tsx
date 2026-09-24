@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { settingsFor } from '@/lib/converters';
 import { formatTimecode, parseTimecode } from '@/lib/timecode';
+import { isPageRangeSyntax } from '@/lib/pdf-options';
 import type { ConversionSettings } from '@/lib/types';
 
 // The per-job settings panel. Which groups appear comes from the converter
@@ -91,6 +92,9 @@ export function SettingsPanel({
   const showVideoPreset = shown.has('videoPreset');
   const showAnimation = shown.has('animation');
   const showTrim = shown.has('trim');
+  const showPdfEdit = shown.has('pdfEdit');
+  const showPdfCompress = shown.has('pdfCompress');
+  const showPdfPageSize = shown.has('pdfPageSize');
   const showPdfPages = shown.has('pdfPages');
   const showPdfScale = shown.has('pdfScale');
   const showXlsxSheets = shown.has('xlsxSheets');
@@ -403,6 +407,93 @@ export function SettingsPanel({
               </div>
             </div>
           </>
+        )}
+
+        {showPdfEdit && (
+          <>
+            <div className={CARD}>
+              <span className={LABEL}>{t('job.pdfPages2')}</span>
+              <input
+                type="text"
+                value={settings.pdfPageRange}
+                onChange={(e) => onChange({ pdfPageRange: e.target.value })}
+                aria-label={t('job.pdfPages2')}
+                aria-invalid={!isPageRangeSyntax(settings.pdfPageRange)}
+                placeholder="1-3, 5, 8-"
+                className={`w-full bg-[var(--bg-secondary)] border text-primary text-xs rounded px-2 py-1 focus:outline-none transition-colors ${
+                  isPageRangeSyntax(settings.pdfPageRange)
+                    ? 'border-[var(--border-secondary)] focus:border-[var(--accent)]'
+                    : 'border-[var(--error)]'
+                }`}
+              />
+              <span className="text-xs text-[var(--text-muted)]">{t('job.pdfPagesHint')}</span>
+            </div>
+            <div className={CARD}>
+              <span className={LABEL}>{t('job.pdfRotate')}</span>
+              <div className="flex gap-1">
+                {([0, 90, 180, 270] as const).map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => onChange({ pdfRotate: n })}
+                    aria-pressed={settings.pdfRotate === n}
+                    className={choice(settings.pdfRotate === n)}
+                  >
+                    {n}°
+                  </button>
+                ))}
+              </div>
+              <span className={LABEL}>{t('job.pdfSplitLabel')}</span>
+              <div className="flex gap-1">
+                {([false, true] as const).map((split) => (
+                  <button
+                    key={String(split)}
+                    onClick={() => onChange({ pdfSplit: split })}
+                    aria-pressed={settings.pdfSplit === split}
+                    className={choice(settings.pdfSplit === split)}
+                  >
+                    {split ? t('job.pdfPerPage') : t('job.pdfOneFile')}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {showPdfCompress && (
+          <div className={CARD}>
+            <span className={LABEL}>{t('job.pdfCompress')}</span>
+            <div className="flex gap-1">
+              {(['off', 'medium', 'strong'] as const).map((level) => (
+                <button
+                  key={level}
+                  onClick={() => onChange({ pdfCompress: level })}
+                  aria-pressed={settings.pdfCompress === level}
+                  className={choice(settings.pdfCompress === level)}
+                >
+                  {t(`job.pdfCompress${level[0].toUpperCase()}${level.slice(1)}`)}
+                </button>
+              ))}
+            </div>
+            <span className="text-xs text-[var(--text-muted)]">{t('job.pdfCompressHint')}</span>
+          </div>
+        )}
+
+        {showPdfPageSize && (
+          <div className={CARD}>
+            <span className={LABEL}>{t('job.pdfPageSize')}</span>
+            <div className="flex gap-1">
+              {(['a4', 'letter', 'fit'] as const).map((size) => (
+                <button
+                  key={size}
+                  onClick={() => onChange({ pdfPageSize: size })}
+                  aria-pressed={settings.pdfPageSize === size}
+                  className={choice(settings.pdfPageSize === size)}
+                >
+                  {size === 'fit' ? t('job.pdfPageFit') : size === 'a4' ? 'A4' : 'Letter'}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
 
         {showTrim && (

@@ -37,6 +37,7 @@ const ERROR_KEYS: Record<ConversionFailure['code'], string> = {
   'corrupt-input': 'corruptInput',
   unsupported: 'unsupported',
   'engine-load': 'engineLoad',
+  'invalid-settings': 'invalidSettings',
   unknown: 'unknown',
 };
 
@@ -64,6 +65,9 @@ interface JobCardProps {
   onDownload: () => void;
   onRemove: () => void;
   onSettingsChange: (patch: Partial<ConversionSettings>) => void;
+  /** Reorder within the list (merge order); omitted at either end. */
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
   t: (key: string) => string;
 }
 
@@ -75,6 +79,8 @@ export function JobCard({
   onDownload,
   onRemove,
   onSettingsChange,
+  onMoveUp,
+  onMoveDown,
   t,
 }: JobCardProps) {
   const [showSettings, setShowSettings] = useState(false);
@@ -244,6 +250,37 @@ export function JobCard({
                 <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
               </svg>
             </button>
+          )}
+
+          {(onMoveUp || onMoveDown) && (
+            <div className="flex flex-col">
+              {(
+                [
+                  [onMoveUp, 'toolbar.moveUp', 'M18 15l-6-6-6 6'],
+                  [onMoveDown, 'toolbar.moveDown', 'M6 9l6 6 6-6'],
+                ] as const
+              ).map(([move, label, path]) => (
+                <button
+                  key={label}
+                  onClick={move}
+                  disabled={!move}
+                  aria-label={t(label)}
+                  title={t(label)}
+                  className="w-7 h-[18px] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-25 disabled:pointer-events-none"
+                >
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <path d={path} />
+                  </svg>
+                </button>
+              ))}
+            </div>
           )}
 
           <button

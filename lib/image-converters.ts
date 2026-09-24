@@ -46,7 +46,7 @@ async function resvgFontOptions() {
 // Renders SVG source via resvg (Rust→wasm) to an ImageData, independent of the
 // browser's SVG engine. Replaces the old <img>+canvas rasterization, which had
 // inconsistent output, no foreignObject support, and no real font loading.
-async function renderSvgToImageData(svgText: string): Promise<ImageData> {
+export async function renderSvgToImageData(svgText: string): Promise<ImageData> {
   const { Resvg } = await loadResvg();
   await ensureResvg();
   const font = await resvgFontOptions();

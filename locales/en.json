@@ -25,7 +25,11 @@
     "clear": "CLEAR",
     "setAllTo": "Set all to",
     "pickFormat": "— pick format —",
-    "apply": "APPLY"
+    "apply": "APPLY",
+    "mergePdf": "MERGE INTO PDF",
+    "merging": "MERGING…",
+    "moveUp": "Move up",
+    "moveDown": "Move down"
   },
   "warning": {
     "largeFile": "Large file detected",
@@ -81,7 +85,20 @@
     "trim": "Trim",
     "trimStart": "Start",
     "trimEnd": "End",
-    "trimHint": "e.g. 0:05 → 0:12.5 · blank = whole clip"
+    "trimHint": "e.g. 0:05 → 0:12.5 · blank = whole clip",
+    "pdfPages2": "Pages",
+    "pdfPagesHint": "e.g. 1-3, 5, 8- · reorder: 3,1,2 · blank = all",
+    "pdfRotate": "Rotate",
+    "pdfSplitLabel": "Output",
+    "pdfOneFile": "One PDF",
+    "pdfPerPage": "PDF per page",
+    "pdfCompress": "Compress",
+    "pdfCompressOff": "Off",
+    "pdfCompressMedium": "Medium",
+    "pdfCompressStrong": "Strong",
+    "pdfCompressHint": "Re-renders pages as images: much smaller for scans, but text is no longer selectable",
+    "pdfPageSize": "Page size",
+    "pdfPageFit": "Fit image"
   },
   "howItWorks": {
     "heading": "HOW IT WORKS",
@@ -216,6 +233,10 @@
     "unknown": {
       "title": "Conversion failed",
       "hint": "Something unexpected went wrong. Press Retry; if it keeps failing, the technical details below will help us fix it."
+    },
+    "invalidSettings": {
+      "title": "This setting doesn’t fit the file",
+      "hint": "A setting on this job doesn’t work for this file; the details say which. Change it and press Retry."
     },
     "details": "Technical details"
   },

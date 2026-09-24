@@ -23,6 +23,12 @@ export interface ConversionSettings {
   // PDF input settings
   pdfAllPages: boolean; // pdf→image: render all pages (zip) vs page 1 (single image)
   pdfScale: number; // pdf→image render scale (1 | 2 | 3)
+  // PDF tools
+  pdfPageRange: string; // pdf→pdf pages in output order, e.g. "1-3, 5, 8-"; '' = all
+  pdfRotate: number; // pdf→pdf clockwise rotation added to every page: 0 | 90 | 180 | 270
+  pdfSplit: boolean; // pdf→pdf: one PDF per page (zip) instead of one PDF
+  pdfCompress: string; // pdf→pdf: 'off' | 'medium' | 'strong' (re-render pages as JPEG)
+  pdfPageSize: string; // image→pdf and merge: 'a4' | 'letter' | 'fit' (page = image)
   // Spreadsheet input
   xlsxAllSheets: boolean; // xlsx→csv: zip of one CSV per sheet; xlsx→json: object keyed by sheet name
   // Image toolbox — applied to any image output before encoding
@@ -47,6 +53,11 @@ export const DEFAULT_SETTINGS: ConversionSettings = {
   animWidth: 480,
   pdfAllPages: false,
   pdfScale: 1,
+  pdfPageRange: '',
+  pdfRotate: 0,
+  pdfSplit: false,
+  pdfCompress: 'off',
+  pdfPageSize: 'a4',
   xlsxAllSheets: false,
   imageCropAspect: 'none',
   imageResizePercent: 100,

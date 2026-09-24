@@ -52,6 +52,15 @@ Independent Next.js project deployed via Cloudflare Pages.
 - PDF input (PDF → PNG/JPG/WebP, PDF → TXT/HTML) uses `@hyzyla/pdfium` (MIT wrapper over BSD-3 PDFium; not AGPL mupdf). Page render → `pdfRenderToImageData` → `finishImage` (so the image toolbox applies). The wrapper's render output is already **RGBA** despite its `colorSpace: "BGRA"` option; never swap channels (pinned by a real-PDFium test and the smoke suite's blue-page pair). Text extraction is layout-naive (reading order, no OCR).
 - PDF → image defaults to page 1 as a single image. With `ConversionSettings.pdfAllPages` it renders every page at `pdfScale` (1×/2×/3×) and returns a `application/zip` Blob (one `<base>-page-<n>.<ext>` per page via jszip); `downloadJob` names zip outputs `.zip` and `JobCard.canPreview` skips zip blobs. Default (`pdfAllPages=false`) keeps the single-page behaviour.
 
+## PDF tools
+
+- `lib/pdf-tools.ts` (pdf-lib 1.17.1, MIT; lazy-loaded through wrappers in the registry, since it's ~420 KB) covers:
+  - `pdf → pdf` (`editPdf`): pages in a chosen range and order (`pdfPageRange`, e.g. `3,1,5-4`, `8-`), added rotation, split to a zip of `<file>-page-<n>.pdf`, and optional compression.
+  - every image → one-page PDF (`imageToPdf`, A4/Letter with the image fitted at 96 dpi, or "fit" to the image). JPEG/PNG are embedded byte-for-byte; other formats are decoded, then re-encoded as JPEG if opaque or PNG if they have alpha.
+  - `mergePdf`: PDFs and images in list order. It's a toolbar batch action (`mergeToPdf` in `useJobManager`), not a route; job cards get move up/down for the order.
+- Compression re-renders pages through PDFium as JPEG (medium 150 dpi/q75, strong 100 dpi/q60). Page sizes come from pdf-lib's page box, not the rounded bitmap. The result is kept only if it's smaller. Text stops being selectable, so it's opt-in.
+- `lib/pdf-options.ts` holds the light parts (`parsePageRange`, `isPageRangeSyntax`, `canMerge`) so the UI never imports pdf-lib. A range beyond the document is `ConversionError('invalid-settings')` (its own localized message: fix the setting, not the file). A password-protected PDF is `unsupported`. A merge failure names the file.
+
 ## EPUB
 
 - `lib/epub-converter.ts` writes EPUB 3 that passes W3C epubcheck with zero errors and warnings (CI runs it on hostile samples). Package: `mimetype` first and stored, `nav.xhtml` (required) plus `toc.ncx`, `dcterms:modified` as `CCYY-MM-DDThh:mm:ssZ`, one `chapter-N.xhtml` per h1/h2 section (a title-only heading merges into the next).

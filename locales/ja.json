@@ -25,7 +25,11 @@
     "clear": "クリア",
     "setAllTo": "すべてを設定",
     "pickFormat": "— 形式を選択 —",
-    "apply": "適用"
+    "apply": "適用",
+    "mergePdf": "PDFに結合",
+    "merging": "結合中…",
+    "moveUp": "上へ",
+    "moveDown": "下へ"
   },
   "warning": {
     "largeFile": "大きなファイルを検出",
@@ -81,7 +85,20 @@
     "trim": "トリミング",
     "trimStart": "開始",
     "trimEnd": "終了",
-    "trimHint": "例: 0:05 → 0:12.5 · 空欄 = 全体"
+    "trimHint": "例: 0:05 → 0:12.5 · 空欄 = 全体",
+    "pdfPages2": "ページ",
+    "pdfPagesHint": "例: 1-3, 5, 8- · 並べ替え: 3,1,2 · 空欄 = 全ページ",
+    "pdfRotate": "回転",
+    "pdfSplitLabel": "出力",
+    "pdfOneFile": "1つのPDF",
+    "pdfPerPage": "ページごとにPDF",
+    "pdfCompress": "圧縮",
+    "pdfCompressOff": "なし",
+    "pdfCompressMedium": "中",
+    "pdfCompressStrong": "強",
+    "pdfCompressHint": "ページを画像として再描画します。スキャン文書は大幅に小さくなりますが、テキストは選択できなくなります",
+    "pdfPageSize": "用紙サイズ",
+    "pdfPageFit": "画像に合わせる"
   },
   "howItWorks": {
     "heading": "使い方",
@@ -216,6 +233,10 @@
     "unknown": {
       "title": "変換に失敗しました",
       "hint": "予期しない問題が発生しました。再試行してください。失敗が続く場合は、下の技術的な詳細が修正の手がかりになります。"
+    },
+    "invalidSettings": {
+      "title": "この設定はファイルに合いません",
+      "hint": "このジョブの設定がこのファイルでは使えません。詳細で該当箇所を確認し、変更してから再試行してください。"
     },
     "details": "技術的な詳細"
   },

@@ -3,7 +3,7 @@
 import { useState, useRef, useMemo, useEffect, useCallback, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getFileExtension, getTargetFormats, FORMATS, getFormatInfo } from '@/lib/converters';
-import { JobCard, type FileJob } from './JobCard';
+import { JobCard, describeError, type FileJob } from './JobCard';
 import { HistoryPanel } from './HistoryPanel';
 import { getHistory, type HistoryEntry } from '@/lib/history';
 import { useLocale } from './LocaleProvider';
@@ -43,6 +43,10 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
     convertAll,
     clearAll,
     doneCount,
+    moveJob,
+    merge,
+    mergeableCount,
+    mergeToPdf,
   } = useJobManager({ preferredTarget, onHistoryUpdate: () => setHistory(getHistory()) });
   const [dragging, setDragging] = useState(false);
   const [dragCategory, setDragCategory] = useState<string | null>(null);
@@ -369,6 +373,20 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                   </div>
 
                   <div className="flex items-center gap-2">
+                    {mergeableCount >= 2 && (
+                      <button
+                        onClick={mergeToPdf}
+                        disabled={merge.status === 'running'}
+                        className="px-4 py-2 border border-[var(--border-secondary)] rounded-lg text-xs text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] transition-all disabled:opacity-60"
+                        style={{ fontFamily: 'var(--font-mono)' }}
+                        aria-label={t('toolbar.mergePdf')}
+                      >
+                        {merge.status === 'running'
+                          ? `${t('toolbar.merging')} ${merge.progress}%`
+                          : `${t('toolbar.mergePdf')} (${mergeableCount})`}
+                      </button>
+                    )}
+
                     {doneCount > 0 && (
                       <button
                         onClick={downloadAllAsZip}
@@ -403,6 +421,22 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                     </button>
                   </div>
                 </div>
+
+                {merge.status === 'error' && (
+                  <div
+                    role="alert"
+                    className="mb-4 px-4 py-3 rounded-xl border text-xs"
+                    style={{
+                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                      borderColor: 'rgba(239, 68, 68, 0.3)',
+                      color: 'var(--error)',
+                      fontFamily: 'var(--font-mono)',
+                    }}
+                  >
+                    <p className="font-semibold">{describeError(merge.error, 'pdf', t).title}</p>
+                    <p className="mt-0.5 opacity-80">{merge.error.detail}</p>
+                  </div>
+                )}
 
                 {/* Batch format selector */}
                 {jobs.length > 1 && (
@@ -458,7 +492,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                 {/* Job cards */}
                 <div className="space-y-3" role="list" aria-label={t('toolbar.files')}>
                   <AnimatePresence>
-                    {jobs.map((job) => (
+                    {jobs.map((job, index) => (
                       <JobCard
                         key={job.id}
                         job={job}
@@ -474,6 +508,8 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                         onDownload={() => downloadJob(job)}
                         onRemove={() => removeJob(job.id)}
                         onSettingsChange={(patch) => updateJobSettings(job.id, patch)}
+                        onMoveUp={index > 0 ? () => moveJob(job.id, -1) : undefined}
+                        onMoveDown={index < jobs.length - 1 ? () => moveJob(job.id, 1) : undefined}
                         t={t}
                       />
                     ))}
