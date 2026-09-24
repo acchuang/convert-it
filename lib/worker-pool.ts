@@ -19,6 +19,10 @@ export class CancelledError extends Error {
  * and video stay here on purpose: ffmpeg.wasm already runs in its own worker,
  * so moving it would nest workers and re-download the 31 MB core per pool slot
  * for no gain.
+ *
+ * The DOM-bound pair could move with a DOM shim in the worker (linkedom is
+ * ~200 KB), but HTML and Markdown inputs are small documents that convert in
+ * milliseconds; the shim would cost more load time than it saves.
  */
 export function runsOnMainThread(sourceExt: string, targetExt: string, category?: string): boolean {
   if (category === 'video' || category === 'audio') return true;
@@ -26,6 +30,9 @@ export function runsOnMainThread(sourceExt: string, targetExt: string, category?
   return sourceExt === 'md' && targetExt === 'epub';
 }
 
+// No transfer lists: the File going in and the Blob coming back are both
+// passed by reference under structured clone (no bytes are copied), and the
+// ImageData copies all happen inside the worker.
 interface Task extends ConvertRequest {
   onProgress?: (pct: number) => void;
   resolve: (blob: Blob) => void;
@@ -41,10 +48,35 @@ const busy = new Map<Worker, Task>();
 const queue: Task[] = [];
 let spawned = 0;
 
+// An idle worker still holds the heap of every wasm codec it touched (pdfium
+// alone is ~4 MB, plus whatever image it last decoded), so idle workers are
+// terminated after a minute. The pool respawns on demand; a respawn costs a
+// codec re-initialisation, which is cheap next to a conversion.
+export const IDLE_TIMEOUT_MS = 60_000;
+const idleTimers = new Map<Worker, ReturnType<typeof setTimeout>>();
+
+function retire(worker: Worker) {
+  idleTimers.delete(worker);
+  const at = idle.indexOf(worker);
+  if (at === -1) return; // picked up for another task meanwhile
+  idle.splice(at, 1);
+  worker.terminate();
+  spawned--;
+}
+
 function release(worker: Worker) {
   busy.delete(worker);
   idle.push(worker);
+  idleTimers.set(
+    worker,
+    setTimeout(() => retire(worker), IDLE_TIMEOUT_MS),
+  );
   pump();
+}
+
+/** Workers currently alive (busy or idle); for tests and diagnostics. */
+export function poolSize(): number {
+  return spawned;
 }
 
 function spawn(): Worker {
@@ -84,6 +116,8 @@ function spawn(): Worker {
 function pump() {
   while (queue.length > 0 && (idle.length > 0 || spawned < MAX_WORKERS)) {
     const worker = idle.pop() ?? spawn();
+    clearTimeout(idleTimers.get(worker));
+    idleTimers.delete(worker);
     const task = queue.shift()!;
     busy.set(worker, task);
     const { id, file, targetExt, settings } = task;
