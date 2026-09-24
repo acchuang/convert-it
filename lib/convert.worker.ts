@@ -1,5 +1,6 @@
 import { convertFile } from './converters';
 import type { ConversionSettings } from './types';
+import { classifyError, toTransferable, type ConversionFailure } from './errors';
 
 export interface ConvertRequest {
   id: string;
@@ -11,7 +12,8 @@ export interface ConvertRequest {
 export type ConvertResponse =
   | { id: string; type: 'progress'; pct: number }
   | { id: string; type: 'done'; blob: Blob }
-  | { id: string; type: 'error'; message: string };
+  // Classified here, where the real error object (and its class) still exists.
+  | { id: string; type: 'error'; failure: ConversionFailure };
 
 // Typed by hand rather than by adding "webworker" to tsconfig's lib, which
 // collides with "dom" on every shared global.
@@ -32,6 +34,6 @@ ctx.onmessage = async (event: MessageEvent<ConvertRequest>) => {
     );
     post({ id, type: 'done', blob });
   } catch (err) {
-    post({ id, type: 'error', message: err instanceof Error ? err.message : String(err) });
+    post({ id, type: 'error', failure: toTransferable(classifyError(err)) });
   }
 };

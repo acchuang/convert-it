@@ -1,5 +1,6 @@
 import type { ConvertRequest, ConvertResponse } from './convert.worker';
 import type { ConversionSettings } from './types';
+import { ConversionError } from './errors';
 
 export class CancelledError extends Error {
   constructor() {
@@ -59,7 +60,8 @@ function spawn(): Worker {
       return;
     }
     if (data.type === 'done') task.resolve(data.blob);
-    else task.reject(new Error(data.message));
+    else
+      task.reject(new ConversionError(data.failure.code, data.failure.detail, data.failure.params));
     release(worker);
   };
 
@@ -67,7 +69,9 @@ function spawn(): Worker {
   // never replies, so fail its task rather than leaving the card spinning.
   worker.onerror = () => {
     const task = busy.get(worker);
-    task?.reject(new Error('Conversion worker crashed — the file may be too large'));
+    task?.reject(
+      new ConversionError('out-of-memory', 'Conversion worker crashed — the file may be too large'),
+    );
     worker.terminate();
     busy.delete(worker);
     spawned--;

@@ -1,4 +1,5 @@
 import type { FileCategory, FormatInfo, ConverterFn, ConversionSettings } from './types';
+import { ConversionError } from './errors';
 import {
   csvToJson,
   csvToTsv,
@@ -246,5 +247,5 @@ export async function convertFile(
     return converter(file, sourceExt, targetExt, settings, onProgress);
   }
 
-  throw new Error(`Unsupported conversion: ${sourceExt} → ${targetExt}`);
+  throw new ConversionError('unsupported', `Unsupported conversion: ${sourceExt} → ${targetExt}`);
 }

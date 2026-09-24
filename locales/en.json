@@ -180,5 +180,32 @@
     "techSheets": "Spreadsheets",
     "techHeif": "HEIC/AVIF",
     "techHosting": "Hosting"
+  },
+  "errors": {
+    "tooLarge": {
+      "title": "File too large ({size} MB; the limit is {limit} MB)",
+      "hint": "Browsers can’t safely hold a file this big in memory. Try a shorter clip or a smaller image, or split the file."
+    },
+    "outOfMemory": {
+      "title": "Ran out of memory",
+      "hint": "Your browser ran out of memory, or the converter crashed on this file. Close other tabs and press Retry, or try a smaller file or a lighter output format."
+    },
+    "corruptInput": {
+      "title": "Couldn’t read this file",
+      "hint": "It may be damaged, incomplete, or not really a .{ext} file. Try exporting it again from the app that made it."
+    },
+    "unsupported": {
+      "title": "Not supported",
+      "hint": "This file uses something the converter can’t handle yet. Try a different output format."
+    },
+    "engineLoad": {
+      "title": "Couldn’t load the converter",
+      "hint": "Part of the conversion engine didn’t download. Check your connection and press Retry."
+    },
+    "unknown": {
+      "title": "Conversion failed",
+      "hint": "Something unexpected went wrong. Press Retry; if it keeps failing, the technical details below will help us fix it."
+    },
+    "details": "Technical details"
   }
 }

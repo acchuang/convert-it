@@ -180,5 +180,32 @@
     "techSheets": "Hojas de cálculo",
     "techHeif": "HEIC/AVIF",
     "techHosting": "Alojamiento"
+  },
+  "errors": {
+    "tooLarge": {
+      "title": "Archivo demasiado grande ({size} MB; el límite es {limit} MB)",
+      "hint": "El navegador no puede manejar con seguridad un archivo tan grande en memoria. Prueba con un clip más corto o una imagen más pequeña, o divide el archivo."
+    },
+    "outOfMemory": {
+      "title": "Memoria agotada",
+      "hint": "El navegador se quedó sin memoria o el convertidor falló con este archivo. Cierra otras pestañas y pulsa Reintentar, o prueba con un archivo más pequeño o un formato de salida más ligero."
+    },
+    "corruptInput": {
+      "title": "No se pudo leer este archivo",
+      "hint": "Puede estar dañado, incompleto o no ser realmente un archivo .{ext}. Intenta exportarlo de nuevo desde la aplicación que lo creó."
+    },
+    "unsupported": {
+      "title": "No compatible",
+      "hint": "Este archivo usa algo que el convertidor aún no admite. Prueba otro formato de salida."
+    },
+    "engineLoad": {
+      "title": "No se pudo cargar el convertidor",
+      "hint": "Una parte del motor de conversión no se descargó. Revisa tu conexión y pulsa Reintentar."
+    },
+    "unknown": {
+      "title": "La conversión falló",
+      "hint": "Algo inesperado salió mal. Pulsa Reintentar; si sigue fallando, los detalles técnicos de abajo nos ayudarán a corregirlo."
+    },
+    "details": "Detalles técnicos"
   }
 }

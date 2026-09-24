@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import type { ConversionFailure } from '@/lib/errors';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getTargetFormats, getFormatInfo, formatFileSize } from '@/lib/converters';
 import type { ConversionSettings } from '@/lib/types';
@@ -13,7 +14,7 @@ export interface FileJob {
   targetExt: string | null;
   status: 'idle' | 'converting' | 'done' | 'error';
   resultBlob?: Blob;
-  error?: string;
+  error?: ConversionFailure;
   progress: number;
   stage?: string;
   settings: ConversionSettings;
@@ -50,6 +51,31 @@ const CONFIGURABLE_FORMATS = new Set([
   ...AUDIO_BITRATE_FORMATS,
   ...VIDEO_SETTINGS_FORMATS,
 ]);
+
+const ERROR_KEYS: Record<ConversionFailure['code'], string> = {
+  'too-large': 'tooLarge',
+  'out-of-memory': 'outOfMemory',
+  'corrupt-input': 'corruptInput',
+  unsupported: 'unsupported',
+  'engine-load': 'engineLoad',
+  unknown: 'unknown',
+};
+
+/** Localized title and hint for a failure, with {placeholders} filled in. */
+export function describeError(
+  failure: ConversionFailure,
+  sourceExt: string,
+  t: (key: string) => string,
+): { title: string; hint: string } {
+  const fill = (text: string) =>
+    text.replace(/\{(\w+)\}/g, (whole, name: string) => {
+      if (name === 'ext') return sourceExt;
+      const value = failure.params?.[name];
+      return value === undefined ? whole : String(value);
+    });
+  const key = `errors.${ERROR_KEYS[failure.code] ?? 'unknown'}`;
+  return { title: fill(t(`${key}.title`)), hint: fill(t(`${key}.hint`)) };
+}
 
 function hasSettings(targetExt: string | null, sourceExt: string): boolean {
   if (!targetExt) return false;
@@ -712,7 +738,10 @@ export function JobCard({
             </span>
           )}
           {job.status === 'error' && (
-            <span className="text-[var(--error)] flex items-center gap-1.5" title={job.error}>
+            <span
+              className="text-[var(--error)] flex items-center gap-1.5"
+              title={job.error?.detail}
+            >
               <svg
                 width="12"
                 height="12"
@@ -725,7 +754,11 @@ export function JobCard({
                 <line x1="12" y1="8" x2="12" y2="12" />
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
-              <span className="truncate max-w-xs">{job.error || 'Conversion failed'}</span>
+              <span className="truncate max-w-xs">
+                {job.error
+                  ? describeError(job.error, job.sourceExt, t).title
+                  : t('errors.unknown.title')}
+              </span>
             </span>
           )}
         </div>
@@ -882,7 +915,7 @@ export function JobCard({
               onClick={onConvert}
               className="px-4 py-1.5 text-[var(--error)] text-xs rounded-lg border border-[var(--error)]/30 bg-[var(--error)]/10 hover:bg-[var(--error)]/20 transition-colors font-medium flex items-center gap-1"
               style={{ fontFamily: 'var(--font-mono)' }}
-              title={job.error}
+              title={job.error?.detail}
               aria-label={t('job.retry')}
             >
               {t('job.retry')}
@@ -928,9 +961,23 @@ export function JobCard({
       </AnimatePresence>
 
       {job.status === 'error' && job.error && (
-        <p className="mt-2 text-xs text-[var(--error)]" style={{ fontFamily: 'var(--font-mono)' }}>
-          {job.error}
-        </p>
+        <div role="alert" className="mt-2 text-xs">
+          <p className="text-[var(--error)] font-semibold">
+            {describeError(job.error, job.sourceExt, t).title}
+          </p>
+          <p className="mt-0.5 text-[var(--text-secondary)]">
+            {describeError(job.error, job.sourceExt, t).hint}
+          </p>
+          <details className="mt-1 text-[var(--text-muted)]">
+            <summary className="cursor-pointer select-none">{t('errors.details')}</summary>
+            <code
+              className="block mt-1 break-all whitespace-pre-wrap"
+              style={{ fontFamily: 'var(--font-mono)' }}
+            >
+              {job.error.detail}
+            </code>
+          </details>
+        </div>
       )}
     </motion.div>
   );
