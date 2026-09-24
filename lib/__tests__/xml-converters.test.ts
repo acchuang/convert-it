@@ -98,11 +98,11 @@ describe('xmlToCsv', () => {
     expect(text).toContain('name;age');
   });
 
-  it('throws when no <row> elements are found', async () => {
+  // Any element name works, not just <row>; a single record is a one-row table.
+  it('treats a single non-<row> record as one row', async () => {
     const file = new File([XML], 'test.xml', { type: 'application/xml' });
-    await expect(xmlToCsv(file, 'xml', 'csv', DEFAULT_SETTINGS)).rejects.toThrow(
-      'No <row> elements found in XML',
-    );
+    const blob = await xmlToCsv(file, 'xml', 'csv', DEFAULT_SETTINGS);
+    expect(await blob.text()).toBe('name,age\r\nAlice,30');
   });
 });
 
@@ -115,11 +115,10 @@ describe('xmlToYaml', () => {
     expect(text).toContain('age: "30"');
   });
 
-  it('produces empty array output when no <row> elements exist', async () => {
+  it('converts a single non-<row> record', async () => {
     const file = new File([XML], 'test.xml', { type: 'application/xml' });
     const blob = await xmlToYaml(file, 'xml', 'yaml', DEFAULT_SETTINGS);
-    const text = await blob.text();
-    expect(text.trim()).toBe('[]');
+    expect((await blob.text()).trim()).toBe('- name: Alice\n  age: "30"');
   });
 });
 
@@ -132,10 +131,10 @@ describe('xmlToTsv', () => {
     expect(text).toContain('Alice');
   });
 
-  it('throws when no <row> elements are found', async () => {
-    const file = new File([XML], 'test.xml', { type: 'application/xml' });
+  it('rejects malformed XML with the line number', async () => {
+    const file = new File(['<root>\n<a>1</b>\n</root>'], 'bad.xml', { type: 'application/xml' });
     await expect(xmlToTsv(file, 'xml', 'tsv', DEFAULT_SETTINGS)).rejects.toThrow(
-      'No <row> elements found in XML',
+      /Invalid XML \(line 2\)/,
     );
   });
 });
@@ -157,5 +156,56 @@ describe('special XML characters', () => {
     const text = await blob.text();
     const data = JSON.parse(text);
     expect(data.root.text).toBe('Tom & Jerry');
+  });
+});
+
+describe('real-world XML → tabular', () => {
+  const csv = async (xml: string) =>
+    (await xmlToCsv(new File([xml], 'a.xml'), 'xml', 'csv', DEFAULT_SETTINGS)).text();
+
+  it('finds records under a header block and keeps attributes', async () => {
+    const xml = `<?xml version="1.0"?>
+      <catalog>
+        <meta><generated>2026-01-01</generated><source>shop</source></meta>
+        <books>
+          <book id="1" lang="en"><title>Dune</title><price currency="USD">9.99</price></book>
+          <book id="2"><title>Solaris &amp; more</title><price currency="EUR">7.50</price></book>
+          <book id="3"><title>Ubik</title></book>
+        </books>
+      </catalog>`;
+    expect(await csv(xml)).toBe(
+      [
+        '@id,@lang,title,price.@currency,price',
+        '1,en,Dune,USD,9.99',
+        '2,,Solaris & more,EUR,7.50',
+        '3,,Ubik,,',
+      ].join('\r\n'),
+    );
+  });
+
+  it('flattens nested elements to dotted columns and joins repeated children', async () => {
+    const xml = `<people>
+      <person><name>Ann</name><address><city>Oslo</city><zip>0150</zip></address><tag>a</tag><tag>b</tag></person>
+      <person><name>Bo</name><address><city>Rome</city></address></person>
+    </people>`;
+    expect(await csv(xml)).toBe(
+      ['name,address.city,address.zip,tag', 'Ann,Oslo,0150,a; b', 'Bo,Rome,,'].join('\r\n'),
+    );
+  });
+
+  it('picks the largest repeated element (an RSS feed)', async () => {
+    const xml = `<rss><channel><title>Feed</title><link>x</link><link>y</link>
+      <item><title>One</title></item><item><title>Two</title></item><item><title>Three</title></item>
+    </channel></rss>`;
+    expect(await csv(xml)).toBe(['title', 'One', 'Two', 'Three'].join('\r\n'));
+  });
+
+  it('keeps leading zeros and whitespace-only records as text', async () => {
+    const xml = '<r><x><id>007</id></x><x><id>010</id></x></r>';
+    expect(await csv(xml)).toBe(['id', '007', '010'].join('\r\n'));
+  });
+
+  it('rejects an empty document', async () => {
+    await expect(csv('<root/>')).rejects.toThrow(/No records found/);
   });
 });

@@ -49,6 +49,8 @@ Independent Next.js project deployed via Cloudflare Pages.
 - HTML → text (htmlToTxt, md/html → PDF) goes through `lib/html-text.ts` `htmlToPlainText`: `DOMParser` (inert — never `innerHTML` on a live-document element, which runs `onerror` handlers), drops script/style, keeps block line breaks.
 - Text → PDF lays out one source line at a time (`textToPdfBlob`); don't round-trip through HTML `textContent`, which loses every line break.
 
+- XML → CSV/TSV/YAML (`xmlToRecords` in `lib/xml-converters.ts`) finds the records: the largest run of same-named sibling elements (ties to the shallowest); otherwise the whole document, unwrapped, is one record. Columns: attributes first (`@id`), nested elements as dotted paths, repeated children joined with `; `. fast-xml-parser, no DOM, so XML runs in the worker pool.
+
 ## Media (FFmpeg)
 
 - Command lines come from the pure `buildFfmpegArgs` in `lib/audio-video-converters.ts` — one entry per container in `VIDEO_CONTAINERS` pairing a video codec with an audio codec that muxer accepts. Unit-test args there; don't build them inline.

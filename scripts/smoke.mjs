@@ -42,7 +42,10 @@ const PAIRS = [
   ['data.csv', 'xlsx', 'xlsx writer', magic('PK')],
   ['data.json', 'yaml', 'yaml', (b) => b.toString().includes('name:')],
   ['doc.md', 'html', 'document', (b) => /<(h1|strong|a)\b/i.test(b.toString())],
-  ['doc.txt', 'pdf', 'jspdf', magic('%PDF')],
+  ['doc.txt', 'pdf', 'jspdf (worker)', magic('%PDF')],
+  ['data.json', 'pdf', 'jspdf json (worker)', magic('%PDF')],
+  ['doc.md', 'pdf', 'jspdf md (main)', magic('%PDF')],
+  ['data.xml', 'csv', 'xml (worker)', (b) => b.toString() === '@id,title\r\n1,Dune\r\n2,Ubik'],
 ];
 
 // Google Chrome by default (what CI runners have); SMOKE_CHROMIUM_PATH points

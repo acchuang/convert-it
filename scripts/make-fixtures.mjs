@@ -54,6 +54,10 @@ writeFileSync(
   join(DIR, 'doc.md'),
   '# Title\n\nSome **bold** text and a [link](https://example.com).\n',
 );
+writeFileSync(
+  join(DIR, 'data.xml'),
+  '<catalog><meta><v>1</v></meta><book id="1"><title>Dune</title></book><book id="2"><title>Ubik</title></book></catalog>',
+);
 writeFileSync(join(DIR, 'doc.txt'), 'Plain text line one.\nPlain text line two.\n');
 
 writeFileSync(
