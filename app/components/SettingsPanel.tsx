@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { settingsFor } from '@/lib/converters';
+import { getFormatInfo, settingsFor } from '@/lib/converters';
+import { TrimScrubber } from './TrimScrubber';
 import { formatTimecode, parseTimecode } from '@/lib/timecode';
 import { isPageRangeSyntax } from '@/lib/pdf-options';
 import type { ConversionSettings } from '@/lib/types';
@@ -69,15 +70,20 @@ function TimeField({
   );
 }
 
+const VIDEO_WIDTHS = [0, 1920, 1280, 854];
+
 export function SettingsPanel({
   targetExt,
   sourceExt,
   settings,
   onChange,
   t,
+  file,
 }: {
   targetExt: string;
   sourceExt: string;
+  /** The source, for the trim scrubber's preview. */
+  file?: File;
   settings: ConversionSettings;
   onChange: (patch: Partial<ConversionSettings>) => void;
   t: (key: string) => string;
@@ -92,6 +98,9 @@ export function SettingsPanel({
   const showVideoPreset = shown.has('videoPreset');
   const showAnimation = shown.has('animation');
   const showTrim = shown.has('trim');
+  const showVideoSize = shown.has('videoSize');
+  const showMute = shown.has('mute');
+  const mediaKind = getFormatInfo(sourceExt)?.category === 'video' ? 'video' : 'audio';
   const showPdfEdit = shown.has('pdfEdit');
   const showPdfCompress = shown.has('pdfCompress');
   const showPdfPageSize = shown.has('pdfPageSize');
@@ -496,8 +505,44 @@ export function SettingsPanel({
           </div>
         )}
 
-        {showTrim && (
+        {showVideoSize && (
           <div className={CARD}>
+            <span className={LABEL}>{t('job.videoSize')}</span>
+            <div className="flex gap-1">
+              {VIDEO_WIDTHS.map((w) => (
+                <button
+                  key={w}
+                  onClick={() => onChange({ videoMaxWidth: w })}
+                  aria-pressed={settings.videoMaxWidth === w}
+                  className={choice(settings.videoMaxWidth === w)}
+                >
+                  {w === 0 ? t('job.original') : `${Math.round((w * 9) / 16)}p`}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {showMute && (
+          <div className={CARD}>
+            <span className={LABEL}>{t('job.audioTrack')}</span>
+            <div className="flex gap-1">
+              {([false, true] as const).map((mute) => (
+                <button
+                  key={String(mute)}
+                  onClick={() => onChange({ mute })}
+                  aria-pressed={settings.mute === mute}
+                  className={choice(settings.mute === mute)}
+                >
+                  {mute ? t('job.muteAudio') : t('job.keepAudio')}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {showTrim && (
+          <div className={`${CARD} ${file ? 'sm:col-span-2 lg:col-span-3' : ''}`}>
             <span className={LABEL}>{t('job.trim')}</span>
             <div className="flex items-center gap-1.5">
               <TimeField
@@ -515,6 +560,16 @@ export function SettingsPanel({
               />
             </div>
             <span className="text-xs text-[var(--text-muted)]">{t('job.trimHint')}</span>
+            {file && (
+              <TrimScrubber
+                file={file}
+                kind={mediaKind}
+                start={settings.trimStart}
+                end={settings.trimEnd}
+                onChange={onChange}
+                t={t}
+              />
+            )}
           </div>
         )}
 

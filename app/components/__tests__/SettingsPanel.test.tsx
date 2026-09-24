@@ -32,6 +32,8 @@ const groups = (source: string, target: string) => {
     pdfEdit: has('job.pdfPages2'),
     pdfCompress: has('job.pdfCompress'),
     pageSize: has('job.pdfPageSize'),
+    videoSize: has('job.videoSize'),
+    mute: has('job.audioTrack'),
   };
 };
 
@@ -66,6 +68,12 @@ describe('SettingsPanel shows what the route reads', () => {
         bitrate: false,
       });
     }
+  });
+
+  it('video → video can be resized and muted; extracting audio or making a GIF cannot', () => {
+    expect(groups('mp4', 'mkv')).toMatchObject({ videoSize: true, mute: true });
+    expect(groups('mp4', 'mp3')).toMatchObject({ videoSize: false, mute: false });
+    expect(groups('mp4', 'gif')).toMatchObject({ videoSize: false, mute: false });
   });
 
   it('every media conversion can be trimmed; nothing else can', () => {

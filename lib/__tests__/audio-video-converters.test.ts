@@ -227,3 +227,21 @@ describe('trim', () => {
     expect(a.slice(0, 4)).toEqual(['-t', '30', '-i', 'in.wav']);
   });
 });
+
+describe('resize and mute (video → video)', () => {
+  const args = (extra: Partial<typeof DEFAULT_SETTINGS>) =>
+    buildFfmpegArgs('mp4', 'webm', 'in.mp4', 'out.webm', { ...DEFAULT_SETTINGS, ...extra });
+
+  it('scales down only, keeping an even height', () => {
+    const a = args({ videoMaxWidth: 1280 });
+    expect(a.slice(2, 4)).toEqual(['-vf', "scale='min(1280,iw)':-2"]);
+    expect(args({ videoMaxWidth: 0 })).not.toContain('-vf');
+  });
+
+  it('mute drops the audio stream instead of encoding it', () => {
+    const a = args({ mute: true });
+    expect(a).toContain('-an');
+    expect(a).not.toContain('-c:a');
+    expect(args({})).toContain('-c:a');
+  });
+});

@@ -406,10 +406,15 @@ export function buildFfmpegArgs(
   const container = category === 'video' ? VIDEO_CONTAINERS[targetExt] : undefined;
   if (!container) throw new Error(`Unsupported conversion: ${sourceExt} → ${targetExt}`);
 
+  // Resize: only ever down, keeping the aspect ratio and an even height
+  // (x264 and libvpx need even dimensions). Mute drops the audio stream.
+  const maxWidth = settings?.videoMaxWidth ?? 0;
+  const scale = maxWidth > 0 ? ['-vf', `scale='min(${maxWidth},iw)':-2`] : [];
   return [
     ...input,
+    ...scale,
     ...container.video(k),
-    ...container.audio(k),
+    ...(settings?.mute ? ['-an'] : container.audio(k)),
     ...(container.extra ?? []),
     '-y',
     outputName,

@@ -98,7 +98,13 @@
     "pdfCompressStrong": "強",
     "pdfCompressHint": "ページを画像として再描画します。スキャン文書は大幅に小さくなりますが、テキストは選択できなくなります",
     "pdfPageSize": "用紙サイズ",
-    "pdfPageFit": "画像に合わせる"
+    "pdfPageFit": "画像に合わせる",
+    "videoSize": "最大サイズ",
+    "audioTrack": "音声",
+    "keepAudio": "残す",
+    "muteAudio": "ミュート",
+    "setStart": "開始に設定",
+    "setEnd": "終了に設定"
   },
   "howItWorks": {
     "heading": "使い方",

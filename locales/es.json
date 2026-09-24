@@ -98,7 +98,13 @@
     "pdfCompressStrong": "Fuerte",
     "pdfCompressHint": "Convierte las páginas en imágenes: mucho más ligero para escaneos, pero el texto deja de ser seleccionable",
     "pdfPageSize": "Tamaño de página",
-    "pdfPageFit": "Ajustar a la imagen"
+    "pdfPageFit": "Ajustar a la imagen",
+    "videoSize": "Tamaño máx.",
+    "audioTrack": "Audio",
+    "keepAudio": "Mantener",
+    "muteAudio": "Silenciar",
+    "setStart": "Fijar inicio",
+    "setEnd": "Fijar fin"
   },
   "howItWorks": {
     "heading": "CÓMO FUNCIONA",

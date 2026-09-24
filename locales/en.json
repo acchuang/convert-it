@@ -98,7 +98,13 @@
     "pdfCompressStrong": "Strong",
     "pdfCompressHint": "Re-renders pages as images: much smaller for scans, but text is no longer selectable",
     "pdfPageSize": "Page size",
-    "pdfPageFit": "Fit image"
+    "pdfPageFit": "Fit image",
+    "videoSize": "Max size",
+    "audioTrack": "Audio",
+    "keepAudio": "Keep",
+    "muteAudio": "Mute",
+    "setStart": "Set start",
+    "setEnd": "Set end"
   },
   "howItWorks": {
     "heading": "HOW IT WORKS",

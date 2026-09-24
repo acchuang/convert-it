@@ -547,6 +547,7 @@ export function JobCard({
             targetExt={job.targetExt}
             sourceExt={job.sourceExt}
             settings={job.settings}
+            file={job.file}
             onChange={onSettingsChange}
             t={t}
           />

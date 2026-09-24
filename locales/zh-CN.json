@@ -98,7 +98,13 @@
     "pdfCompressStrong": "强",
     "pdfCompressHint": "将页面重新渲染为图片：扫描件会小很多，但文字将无法选择",
     "pdfPageSize": "页面尺寸",
-    "pdfPageFit": "适应图片"
+    "pdfPageFit": "适应图片",
+    "videoSize": "最大尺寸",
+    "audioTrack": "音频",
+    "keepAudio": "保留",
+    "muteAudio": "静音",
+    "setStart": "设为开始",
+    "setEnd": "设为结束"
   },
   "howItWorks": {
     "heading": "使用方式",

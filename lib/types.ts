@@ -16,6 +16,8 @@ export interface ConversionSettings {
   audioBitrate: number; // 64 | 128 | 192 | 256 | 320 (kbps)
   videoQuality: number; // 0-51, lower is better quality (CRF)
   videoPreset: string; // ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow
+  videoMaxWidth: number; // video→video: downscale to at most this width in px; 0 = keep
+  mute: boolean; // video→video: drop the audio track
   trimStart: number; // seconds into the source; 0 = from the start
   trimEnd: number; // seconds into the source; 0 (or ≤ trimStart) = to the end
   animFps: number; // video → GIF / animated WebP frame rate
@@ -47,6 +49,8 @@ export const DEFAULT_SETTINGS: ConversionSettings = {
   audioBitrate: 192,
   videoQuality: 23,
   videoPreset: 'medium',
+  videoMaxWidth: 0,
+  mute: false,
   trimStart: 0,
   trimEnd: 0,
   animFps: 12,

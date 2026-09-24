@@ -72,6 +72,8 @@ export type SettingKey =
   | 'videoPreset' // videoPreset
   | 'animation' // animFps, animWidth
   | 'trim' // trimStart, trimEnd
+  | 'videoSize' // videoMaxWidth
+  | 'mute' // mute
   | 'pdfPages' // pdfAllPages
   | 'pdfScale' // pdfScale
   | 'pdfEdit' // pdfPageRange, pdfRotate, pdfSplit
@@ -96,6 +98,8 @@ export const SETTING_FIELDS: Record<SettingKey, (keyof ConversionSettings)[]> = 
   videoPreset: ['videoPreset'],
   animation: ['animFps', 'animWidth'],
   trim: ['trimStart', 'trimEnd'],
+  videoSize: ['videoMaxWidth'],
+  mute: ['mute'],
   pdfPages: ['pdfAllPages'],
   pdfScale: ['pdfScale'],
   pdfEdit: ['pdfPageRange', 'pdfRotate', 'pdfSplit'],
@@ -172,8 +176,10 @@ const audioSettings = (to: string): SettingKey[] =>
 // mpeg4 (AVI) and Sorenson (FLV) take a fixed quantiser: no speed preset.
 function videoSettings(to: string): SettingKey[] {
   if (to === 'gif' || to === 'webp') return ['animation', 'trim'];
-  if (to === 'avi' || to === 'flv') return ['videoQuality', 'audioBitrate', 'trim'];
-  return ['videoQuality', 'videoPreset', 'audioBitrate', 'trim'];
+  if (to === 'avi' || to === 'flv') {
+    return ['videoQuality', 'videoSize', 'audioBitrate', 'mute', 'trim'];
+  }
+  return ['videoQuality', 'videoPreset', 'videoSize', 'audioBitrate', 'mute', 'trim'];
 }
 
 const VIDEO_TARGETS = [

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { crfToQualityTier, trimRange } from '@/lib/webcodecs-converter';
+import { crfToQualityTier, fitWidth, trimRange } from '@/lib/webcodecs-converter';
 
 describe('crfToQualityTier', () => {
   it('maps the CRF slider onto quality tiers, default CRF 23 → high', () => {
@@ -15,6 +15,16 @@ describe('crfToQualityTier', () => {
       'veryLow',
       'veryLow',
     ]);
+  });
+});
+
+describe('fitWidth', () => {
+  it('matches ffmpeg scale=min(W,iw):-2 — down only, aspect kept, even sides', () => {
+    expect(fitWidth(1920, 1080, 1280)).toEqual({ width: 1280, height: 720 });
+    expect(fitWidth(1920, 1080, 854)).toEqual({ width: 854, height: 480 });
+    expect(fitWidth(1000, 750, 333)).toEqual({ width: 334, height: 250 });
+    expect(fitWidth(640, 360, 1280)).toBeNull();
+    expect(fitWidth(1920, 1080, 0)).toBeNull();
   });
 });
 
@@ -139,6 +149,18 @@ describe('convertWithWebCodecs', () => {
     });
     expect(progress.at(-1)).toBe(100);
     expect(disposed).toBe(1);
+  });
+
+  it('mute discards the audio without probing it', async () => {
+    const { convertWithWebCodecs } = await load();
+    world.audioTrack = { codec: 'aac', numberOfChannels: 2, sampleRate: 44100 };
+    world.canEncodeAudio = false; // would otherwise send the job to ffmpeg
+    const blob = await convertWithWebCodecs(file(), 'mkv', 'webm', {
+      ...(settings as object),
+      mute: true,
+    } as never);
+    expect(blob).not.toBeNull();
+    expect(initOptions?.audio).toEqual({ discard: true });
   });
 
   it('passes the trim through', async () => {

@@ -98,7 +98,13 @@
     "pdfCompressStrong": "強",
     "pdfCompressHint": "將頁面重新繪製為圖片：掃描檔會小很多，但文字將無法選取",
     "pdfPageSize": "頁面尺寸",
-    "pdfPageFit": "符合圖片"
+    "pdfPageFit": "符合圖片",
+    "videoSize": "最大尺寸",
+    "audioTrack": "音訊",
+    "keepAudio": "保留",
+    "muteAudio": "靜音",
+    "setStart": "設為開始",
+    "setEnd": "設為結束"
   },
   "howItWorks": {
     "heading": "使用方式",
