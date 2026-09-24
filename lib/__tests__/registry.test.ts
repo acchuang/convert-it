@@ -75,12 +75,13 @@ describe('declared settings match what data and document converters read', () =>
 });
 
 describe('declared settings match the ffmpeg command line', () => {
+  // Same rule as above, applied to the command line: every field the ffmpeg
+  // args read is declared, and every declared field is read.
   const media = allRoutes().filter((r) => r.thread === 'main' && !['html', 'md'].includes(r.from));
   it.each(media.map((r) => [`${r.from} → ${r.to}`, r] as const))('%s', (_name, route) => {
-    const args = buildFfmpegArgs(route.from, route.to, 'in', 'out', DEFAULT_SETTINGS);
-    expect(route.settings.includes('audioBitrate')).toBe(args.includes('-b:a'));
-    expect(route.settings.includes('video')).toBe(
-      args.includes('-crf') || (args.includes('-q:v') && route.to !== 'webp'),
-    );
+    const { settings, read } = recording();
+    buildFfmpegArgs(route.from, route.to, 'in', 'out', settings);
+    const declared = new Set(route.settings.flatMap((k: SettingKey) => SETTING_FIELDS[k]));
+    expect([...read].sort()).toEqual([...declared].sort());
   });
 });

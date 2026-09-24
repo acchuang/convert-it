@@ -74,7 +74,14 @@
     "xlsxSheets": "シート",
     "xlsxFirstSheet": "最初のシート",
     "xlsxAllSheets": "すべてのシート",
-    "pdfScale": "倍率"
+    "pdfScale": "倍率",
+    "fps": "フレームレート",
+    "animWidth": "最大幅",
+    "original": "元のサイズ",
+    "trim": "トリミング",
+    "trimStart": "開始",
+    "trimEnd": "終了",
+    "trimHint": "例: 0:05 → 0:12.5 · 空欄 = 全体"
   },
   "howItWorks": {
     "heading": "使い方",

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { crfToQualityTier } from '@/lib/webcodecs-converter';
+import { crfToQualityTier, trimRange } from '@/lib/webcodecs-converter';
 
 describe('crfToQualityTier', () => {
   it('maps the CRF slider onto quality tiers, default CRF 23 → high', () => {
@@ -15,6 +15,15 @@ describe('crfToQualityTier', () => {
       'veryLow',
       'veryLow',
     ]);
+  });
+});
+
+describe('trimRange', () => {
+  it('matches the ffmpeg trim rules', () => {
+    expect(trimRange({ trimStart: 0, trimEnd: 0 })).toBeUndefined();
+    expect(trimRange({ trimStart: 2, trimEnd: 7 })).toEqual({ start: 2, end: 7 });
+    expect(trimRange({ trimStart: 5, trimEnd: 5 })).toEqual({ start: 5 });
+    expect(trimRange({ trimStart: 0, trimEnd: 4 })).toEqual({ end: 4 });
   });
 });
 
@@ -130,6 +139,16 @@ describe('convertWithWebCodecs', () => {
     });
     expect(progress.at(-1)).toBe(100);
     expect(disposed).toBe(1);
+  });
+
+  it('passes the trim through', async () => {
+    const { convertWithWebCodecs } = await load();
+    await convertWithWebCodecs(file(), 'mkv', 'webm', {
+      ...(settings as object),
+      trimStart: 1,
+      trimEnd: 3,
+    } as never);
+    expect(initOptions?.trim).toEqual({ start: 1, end: 3 });
   });
 
   it('declines pairs it does not handle, and browsers without WebCodecs', async () => {

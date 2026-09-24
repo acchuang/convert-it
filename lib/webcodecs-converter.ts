@@ -52,6 +52,16 @@ export function crfToQualityTier(crf: number): 'veryHigh' | 'high' | 'medium' | 
   return 'veryLow';
 }
 
+/** The trim settings as mediabunny's range; same rules as ffmpeg's trimArgs. */
+export function trimRange(
+  settings?: Partial<ConversionSettings>,
+): { start?: number; end?: number } | undefined {
+  const start = Math.max(0, settings?.trimStart ?? 0);
+  const end = settings?.trimEnd ?? 0;
+  if (!start && !(end > start)) return undefined;
+  return { ...(start ? { start } : {}), ...(end > start ? { end } : {}) };
+}
+
 let active: Conversion | null = null;
 // Bumped by every cancel, so one that lands while a job is still probing its
 // input (before execute starts) is not lost.
@@ -133,6 +143,7 @@ export async function convertWithWebCodecs(
       input,
       output,
       tracks: 'primary',
+      trim: trimRange(settings),
       video: target.video
         ? {
             codec: target.video,

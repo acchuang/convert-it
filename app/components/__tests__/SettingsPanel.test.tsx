@@ -1,10 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { SettingsPanel } from '@/app/components/SettingsPanel';
 import { DEFAULT_SETTINGS } from '@/lib/types';
 
 const t = (key: string) => key;
 const groups = (source: string, target: string) => {
+  cleanup(); // several calls per test: measure only this render
   render(
     <SettingsPanel
       sourceExt={source}
@@ -26,6 +27,8 @@ const groups = (source: string, target: string) => {
     indent: has('job.indent'),
     pdfPages: has('job.pdfPages'),
     sheets: has('job.xlsxSheets'),
+    fps: has('job.fps'),
+    trim: has('job.trim'),
   };
 };
 
@@ -44,6 +47,28 @@ describe('SettingsPanel shows what the route reads', () => {
 
   it('video → video: CRF/preset and the audio bitrate it applies', () => {
     expect(groups('mp4', 'mkv')).toMatchObject({ preset: true, bitrate: true });
+  });
+
+  it('AVI/FLV have a fixed-quantiser encoder: quality but no speed preset', () => {
+    expect(groups('mp4', 'avi')).toMatchObject({ quality: true, preset: false, bitrate: true });
+  });
+
+  it('video → GIF / animated WebP: frame rate, width and trim, no codec knobs', () => {
+    for (const target of ['gif', 'webp']) {
+      expect(groups('mp4', target)).toMatchObject({
+        fps: true,
+        trim: true,
+        quality: false,
+        preset: false,
+        bitrate: false,
+      });
+    }
+  });
+
+  it('every media conversion can be trimmed; nothing else can', () => {
+    expect(groups('mp4', 'mkv').trim).toBe(true);
+    expect(groups('wav', 'mp3').trim).toBe(true);
+    expect(groups('png', 'jpg').trim).toBe(false);
   });
 
   it('lossless audio targets have no bitrate', () => {

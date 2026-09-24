@@ -74,7 +74,14 @@
     "xlsxSheets": "Sheets",
     "xlsxFirstSheet": "First sheet",
     "xlsxAllSheets": "All sheets",
-    "pdfScale": "Scale"
+    "pdfScale": "Scale",
+    "fps": "Frame rate",
+    "animWidth": "Max width",
+    "original": "Original",
+    "trim": "Trim",
+    "trimStart": "Start",
+    "trimEnd": "End",
+    "trimHint": "e.g. 0:05 → 0:12.5 · blank = whole clip"
   },
   "howItWorks": {
     "heading": "HOW IT WORKS",

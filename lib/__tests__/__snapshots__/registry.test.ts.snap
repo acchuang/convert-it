@@ -12,6 +12,7 @@ exports[`converter registry > targets per source, in order (the first is the def
     "wav",
     "aac",
     "webp",
+    "gif",
   ],
   "aac": [
     "mp3",
@@ -31,6 +32,7 @@ exports[`converter registry > targets per source, in order (the first is the def
     "aac",
     "ogg",
     "webp",
+    "gif",
   ],
   "avif": [
     "jpg",
@@ -71,6 +73,7 @@ exports[`converter registry > targets per source, in order (the first is the def
     "aac",
     "ogg",
     "webp",
+    "gif",
   ],
   "gif": [
     "png",
@@ -140,6 +143,7 @@ exports[`converter registry > targets per source, in order (the first is the def
     "aac",
     "ogg",
     "webp",
+    "gif",
   ],
   "md": [
     "html",
@@ -157,6 +161,7 @@ exports[`converter registry > targets per source, in order (the first is the def
     "aac",
     "ogg",
     "webp",
+    "gif",
   ],
   "mov": [
     "mp4",
@@ -169,6 +174,7 @@ exports[`converter registry > targets per source, in order (the first is the def
     "aac",
     "ogg",
     "webp",
+    "gif",
   ],
   "mp3": [
     "wav",
@@ -188,6 +194,7 @@ exports[`converter registry > targets per source, in order (the first is the def
     "aac",
     "ogg",
     "webp",
+    "gif",
   ],
   "ogg": [
     "mp3",
@@ -252,6 +259,7 @@ exports[`converter registry > targets per source, in order (the first is the def
     "aac",
     "ogg",
     "webp",
+    "gif",
   ],
   "webp": [
     "jpg",

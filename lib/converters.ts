@@ -64,7 +64,10 @@ export type SettingKey =
   | 'jsonIndent' // jsonIndent
   | 'xmlRoot' // xmlRootElement
   | 'audioBitrate' // audioBitrate
-  | 'video' // videoQuality, videoPreset
+  | 'videoQuality' // videoQuality
+  | 'videoPreset' // videoPreset
+  | 'animation' // animFps, animWidth
+  | 'trim' // trimStart, trimEnd
   | 'pdfPages' // pdfAllPages
   | 'pdfScale' // pdfScale
   | 'xlsxSheets'; // xlsxAllSheets
@@ -82,7 +85,10 @@ export const SETTING_FIELDS: Record<SettingKey, (keyof ConversionSettings)[]> = 
   jsonIndent: ['jsonIndent'],
   xmlRoot: ['xmlRootElement'],
   audioBitrate: ['audioBitrate'],
-  video: ['videoQuality', 'videoPreset'],
+  videoQuality: ['videoQuality'],
+  videoPreset: ['videoPreset'],
+  animation: ['animFps', 'animWidth'],
+  trim: ['trimStart', 'trimEnd'],
   pdfPages: ['pdfAllPages'],
   pdfScale: ['pdfScale'],
   xlsxSheets: ['xlsxAllSheets'],
@@ -148,8 +154,16 @@ for (const [from, targets] of Object.entries(IMAGE_TARGETS)) {
 // --- Video and audio (ffmpeg.wasm runs in its own worker, so 'main') ------------
 
 // Lossless audio has no bitrate (buildFfmpegArgs leaves -b:a out for them).
+// Every media conversion can be trimmed.
 const audioSettings = (to: string): SettingKey[] =>
-  AUDIO_CODECS[to]?.bitrate ? ['audioBitrate'] : [];
+  AUDIO_CODECS[to]?.bitrate ? ['audioBitrate', 'trim'] : ['trim'];
+
+// mpeg4 (AVI) and Sorenson (FLV) take a fixed quantiser: no speed preset.
+function videoSettings(to: string): SettingKey[] {
+  if (to === 'gif' || to === 'webp') return ['animation', 'trim'];
+  if (to === 'avi' || to === 'flv') return ['videoQuality', 'audioBitrate', 'trim'];
+  return ['videoQuality', 'videoPreset', 'audioBitrate', 'trim'];
+}
 
 const VIDEO_TARGETS = [
   'mp4',
@@ -163,6 +177,7 @@ const VIDEO_TARGETS = [
   'aac',
   'ogg',
   'webp',
+  'gif',
 ];
 const VIDEO_SOURCES: Record<string, string[]> = {
   mp4: VIDEO_TARGETS.filter((t) => t !== 'mp4'),
@@ -177,9 +192,7 @@ const VIDEO_SOURCES: Record<string, string[]> = {
 for (const [from, targets] of Object.entries(VIDEO_SOURCES)) {
   for (const to of targets) {
     if (AUDIO_CODECS[to]) add(from, to, extractAudio, audioSettings(to), 'main');
-    else if (to === 'webp')
-      add(from, to, convertAudioVideo, [], 'main'); // animated WebP: fixed quality
-    else add(from, to, convertAudioVideo, ['video', 'audioBitrate'], 'main');
+    else add(from, to, convertAudioVideo, videoSettings(to), 'main');
   }
 }
 

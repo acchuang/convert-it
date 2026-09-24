@@ -2,6 +2,7 @@ import { afterEach, describe, it, expect, vi } from 'vitest';
 import { getTargetFormats } from '@/lib/converters';
 import {
   buildFfmpegArgs,
+  trimArgs,
   createLogWatcher,
   FFMPEG_CORE_SHA256,
   sha256Hex,
@@ -169,5 +170,60 @@ describe('tampered FFmpeg core', () => {
       vi.unstubAllEnvs();
       vi.resetModules();
     }
+  });
+});
+
+describe('video → GIF', () => {
+  const args = (extra: Partial<typeof DEFAULT_SETTINGS> = {}) =>
+    buildFfmpegArgs('mp4', 'gif', 'in.mp4', 'out.gif', { ...DEFAULT_SETTINGS, ...extra });
+  const filter = (a: string[]) => a[a.indexOf('-filter_complex') + 1];
+
+  it('builds a palette from the clip and maps every frame onto it', () => {
+    const a = args();
+    expect(filter(a)).toBe(
+      "fps=12,scale='min(480,iw)':-2:flags=lanczos,split[a][b];[a]palettegen=stats_mode=diff[p];" +
+        '[b][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle',
+    );
+    expect(a.slice(-4)).toEqual(['-loop', '0', '-y', 'out.gif']);
+    expect(a).not.toContain('-c:a');
+  });
+
+  it('frame rate and width come from the settings; width 0 keeps the source size', () => {
+    expect(filter(args({ animFps: 8, animWidth: 320 }))).toMatch(/^fps=8,scale='min\(320,iw\)'/);
+    expect(filter(args({ animWidth: 0 }))).toMatch(/^fps=12,split/);
+  });
+
+  it('animated WebP uses the same frame rate and width', () => {
+    const a = buildFfmpegArgs('mp4', 'webp', 'in', 'out.webp', {
+      ...DEFAULT_SETTINGS,
+      animFps: 15,
+    });
+    expect(a[a.indexOf('-vf') + 1]).toBe("fps=15,scale='min(480,iw)':-2:flags=lanczos");
+  });
+});
+
+describe('trim', () => {
+  it('seeks with -ss and caps the length with -t, both before -i', () => {
+    const a = buildFfmpegArgs('mp4', 'mkv', 'in.mp4', 'out.mkv', {
+      ...DEFAULT_SETTINGS,
+      trimStart: 2.5,
+      trimEnd: 10,
+    });
+    expect(a.slice(0, 6)).toEqual(['-ss', '2.5', '-t', '7.5', '-i', 'in.mp4']);
+  });
+
+  it('no trim by default, and an end at or before the start means "to the end"', () => {
+    expect(trimArgs(DEFAULT_SETTINGS)).toEqual([]);
+    expect(trimArgs({ trimStart: 5, trimEnd: 5 })).toEqual(['-ss', '5']);
+    expect(trimArgs({ trimStart: 0, trimEnd: 4 })).toEqual(['-t', '4']);
+    expect(trimArgs({ trimStart: -3 })).toEqual([]);
+  });
+
+  it('applies to audio too', () => {
+    const a = buildFfmpegArgs('wav', 'mp3', 'in.wav', 'out.mp3', {
+      ...DEFAULT_SETTINGS,
+      trimEnd: 30,
+    });
+    expect(a.slice(0, 4)).toEqual(['-t', '30', '-i', 'in.wav']);
   });
 });

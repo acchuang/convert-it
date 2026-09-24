@@ -16,6 +16,10 @@ export interface ConversionSettings {
   audioBitrate: number; // 64 | 128 | 192 | 256 | 320 (kbps)
   videoQuality: number; // 0-51, lower is better quality (CRF)
   videoPreset: string; // ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow
+  trimStart: number; // seconds into the source; 0 = from the start
+  trimEnd: number; // seconds into the source; 0 (or ≤ trimStart) = to the end
+  animFps: number; // video → GIF / animated WebP frame rate
+  animWidth: number; // video → GIF / animated WebP max width in px; 0 = source width
   // PDF input settings
   pdfAllPages: boolean; // pdf→image: render all pages (zip) vs page 1 (single image)
   pdfScale: number; // pdf→image render scale (1 | 2 | 3)
@@ -37,6 +41,10 @@ export const DEFAULT_SETTINGS: ConversionSettings = {
   audioBitrate: 192,
   videoQuality: 23,
   videoPreset: 'medium',
+  trimStart: 0,
+  trimEnd: 0,
+  animFps: 12,
+  animWidth: 480,
   pdfAllPages: false,
   pdfScale: 1,
   xlsxAllSheets: false,

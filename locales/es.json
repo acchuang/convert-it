@@ -74,7 +74,14 @@
     "xlsxSheets": "Hojas",
     "xlsxFirstSheet": "Primera hoja",
     "xlsxAllSheets": "Todas las hojas",
-    "pdfScale": "Escala"
+    "pdfScale": "Escala",
+    "fps": "Fotogramas/s",
+    "animWidth": "Ancho máx.",
+    "original": "Original",
+    "trim": "Recortar",
+    "trimStart": "Inicio",
+    "trimEnd": "Fin",
+    "trimHint": "p. ej. 0:05 → 0:12.5 · vacío = clip completo"
   },
   "howItWorks": {
     "heading": "CÓMO FUNCIONA",

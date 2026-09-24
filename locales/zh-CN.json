@@ -74,7 +74,14 @@
     "xlsxSheets": "工作表",
     "xlsxFirstSheet": "第一个工作表",
     "xlsxAllSheets": "所有工作表",
-    "pdfScale": "缩放"
+    "pdfScale": "缩放",
+    "fps": "帧率",
+    "animWidth": "最大宽度",
+    "original": "原始",
+    "trim": "裁剪时长",
+    "trimStart": "开始",
+    "trimEnd": "结束",
+    "trimHint": "例如 0:05 → 0:12.5 · 留空 = 整段"
   },
   "howItWorks": {
     "heading": "使用方式",

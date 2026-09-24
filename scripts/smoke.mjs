@@ -55,6 +55,7 @@ const PAIRS = [
   ['clip.mkv', 'webm', 'webcodecs vp9+opus', (b) => b.readUInt32BE(0) === 0x1a45dfa3],
   ['clip.webm', 'wav', 'webcodecs extract', (b) => magic('RIFF')(b) && magic('WAVE', 8)(b)],
   ['clip.webm', 'mp4', 'ffmpeg video', magic('ftyp', 4)],
+  ['clip.webm', 'gif', 'ffmpeg gif', magic('GIF89a')],
   [
     'audio.wav',
     'mp3',

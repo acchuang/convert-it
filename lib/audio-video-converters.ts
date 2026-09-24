@@ -246,27 +246,51 @@ function crfToQscale(crf: number): string {
   return String(Math.min(31, Math.max(1, Math.round(crf / 4.5))));
 }
 
+// The settings a command line can use, read only when a codec asks for one
+// (getters): registry.test records which fields each route reads, and a
+// setting the panel shows must be one the conversion actually uses.
+interface Knobs {
+  readonly crf: number;
+  readonly preset: string;
+  readonly kbps: number;
+}
+
+function knobsFrom(settings?: Partial<ConversionSettings>): Knobs {
+  return {
+    // `??`, not `||`: CRF 0 is lossless, not "unset".
+    get crf() {
+      return settings?.videoQuality ?? 23;
+    },
+    get preset() {
+      return settings?.videoPreset || 'medium';
+    },
+    get kbps() {
+      return settings?.audioBitrate ?? 192;
+    },
+  };
+}
+
 interface VideoContainer {
-  video: (crf: number, preset: string) => string[];
+  video: (k: Knobs) => string[];
   // Each muxer only accepts some audio codecs; WebM, for one, rejects AAC outright.
-  audio: (kbps: number) => string[];
+  audio: (k: Knobs) => string[];
   extra?: string[];
 }
 
-const x264 = (crf: number, preset: string) => [
+const x264 = (k: Knobs) => [
   '-c:v',
   'libx264',
   '-preset',
-  preset,
+  k.preset,
   '-crf',
-  String(crf),
+  String(k.crf),
   // 10-bit or 4:4:4 sources otherwise come out as High 4:4:4 H.264, which
   // browsers and QuickTime refuse to play.
   '-pix_fmt',
   'yuv420p',
 ];
-const aac = (kbps: number) => ['-c:a', 'aac', '-b:a', `${kbps}k`];
-const mp3 = (kbps: number) => ['-c:a', 'libmp3lame', '-b:a', `${kbps}k`, '-ar', '44100'];
+const aac = (k: Knobs) => ['-c:a', 'aac', '-b:a', `${k.kbps}k`];
+const mp3 = (k: Knobs) => ['-c:a', 'libmp3lame', '-b:a', `${k.kbps}k`, '-ar', '44100'];
 
 const VIDEO_CONTAINERS: Record<string, VideoContainer> = {
   mp4: { video: x264, audio: aac, extra: ['-movflags', '+faststart'] },
@@ -279,25 +303,49 @@ const VIDEO_CONTAINERS: Record<string, VideoContainer> = {
   // Vorbis encode cleanly, both are valid WebM, and every browser plays them.
   // In constrained-quality mode -b:v is only a ceiling; CRF decides the quality.
   webm: {
-    video: (crf, preset) => [
+    video: (k) => [
       '-c:v',
       'libvpx',
       '-crf',
-      crfToVp8(crf),
+      crfToVp8(k.crf),
       '-b:v',
       '4M',
       '-deadline',
       'good',
       '-cpu-used',
-      VP8_CPU_USED[preset] ?? '2',
+      VP8_CPU_USED[k.preset] ?? '2',
       '-pix_fmt',
       'yuv420p',
     ],
-    audio: (kbps) => ['-c:a', 'libvorbis', '-b:a', `${kbps}k`],
+    audio: (k) => ['-c:a', 'libvorbis', '-b:a', `${k.kbps}k`],
   },
-  avi: { video: (crf) => ['-c:v', 'mpeg4', '-q:v', crfToQscale(crf)], audio: mp3 },
-  flv: { video: (crf) => ['-c:v', 'flv', '-q:v', crfToQscale(crf)], audio: mp3 },
+  // Fixed-quantiser encoders: no speed preset to offer.
+  avi: { video: (k) => ['-c:v', 'mpeg4', '-q:v', crfToQscale(k.crf)], audio: mp3 },
+  flv: { video: (k) => ['-c:v', 'flv', '-q:v', crfToQscale(k.crf)], audio: mp3 },
 };
+
+/**
+ * Input options for a trim: -ss seeks before decoding (fast, and frame-exact
+ * when re-encoding), -t caps the length read from there. An end at or before
+ * the start means "to the end".
+ */
+export function trimArgs(settings?: Partial<ConversionSettings>): string[] {
+  const start = Math.max(0, settings?.trimStart ?? 0);
+  const end = settings?.trimEnd ?? 0;
+  const args: string[] = [];
+  if (start > 0) args.push('-ss', String(start));
+  if (end > start) args.push('-t', String(+(end - start).toFixed(3)));
+  return args;
+}
+
+/** fps and width for animated output; width 0 keeps the source width. */
+function animationFilter(settings?: Partial<ConversionSettings>): string {
+  const fps = settings?.animFps || 12;
+  const width = settings?.animWidth ?? 480;
+  // Only ever scale down; -2 keeps the height even, which libwebp requires.
+  const scale = width > 0 ? `,scale='min(${width},iw)':-2:flags=lanczos` : '';
+  return `fps=${fps}${scale}`;
+}
 
 /**
  * The ffmpeg command line for one conversion. Pure, so the per-container codec
@@ -313,23 +361,34 @@ export function buildFfmpegArgs(
   const category = getCategory(sourceExt);
   if (!category) throw new Error(`Unsupported file type: ${sourceExt}`);
 
-  // `??`, not `||`: CRF 0 is lossless, not "unset".
-  const crf = settings?.videoQuality ?? 23;
-  const preset = settings?.videoPreset || 'medium';
-  const kbps = settings?.audioBitrate ?? 192;
+  const k = knobsFrom(settings);
+  const input = [...trimArgs(settings), '-i', inputName];
 
   const audioTarget = AUDIO_CODECS[targetExt];
   if (audioTarget) {
     // -vn also drops embedded cover art, which ogg and wav can't carry anyway.
-    const args = ['-i', inputName, '-vn', '-c:a', audioTarget.codec];
-    if (audioTarget.bitrate) args.push('-b:a', `${kbps}k`, '-ar', '44100');
+    const args = [...input, '-vn', '-c:a', audioTarget.codec];
+    if (audioTarget.bitrate) args.push('-b:a', `${k.kbps}k`, '-ar', '44100');
     return [...args, '-y', outputName];
+  }
+
+  if (category === 'video' && targetExt === 'gif') {
+    // One pass, two branches: palettegen builds a 256-colour palette from the
+    // whole clip, paletteuse maps every frame onto it. Without it GIF gets
+    // the generic web palette and banding. diff_mode=rectangle re-dithers
+    // only what changed between frames, which keeps static areas from
+    // shimmering and the file smaller.
+    const filter =
+      `${animationFilter(settings)},split[a][b];[a]palettegen=stats_mode=diff[p];` +
+      '[b][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle';
+    return [...input, '-filter_complex', filter, '-loop', '0', '-y', outputName];
   }
 
   if (category === 'video' && targetExt === 'webp') {
     return [
-      '-i',
-      inputName,
+      ...input,
+      '-vf',
+      animationFilter(settings),
       '-c:v',
       'libwebp',
       '-loop',
@@ -348,10 +407,9 @@ export function buildFfmpegArgs(
   if (!container) throw new Error(`Unsupported conversion: ${sourceExt} → ${targetExt}`);
 
   return [
-    '-i',
-    inputName,
-    ...container.video(crf, preset),
-    ...container.audio(kbps),
+    ...input,
+    ...container.video(k),
+    ...container.audio(k),
     ...(container.extra ?? []),
     '-y',
     outputName,
