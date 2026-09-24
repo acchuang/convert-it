@@ -41,7 +41,10 @@ export default class ErrorBoundary extends Component<Props, State> {
             !
           </div>
           <p className="text-[var(--text-primary)] mb-2 text-lg">Something went wrong</p>
-          <p className="text-[var(--text-muted)] text-sm mb-6" style={{ fontFamily: 'var(--font-mono)' }}>
+          <p
+            className="text-[var(--text-muted)] text-sm mb-6"
+            style={{ fontFamily: 'var(--font-mono)' }}
+          >
             {this.state.error.message}
           </p>
           <button

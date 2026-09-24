@@ -7,9 +7,9 @@ function getFilename(file: File): string {
 }
 
 function generateUuid(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
 }
@@ -51,7 +51,11 @@ function opfXml(title: string, id: string): string {
 }
 
 function escapeXml(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 async function buildEpub(title: string, body: string): Promise<Blob> {
@@ -67,21 +71,13 @@ async function buildEpub(title: string, body: string): Promise<Blob> {
   return zip.generateAsync({ type: 'blob', mimeType: 'application/epub+zip' });
 }
 
-export async function txtToEpub(
-  file: File,
-  _sourceExt: string,
-  _targetExt: string,
-): Promise<Blob> {
+export async function txtToEpub(file: File, _sourceExt: string, _targetExt: string): Promise<Blob> {
   const text = await file.text();
   const body = `<pre>${escapeXml(text)}</pre>`;
   return buildEpub(getFilename(file), body);
 }
 
-export async function mdToEpub(
-  file: File,
-  _sourceExt: string,
-  _targetExt: string,
-): Promise<Blob> {
+export async function mdToEpub(file: File, _sourceExt: string, _targetExt: string): Promise<Blob> {
   const md = await file.text();
   const body = String(marked.parse(md));
   return buildEpub(getFilename(file), body);

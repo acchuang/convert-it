@@ -1,24 +1,28 @@
 import { XMLParser, XMLBuilder } from 'fast-xml-parser';
 import type { ConversionSettings } from './types';
 
-export function xmlToJson(file: File, _s: string, _t: string, settings?: ConversionSettings, _onProgress?: (pct: number) => void): Promise<Blob> {
+export function xmlToJson(
+  file: File,
+  _s: string,
+  _t: string,
+  settings?: ConversionSettings,
+  _onProgress?: (pct: number) => void,
+): Promise<Blob> {
   const indent = settings?.jsonIndent ?? 2;
-  return file.text().then(text => {
+  return file.text().then((text) => {
     const parser = new XMLParser({
       ignoreAttributes: false,
       attributeNamePrefix: '@_',
       textNodeName: '#text',
     });
     const result = parser.parse(text);
-    const json = indent === 0
-      ? JSON.stringify(result)
-      : JSON.stringify(result, null, indent);
+    const json = indent === 0 ? JSON.stringify(result) : JSON.stringify(result, null, indent);
     return new Blob([json], { type: 'application/json' });
   });
 }
 
 export function xmlToTxt(file: File): Promise<Blob> {
-  return file.text().then(text => {
+  return file.text().then((text) => {
     const doc = new DOMParser().parseFromString(text, 'text/xml');
     const plain = doc.documentElement?.textContent ?? '';
     const trimmed = plain.replace(/\n{3,}/g, '\n\n').trim();
@@ -26,7 +30,13 @@ export function xmlToTxt(file: File): Promise<Blob> {
   });
 }
 
-export async function xmlToCsv(file: File, _s: string, _t: string, settings?: ConversionSettings, _onProgress?: (pct: number) => void): Promise<Blob> {
+export async function xmlToCsv(
+  file: File,
+  _s: string,
+  _t: string,
+  settings?: ConversionSettings,
+  _onProgress?: (pct: number) => void,
+): Promise<Blob> {
   const Papa = (await import('papaparse')).default;
   const delimiter = settings?.csvDelimiter ?? ',';
   const text = await file.text();
@@ -34,9 +44,9 @@ export async function xmlToCsv(file: File, _s: string, _t: string, settings?: Co
   const rows = doc.querySelectorAll('row');
   if (rows.length === 0) throw new Error('No <row> elements found in XML');
   const data: Record<string, string>[] = [];
-  rows.forEach(row => {
+  rows.forEach((row) => {
     const obj: Record<string, string> = {};
-    row.querySelectorAll(':scope > *').forEach(el => {
+    row.querySelectorAll(':scope > *').forEach((el) => {
       obj[el.tagName] = el.textContent ?? '';
     });
     data.push(obj);
@@ -45,15 +55,20 @@ export async function xmlToCsv(file: File, _s: string, _t: string, settings?: Co
   return new Blob([csv], { type: 'text/csv' });
 }
 
-export async function xmlToYaml(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
+export async function xmlToYaml(
+  file: File,
+  _s: string,
+  _t: string,
+  _settings?: ConversionSettings,
+): Promise<Blob> {
   const { stringify } = await import('yaml');
   const text = await file.text();
   const doc = new DOMParser().parseFromString(text, 'text/xml');
   const rows = doc.querySelectorAll('row');
   const data: Record<string, string>[] = [];
-  rows.forEach(row => {
+  rows.forEach((row) => {
     const obj: Record<string, string> = {};
-    row.querySelectorAll(':scope > *').forEach(el => {
+    row.querySelectorAll(':scope > *').forEach((el) => {
       obj[el.tagName] = el.textContent ?? '';
     });
     data.push(obj);
@@ -62,16 +77,21 @@ export async function xmlToYaml(file: File, _s: string, _t: string, _settings?: 
   return new Blob([y], { type: 'application/yaml' });
 }
 
-export async function xmlToTsv(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
+export async function xmlToTsv(
+  file: File,
+  _s: string,
+  _t: string,
+  _settings?: ConversionSettings,
+): Promise<Blob> {
   const Papa = (await import('papaparse')).default;
   const text = await file.text();
   const doc = new DOMParser().parseFromString(text, 'text/xml');
   const rows = doc.querySelectorAll('row');
   if (rows.length === 0) throw new Error('No <row> elements found in XML');
   const data: Record<string, string>[] = [];
-  rows.forEach(row => {
+  rows.forEach((row) => {
     const obj: Record<string, string> = {};
-    row.querySelectorAll(':scope > *').forEach(el => {
+    row.querySelectorAll(':scope > *').forEach((el) => {
       obj[el.tagName] = el.textContent ?? '';
     });
     data.push(obj);
@@ -80,9 +100,15 @@ export async function xmlToTsv(file: File, _s: string, _t: string, _settings?: C
   return new Blob([tsv], { type: 'text/tab-separated-values' });
 }
 
-export function jsonToXml(file: File, _s: string, _t: string, settings?: ConversionSettings, _onProgress?: (pct: number) => void): Promise<Blob> {
+export function jsonToXml(
+  file: File,
+  _s: string,
+  _t: string,
+  settings?: ConversionSettings,
+  _onProgress?: (pct: number) => void,
+): Promise<Blob> {
   const rootEl = settings?.xmlRootElement ?? 'root';
-  return file.text().then(text => {
+  return file.text().then((text) => {
     const data = JSON.parse(text);
     const builder = new XMLBuilder({
       ignoreAttributes: false,

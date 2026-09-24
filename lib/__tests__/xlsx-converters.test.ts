@@ -56,7 +56,10 @@ describe('xlsxToCsv (round trip via csvToXlsx)', () => {
     const xlsxBlob = await csvToXlsx(csvFile, 'csv', 'xlsx', DEFAULT_SETTINGS);
 
     const xlsxFile = new File([xlsxBlob], 'test.xlsx', { type: XLSX_MIME });
-    const csvBlob = await xlsxToCsv(xlsxFile, 'xlsx', 'csv', { ...DEFAULT_SETTINGS, csvDelimiter: ';' });
+    const csvBlob = await xlsxToCsv(xlsxFile, 'xlsx', 'csv', {
+      ...DEFAULT_SETTINGS,
+      csvDelimiter: ';',
+    });
     const csvText = await csvBlob.text();
 
     expect(csvText).toContain('name;age');
@@ -69,7 +72,9 @@ describe('xlsxToJson (round trip via jsonToXlsx)', () => {
       { name: 'Alice', age: 30 },
       { name: 'Bob', age: 25 },
     ];
-    const jsonFile = new File([JSON.stringify(original)], 'test.json', { type: 'application/json' });
+    const jsonFile = new File([JSON.stringify(original)], 'test.json', {
+      type: 'application/json',
+    });
     const xlsxBlob = await jsonToXlsx(jsonFile, 'json', 'xlsx', DEFAULT_SETTINGS);
 
     const xlsxFile = new File([xlsxBlob], 'test.xlsx', { type: XLSX_MIME });
@@ -82,14 +87,33 @@ describe('xlsxToJson (round trip via jsonToXlsx)', () => {
 
   it('respects jsonIndent setting of 0 (minified)', async () => {
     const original = [{ name: 'Alice', age: 30 }];
-    const jsonFile = new File([JSON.stringify(original)], 'test.json', { type: 'application/json' });
+    const jsonFile = new File([JSON.stringify(original)], 'test.json', {
+      type: 'application/json',
+    });
     const xlsxBlob = await jsonToXlsx(jsonFile, 'json', 'xlsx', DEFAULT_SETTINGS);
 
     const xlsxFile = new File([xlsxBlob], 'test.xlsx', { type: XLSX_MIME });
-    const jsonBlob = await xlsxToJson(xlsxFile, 'xlsx', 'json', { ...DEFAULT_SETTINGS, jsonIndent: 0 });
+    const jsonBlob = await xlsxToJson(xlsxFile, 'xlsx', 'json', {
+      ...DEFAULT_SETTINGS,
+      jsonIndent: 0,
+    });
     const text = await jsonBlob.text();
 
     expect(text).not.toContain('\n');
     expect(JSON.parse(text)).toEqual(original);
+  });
+});
+
+describe('csvToXlsx type inference', () => {
+  it('keeps leading-zero IDs as text and converts plain numbers and booleans', async () => {
+    const { readWorkbook } = await import('@/lib/xlsx');
+    const file = new File(['id,n,flag\n007,42,TRUE\n1e5,3.50,no'], 'a.csv');
+    const blob = await csvToXlsx(file, 'csv', 'xlsx', DEFAULT_SETTINGS);
+    const [sheet] = await readWorkbook(await blob.arrayBuffer());
+    expect(sheet.rows).toEqual([
+      ['id', 'n', 'flag'],
+      ['007', 42, true],
+      ['1e5', '3.50', 'no'],
+    ]);
   });
 });

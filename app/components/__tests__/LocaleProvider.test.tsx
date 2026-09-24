@@ -23,7 +23,7 @@ describe('LocaleProvider', () => {
     render(
       <LocaleProvider>
         <TestConsumer />
-      </LocaleProvider>
+      </LocaleProvider>,
     );
 
     expect(screen.getByTestId('locale').textContent).toBe('en');
@@ -37,7 +37,7 @@ describe('LocaleProvider', () => {
     render(
       <LocaleProvider>
         <TestConsumer />
-      </LocaleProvider>
+      </LocaleProvider>,
     );
 
     await waitFor(() => {
@@ -51,7 +51,7 @@ describe('LocaleProvider', () => {
     render(
       <LocaleProvider>
         <TestConsumer />
-      </LocaleProvider>
+      </LocaleProvider>,
     );
 
     await waitFor(() => {
@@ -77,7 +77,7 @@ describe('LocaleProvider', () => {
     render(
       <LocaleProvider>
         <TestConsumer />
-      </LocaleProvider>
+      </LocaleProvider>,
     );
 
     await waitFor(() => {

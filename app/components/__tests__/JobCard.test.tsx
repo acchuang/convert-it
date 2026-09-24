@@ -48,7 +48,7 @@ describe('JobCard', () => {
         onRemove={vi.fn()}
         onSettingsChange={vi.fn()}
         t={t}
-      />
+      />,
     );
     expect(screen.getByText('test.csv')).toBeDefined();
     expect(screen.getByText('.CSV')).toBeDefined();
@@ -64,7 +64,7 @@ describe('JobCard', () => {
         onRemove={vi.fn()}
         onSettingsChange={vi.fn()}
         t={t}
-      />
+      />,
     );
     expect(screen.getByText('job.convert')).toBeDefined();
   });
@@ -79,7 +79,7 @@ describe('JobCard', () => {
         onRemove={vi.fn()}
         onSettingsChange={vi.fn()}
         t={t}
-      />
+      />,
     );
     expect(screen.getByText('45%')).toBeDefined();
   });
@@ -94,7 +94,7 @@ describe('JobCard', () => {
         onRemove={vi.fn()}
         onSettingsChange={vi.fn()}
         t={t}
-      />
+      />,
     );
     expect(screen.getByText('job.download')).toBeDefined();
   });

@@ -15,6 +15,7 @@
 ### Task 1.1: Add ePub export format entries
 
 **Files:**
+
 - Modify: `lib/converters.ts`
 
 - [ ] **Step 1: Add ePub format entry**
@@ -55,6 +56,7 @@ Expected: Fails — `Module './epub-converter' has no exported member 'txtToEpub
 **Note:** This is installed now (Chunk 1) so it's available when Chunk 2 writes the HEIC converter. The installation belongs to Chunk 2's HEIC feature, but npm install must happen before the converter code is written.
 
 **Files:**
+
 - Modify: `package.json`
 
 - [ ] **Step 1: Install as runtime dependency**
@@ -71,6 +73,7 @@ Expected: OK
 ### Task 1.3: Write ePub converter + tests (TDD)
 
 **Files:**
+
 - Create: `lib/epub-converter.ts`
 - Create: `lib/__tests__/epub-converter.test.ts`
 
@@ -148,9 +151,9 @@ function getFilename(file: File): string {
 }
 
 function generateUuid(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
 }
@@ -192,7 +195,11 @@ function opfXml(title: string, id: string): string {
 }
 
 function escapeXml(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 async function buildEpub(title: string, body: string): Promise<Blob> {
@@ -208,21 +215,13 @@ async function buildEpub(title: string, body: string): Promise<Blob> {
   return zip.generateAsync({ type: 'blob', mimeType: 'application/epub+zip' });
 }
 
-export async function txtToEpub(
-  file: File,
-  _sourceExt: string,
-  _targetExt: string,
-): Promise<Blob> {
+export async function txtToEpub(file: File, _sourceExt: string, _targetExt: string): Promise<Blob> {
   const text = await file.text();
   const body = `<pre>${escapeXml(text)}</pre>`;
   return buildEpub(getFilename(file), body);
 }
 
-export async function mdToEpub(
-  file: File,
-  _sourceExt: string,
-  _targetExt: string,
-): Promise<Blob> {
+export async function mdToEpub(file: File, _sourceExt: string, _targetExt: string): Promise<Blob> {
   const md = await file.text();
   const body = await marked.parse(md, { async: false });
   return buildEpub(getFilename(file), body);
@@ -262,6 +261,7 @@ git commit -m "feat: add ePub export (txt/md/html to ePub)"
 ### Task 2.1: Write HEIC converter + tests (TDD)
 
 **Files:**
+
 - Create: `lib/heic-converter.ts`
 - Create: `lib/__tests__/heic-converter.test.ts`
 
@@ -356,7 +356,7 @@ import { IMAGE_MIME_MAP } from './image-converters';
 function rasterizeToTarget(
   source: HTMLImageElement,
   targetExt: string,
-  quality: number
+  quality: number,
 ): Promise<Blob> {
   const canvas = document.createElement('canvas');
   canvas.width = source.naturalWidth;
@@ -373,12 +373,12 @@ function rasterizeToTarget(
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(
-      blob => {
+      (blob) => {
         if (blob) resolve(blob);
         else reject(new Error('Canvas export failed'));
       },
       mimeType,
-      quality
+      quality,
     );
   });
 }
@@ -386,7 +386,7 @@ function rasterizeToTarget(
 export default async function convertHeic(
   file: File,
   targetExt: string,
-  settings?: ConversionSettings
+  settings?: ConversionSettings,
 ): Promise<Blob> {
   const quality = settings?.quality ?? 0.92;
 
@@ -414,7 +414,10 @@ export default async function convertHeic(
   tempCanvas.getContext('2d')!.putImageData(imageData, 0, 0);
 
   const tempBlob = await new Promise<Blob>((resolve, reject) => {
-    tempCanvas.toBlob(b => b ? resolve(b) : reject(new Error('canvas toBlob failed')), 'image/png');
+    tempCanvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error('canvas toBlob failed'))),
+      'image/png',
+    );
   });
 
   const url = URL.createObjectURL(tempBlob);
@@ -439,10 +442,13 @@ export default async function convertHeic(
 - [ ] **Step 2.5: Export IMAGE_MIME_MAP from image-converters**
 
 In `lib/image-converters.ts`, change line 4 from:
+
 ```typescript
 const IMAGE_MIME_MAP: Record<string, string> = {
 ```
+
 to:
+
 ```typescript
 export const IMAGE_MIME_MAP: Record<string, string> = {
 ```
@@ -458,6 +464,7 @@ Expected: All 3 tests pass
 ### Task 2.2: Write AVIF converter + tests (TDD)
 
 **Files:**
+
 - Create: `lib/avif-converter.ts`
 - Create: `lib/__tests__/avif-converter.test.ts`
 
@@ -522,11 +529,7 @@ import type { ConversionSettings } from './types';
 import { encodeIcoBlob } from 'ico-codec';
 import { IMAGE_MIME_MAP } from './image-converters';
 
-function rasterizeBitmap(
-  bitmap: ImageBitmap,
-  targetExt: string,
-  quality: number
-): Promise<Blob> {
+function rasterizeBitmap(bitmap: ImageBitmap, targetExt: string, quality: number): Promise<Blob> {
   const canvas = document.createElement('canvas');
   canvas.width = bitmap.width;
   canvas.height = bitmap.height;
@@ -542,12 +545,12 @@ function rasterizeBitmap(
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(
-      blob => {
+      (blob) => {
         if (blob) resolve(blob);
         else reject(new Error('Canvas export failed'));
       },
       mimeType,
-      quality
+      quality,
     );
   });
 }
@@ -555,7 +558,7 @@ function rasterizeBitmap(
 export default async function convertAvif(
   file: File,
   targetExt: string,
-  settings?: ConversionSettings
+  settings?: ConversionSettings,
 ): Promise<Blob> {
   const quality = settings?.quality ?? 0.92;
 
@@ -588,6 +591,7 @@ Expected: All 3 tests pass
 ### Task 2.3: Add HEIC + AVIF to dispatch + registry
 
 **Files:**
+
 - Modify: `lib/converters.ts`
 
 - [ ] **Step 1: Add HEIC + AVIF format entries**
@@ -620,8 +624,8 @@ import convertAvif from './avif-converter';
 In `convertFile`, after `const sourceExt = getFileExtension(file.name);` (line 174) and before `const category = getFormatInfo(sourceExt)?.category;` (line 175), add:
 
 ```typescript
-  if (sourceExt === 'heic') return convertHeic(file, targetExt, settings);
-  if (sourceExt === 'avif') return convertAvif(file, targetExt, settings);
+if (sourceExt === 'heic') return convertHeic(file, targetExt, settings);
+if (sourceExt === 'avif') return convertAvif(file, targetExt, settings);
 ```
 
 - [ ] **Step 4: Run all checks**
@@ -646,6 +650,7 @@ git commit -m "feat: add HEIC and AVIF decode support"
 ### Task 3.1: Add animated WebP support to video pipeline + tests
 
 **Files:**
+
 - Modify: `lib/audio-video-converters.ts`
 - Create: `lib/__tests__/audio-video-converters.test.ts`
 
@@ -676,10 +681,13 @@ Expected: 8 tests, all FAIL (webp not in conversion map yet)
 In `lib/converters.ts`, add `'webp'` to each video source array in `VIDEO_CONVERSIONS` (lines 66-75). Add it to all entries: mp4, webm, avi, mov, mkv, flv, m4v, 3gp.
 
 Each entry changes from e.g.:
+
 ```typescript
   mp4: ['webm', 'avi', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg'],
 ```
+
 to:
+
 ```typescript
   mp4: ['webm', 'avi', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg', 'webp'],
 ```

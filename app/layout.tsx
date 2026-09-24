@@ -28,10 +28,22 @@ const dmMono = DM_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: 'Convert-it — Universal File Converter',
-  description: 'Convert any file to any format, entirely in your browser. Your files never leave your device — no uploads, no accounts.',
+  description:
+    'Convert any file to any format, entirely in your browser. Your files never leave your device — no uploads, no accounts.',
   applicationName: 'Convert-it',
   authors: [{ name: 'https://github.com/acchuang' }],
-  keywords: ['file converter', 'image converter', 'video converter', 'audio converter', 'document converter', 'online converter', 'browser converter', 'free converter', 'privacy focused', 'no upload'],
+  keywords: [
+    'file converter',
+    'image converter',
+    'video converter',
+    'audio converter',
+    'document converter',
+    'online converter',
+    'browser converter',
+    'free converter',
+    'privacy focused',
+    'no upload',
+  ],
   robots: {
     index: true,
     follow: true,
@@ -43,7 +55,8 @@ export const metadata: Metadata = {
     url: SITE_URL,
     siteName: 'Convert-it',
     title: 'Convert-it — Universal File Converter',
-    description: 'Convert any file to any format, entirely in your browser. Your files never leave your device — no uploads, no accounts.',
+    description:
+      'Convert any file to any format, entirely in your browser. Your files never leave your device — no uploads, no accounts.',
     type: 'website',
     locale: 'en_US',
     images: [
@@ -58,7 +71,8 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Convert-it — Universal File Converter',
-    description: 'Convert any file to any format, entirely in your browser. Your files never leave your device — no uploads, no accounts.',
+    description:
+      'Convert any file to any format, entirely in your browser. Your files never leave your device — no uploads, no accounts.',
     images: ['/og-image.svg'],
   },
   alternates: {
@@ -73,7 +87,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${bebasNeue.variable} ${dmSans.variable} ${dmMono.variable}`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${bebasNeue.variable} ${dmSans.variable} ${dmMono.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         {/* Applies the stored theme before first paint. Without it a light-mode user
             gets a dark frame, because the static export prerenders dark and the
@@ -118,9 +136,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <LocaleProvider>
-          <ThemeProvider>
-            {children}
-          </ThemeProvider>
+          <ThemeProvider>{children}</ThemeProvider>
         </LocaleProvider>
       </body>
     </html>

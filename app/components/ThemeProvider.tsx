@@ -52,12 +52,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const toggle = useCallback(() => {
     writeStored(STORAGE_KEY, readTheme() === 'dark' ? 'light' : 'dark');
-    listeners.forEach(fn => fn());
+    listeners.forEach((fn) => fn());
   }, []);
 
-  return (
-    <ThemeContext.Provider value={{ theme, toggle }}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={{ theme, toggle }}>{children}</ThemeContext.Provider>;
 }

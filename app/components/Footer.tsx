@@ -14,8 +14,13 @@ export default function Footer({ maxWidth = 'max-w-5xl', navLabel, children }: F
 
   return (
     <footer className="border-t border-[var(--border-primary)] px-6 py-6 mt-16" role="contentinfo">
-      <div className={`${maxWidth} mx-auto flex flex-col md:flex-row items-center justify-between gap-4`}>
-        <span style={{ fontFamily: 'var(--font-mono)' }} className="text-xs text-[var(--text-muted)]">
+      <div
+        className={`${maxWidth} mx-auto flex flex-col md:flex-row items-center justify-between gap-4`}
+      >
+        <span
+          style={{ fontFamily: 'var(--font-mono)' }}
+          className="text-xs text-[var(--text-muted)]"
+        >
           {t('footer.copyright')}
         </span>
         {children && (

@@ -228,7 +228,12 @@ export function planImageTransform(
       ch = height;
       cw = Math.round(height * aspect);
     }
-    crop = { x: Math.round((width - cw) / 2), y: Math.round((height - ch) / 2), width: cw, height: ch };
+    crop = {
+      x: Math.round((width - cw) / 2),
+      y: Math.round((height - ch) / 2),
+      width: cw,
+      height: ch,
+    };
     w = cw;
     h = ch;
   }
@@ -257,7 +262,6 @@ export function planImageTransform(
 
   if (!crop && outW === width && outH === height) return null;
   return { crop, width: outW, height: outH };
-
 }
 
 // ponytail: one drawImage does crop and resize in a single step. Browsers use a
@@ -274,8 +278,14 @@ export function transformImageData(imageData: ImageData, transform: ImageTransfo
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(
     source,
-    crop.x, crop.y, crop.width, crop.height,
-    0, 0, transform.width, transform.height,
+    crop.x,
+    crop.y,
+    crop.width,
+    crop.height,
+    0,
+    0,
+    transform.width,
+    transform.height,
   );
   return ctx.getImageData(0, 0, transform.width, transform.height);
 }
@@ -329,7 +339,9 @@ export async function finishImage(
   settings?: ConversionSettings,
   onProgress?: (pct: number) => void,
 ): Promise<Blob> {
-  const transform = settings ? planImageTransform(imageData.width, imageData.height, settings) : null;
+  const transform = settings
+    ? planImageTransform(imageData.width, imageData.height, settings)
+    : null;
   const output = transform ? transformImageData(imageData, transform) : imageData;
 
   if (targetExt === 'ico') {

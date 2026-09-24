@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { useJobManager } from '@/lib/useJobManager';
+import { outputFilename, uniqueName, useJobManager } from '@/lib/useJobManager';
 import { DEFAULT_SETTINGS } from '@/lib/types';
 import type { FileJob } from '@/app/components/JobCard';
 
@@ -18,16 +18,18 @@ vi.mock('@/lib/worker-pool', async () => {
   const actual = await vi.importActual<typeof import('@/lib/worker-pool')>('@/lib/worker-pool');
   return {
     ...actual,
-    runInWorker: vi.fn(async (
-      _id: string,
-      file: File,
-      targetExt: string,
-      settings: ConversionSettings,
-      onProgress?: (pct: number) => void,
-    ) => {
-      const { convertFile } = await import('@/lib/converters');
-      return convertFile(file, targetExt, settings, onProgress);
-    }),
+    runInWorker: vi.fn(
+      async (
+        _id: string,
+        file: File,
+        targetExt: string,
+        settings: ConversionSettings,
+        onProgress?: (pct: number) => void,
+      ) => {
+        const { convertFile } = await import('@/lib/converters');
+        return convertFile(file, targetExt, settings, onProgress);
+      },
+    ),
     cancelInWorker: vi.fn(() => false),
   };
 });
@@ -97,7 +99,10 @@ describe('useJobManager: convertJob', () => {
   it('transitions idle -> converting -> done and sets resultBlob on success', async () => {
     let resolveConvert!: (blob: Blob) => void;
     mockConvertFile.mockImplementation(
-      () => new Promise<Blob>(resolve => { resolveConvert = resolve; })
+      () =>
+        new Promise<Blob>((resolve) => {
+          resolveConvert = resolve;
+        }),
     );
 
     const { result } = renderHook(() => useJobManager());
@@ -143,7 +148,10 @@ describe('useJobManager: convertJob', () => {
   it('does not invoke convertFile twice when convertJob is called concurrently on the same job', async () => {
     let resolveConvert!: (blob: Blob) => void;
     mockConvertFile.mockImplementation(
-      () => new Promise<Blob>(resolve => { resolveConvert = resolve; })
+      () =>
+        new Promise<Blob>((resolve) => {
+          resolveConvert = resolve;
+        }),
     );
 
     const { result } = renderHook(() => useJobManager());
@@ -202,7 +210,9 @@ describe('useJobManager: worker routing and cancel', () => {
     mockConvertFile.mockResolvedValue(new Blob(['ok']));
 
     const { result } = renderHook(() => useJobManager());
-    act(() => result.current.addFiles([new File(['<p>x</p>'], 'page.html', { type: 'text/html' })]));
+    act(() =>
+      result.current.addFiles([new File(['<p>x</p>'], 'page.html', { type: 'text/html' })]),
+    );
 
     await act(async () => {
       await result.current.convertJob(result.current.jobs[0]);
@@ -237,11 +247,16 @@ describe('useJobManager: worker routing and cancel', () => {
   it('discards the result of a cancelled main-thread job', async () => {
     let resolveConvert!: (blob: Blob) => void;
     mockConvertFile.mockImplementation(
-      () => new Promise<Blob>(resolve => { resolveConvert = resolve; })
+      () =>
+        new Promise<Blob>((resolve) => {
+          resolveConvert = resolve;
+        }),
     );
 
     const { result } = renderHook(() => useJobManager());
-    act(() => result.current.addFiles([new File(['<p>x</p>'], 'page.html', { type: 'text/html' })]));
+    act(() =>
+      result.current.addFiles([new File(['<p>x</p>'], 'page.html', { type: 'text/html' })]),
+    );
     const job = result.current.jobs[0];
 
     let convertPromise!: Promise<void>;
@@ -305,5 +320,68 @@ describe('useJobManager: removeJob / clearAll / doneCount', () => {
     });
 
     expect(result.current.doneCount).toBe(1);
+  });
+});
+
+describe('outputFilename', () => {
+  const file = new File(['x'], 'report.final.pdf');
+
+  it('swaps the extension for the target', () => {
+    expect(
+      outputFilename({
+        file,
+        targetExt: 'png',
+        resultBlob: new Blob(['x'], { type: 'image/png' }),
+      }),
+    ).toBe('report.final.png');
+  });
+
+  it('names a zip result .zip whatever the target', () => {
+    const resultBlob = new Blob(['x'], { type: 'application/zip' });
+    expect(outputFilename({ file, targetExt: 'png', resultBlob })).toBe('report.final.zip');
+  });
+});
+
+describe('uniqueName', () => {
+  it('suffixes repeats, case-insensitively, keeping the extension', () => {
+    const used = new Set<string>();
+    expect(uniqueName('photo.png', used)).toBe('photo.png');
+    expect(uniqueName('photo.png', used)).toBe('photo (2).png');
+    expect(uniqueName('PHOTO.png', used)).toBe('PHOTO (3).png');
+    expect(uniqueName('photo (2).png', used)).toBe('photo (2) (2).png');
+    expect(uniqueName('README', used)).toBe('README');
+    expect(uniqueName('README', used)).toBe('README (2)');
+  });
+});
+
+describe('downloadJob', () => {
+  it('keeps the object URL alive after the click so the download can finish', async () => {
+    vi.useFakeTimers();
+    const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:test');
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    try {
+      const { result } = renderHook(() => useJobManager());
+      const job = {
+        id: '1',
+        file: new File(['x'], 'a.txt'),
+        sourceExt: 'txt',
+        targetExt: 'md',
+        status: 'done',
+        progress: 100,
+        settings: DEFAULT_SETTINGS,
+        resultBlob: new Blob(['x']),
+      } as FileJob;
+      act(() => result.current.downloadJob(job));
+      expect(click).toHaveBeenCalled();
+      expect(revoke).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(60_000);
+      expect(revoke).toHaveBeenCalledWith('blob:test');
+    } finally {
+      revoke.mockRestore();
+      create.mockRestore();
+      click.mockRestore();
+      vi.useRealTimers();
+    }
   });
 });
