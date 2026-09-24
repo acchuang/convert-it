@@ -4,6 +4,11 @@ _Reviewed at `7a92641` (2026-09-24). Scope: every file in `lib/`, the app shell,
 
 ---
 
+## Status
+
+- **Phase 0: done.** C1, C3, C4, C5, C8–C12, S2, C17, plus C7 (duration-based progress; the log parser was being rewritten anyway). Each fix has tests that check the output is valid. Every media target was run against the real `@ffmpeg/core` 0.12.10 in both Chromium and Node.
+- **New finding while doing C3:** `libvpx-vp9` crashes that core on every input ("memory access out of bounds"), so WebM output never worked, AAC or not. WebM now uses VP8 + Opus. Before going back to VP9 after a core upgrade, re-test it in a browser.
+
 ## 1. Executive summary
 
 The core architecture is good, and better than most commercial converters: fully client-side, lazily loaded WASM codecs, a worker pool that you can cancel, conservative memory ceilings, a registry that generates both the conversion map and the SEO pages, and comments that explain _why_. There is real engineering judgement here.

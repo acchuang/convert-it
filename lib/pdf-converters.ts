@@ -1,5 +1,7 @@
 import type { ConversionSettings } from './types';
 import { ASSET_BASE, encodeImageData } from './image-encode';
+import { htmlToPlainText } from './html-text';
+import { escapeHtml } from './markup';
 
 // Lazy-load jsPDF to avoid bloating initial bundle
 async function getJsPDF() {
@@ -19,10 +21,6 @@ function ensurePdfium(): Promise<PDFiumLibrary> {
     );
   }
   return pdfiumReady;
-}
-
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 // PDFium renders to a BGRA byte buffer; ImageData expects RGBA, so swap R/B.
@@ -128,30 +126,38 @@ export async function pdfToHtml(
   }
 }
 
-async function htmlToPdfBlob(htmlContent: string): Promise<Blob> {
+interface PdfTextOptions {
+  monospace?: boolean;
+}
+
+// Lays plain text out on A4 pages, one source line at a time, so the input's
+// line breaks and blank lines survive. splitTextToSize only wraps what is too
+// wide; it never has to guess where a line ended.
+async function textToPdfBlob(text: string, options: PdfTextOptions = {}): Promise<Blob> {
   const jsPDF = await getJsPDF();
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+  const fontSize = options.monospace ? 9 : 11;
+  doc.setFont(options.monospace ? 'courier' : 'helvetica', 'normal');
+  doc.setFontSize(fontSize);
 
-  // Use a simple approach: split HTML into pages
-  // jsPDF doesn't have a direct HTML renderer, so we convert HTML to plain-ish text
-  // with basic formatting
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = htmlContent;
-  const plainText = tempDiv.textContent ?? htmlContent;
-
-  const lines = doc.splitTextToSize(plainText, 520);
-  const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 40;
-  const lineHeight = 12;
-  let y = margin;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const lineHeight = fontSize * 1.35;
+  let y = margin + fontSize;
 
-  for (const line of lines as string[]) {
-    if (y + lineHeight > pageHeight - margin) {
-      doc.addPage();
-      y = margin;
+  // jsPDF draws a tab as a glyph box; expand to spaces so indentation holds.
+  const sourceLines = text.replace(/\r\n?/g, '\n').replace(/\t/g, '    ').split('\n');
+  for (const sourceLine of sourceLines) {
+    const wrapped: string[] = sourceLine === '' ? [''] : doc.splitTextToSize(sourceLine, pageWidth - margin * 2);
+    for (const line of wrapped) {
+      if (y > pageHeight - margin) {
+        doc.addPage();
+        y = margin + fontSize;
+      }
+      if (line) doc.text(line, margin, y);
+      y += lineHeight;
     }
-    doc.text(line, margin, y);
-    y += lineHeight;
   }
 
   return doc.output('blob');
@@ -165,12 +171,7 @@ export async function txtToPdf(
   _t: string,
   _settings?: ConversionSettings,
 ): Promise<Blob> {
-  const text = await file.text();
-  const html = text
-    .split('\n')
-    .map((line) => `<p>${line}</p>`)
-    .join('');
-  return htmlToPdfBlob(html);
+  return textToPdfBlob(await file.text());
 }
 
 export async function mdToPdf(
@@ -181,9 +182,8 @@ export async function mdToPdf(
 ): Promise<Blob> {
   const { marked } = await import('marked');
   const text = await file.text();
-  const htmlBody = await marked.parse(text);
-  const html = `<div>${htmlBody}</div>`;
-  return htmlToPdfBlob(html);
+  const html = await marked.parse(text);
+  return textToPdfBlob(htmlToPlainText(html));
 }
 
 export async function htmlToPdf(
@@ -192,8 +192,7 @@ export async function htmlToPdf(
   _t: string,
   _settings?: ConversionSettings,
 ): Promise<Blob> {
-  const htmlContent = await file.text();
-  return htmlToPdfBlob(htmlContent);
+  return textToPdfBlob(htmlToPlainText(await file.text()));
 }
 
 export async function jsonToPdf(
@@ -204,8 +203,5 @@ export async function jsonToPdf(
 ): Promise<Blob> {
   const text = await file.text();
   const data = JSON.parse(text);
-  const formatted = JSON.stringify(data, null, 2);
-  const lines = formatted.split('\n');
-  const html = `<pre style="font-family: monospace; font-size: 10pt;">${lines.map((l) => `<span>${l}</span>`).join('<br/>')}</pre>`;
-  return htmlToPdfBlob(html);
+  return textToPdfBlob(JSON.stringify(data, null, 2), { monospace: true });
 }

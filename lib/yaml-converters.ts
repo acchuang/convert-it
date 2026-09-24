@@ -1,5 +1,6 @@
 import { parse as yamlParse, stringify as yamlStringify } from 'yaml';
 import type { ConversionSettings } from './types';
+import { rowsToXml } from './markup';
 
 function toArray(data: unknown): Record<string, unknown>[] {
   if (Array.isArray(data)) return data as Record<string, unknown>[];
@@ -33,11 +34,7 @@ export async function yamlToXml(file: File, _s: string, _t: string, settings?: C
   const text = await file.text();
   const data = yamlParse(text);
   const arr = toArray(data);
-  const rows = arr.map(row => {
-    const fields = Object.entries(row).map(([k, v]) => `    <${k}>${v ?? ''}</${k}>`).join('\n');
-    return `  <row>\n${fields}\n  </row>`;
-  });
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<${rootEl}>\n${rows.join('\n')}\n</${rootEl}>`;
+  const xml = rowsToXml(arr, rootEl);
   return new Blob([xml], { type: 'application/xml' });
 }
 

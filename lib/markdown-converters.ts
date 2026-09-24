@@ -2,14 +2,8 @@ import { marked } from 'marked';
 import TurndownService from 'turndown';
 
 import type { ConversionSettings } from './types';
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
+import { htmlToPlainText } from './html-text';
+import { escapeHtml } from './markup';
 
 export function mdToHtml(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
   return file.text().then(async text => {
@@ -29,10 +23,7 @@ export function htmlToMd(file: File, _s: string, _t: string, _settings?: Convers
 
 export function htmlToTxt(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
   return file.text().then(text => {
-    const doc = new DOMParser().parseFromString(text, 'text/html');
-    const plain = doc.body?.textContent ?? text.replace(/<[^>]+>/g, '');
-    const trimmed = plain.replace(/\n{3,}/g, '\n\n').trim();
-    return new Blob([trimmed], { type: 'text/plain' });
+    return new Blob([htmlToPlainText(text)], { type: 'text/plain' });
   });
 }
 

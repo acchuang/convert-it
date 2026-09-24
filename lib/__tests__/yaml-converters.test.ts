@@ -119,3 +119,16 @@ describe('invalid YAML syntax', () => {
     await expect(yamlToJson(file, 'yaml', 'json', DEFAULT_SETTINGS)).rejects.toThrow();
   });
 });
+
+describe('yamlToXml with nested data', () => {
+  it('emits nested elements, not [object Object], and parses as XML', async () => {
+    const yaml = 'user:\n  name: Ann & Co\n  roles:\n    - admin\n    - dev\n';
+    const blob = await yamlToXml(new File([yaml], 'a.yaml'), 'yaml', 'xml', DEFAULT_SETTINGS);
+    const xml = await blob.text();
+    expect(xml).not.toContain('[object Object]');
+    const doc = new DOMParser().parseFromString(xml, 'application/xml');
+    expect(doc.getElementsByTagName('parsererror')).toHaveLength(0);
+    expect(doc.querySelector('user > name')?.textContent).toBe('Ann & Co');
+    expect(doc.querySelectorAll('user > roles')).toHaveLength(2);
+  });
+});

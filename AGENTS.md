@@ -41,6 +41,18 @@ Independent Next.js project deployed via Cloudflare Pages.
 - PDF input (PDF → PNG/JPG/WebP, PDF → TXT/HTML) uses `@hyzyla/pdfium` (MIT wrapper over BSD-3 PDFium; not AGPL mupdf). Page render → RGBA → existing `encodeImageData` pipeline. Text extraction is layout-naive (reading order, no OCR).
 - PDF → image defaults to page 1 as a single image. With `ConversionSettings.pdfAllPages` it renders every page at `pdfScale` (1×/2×/3×) and returns a `application/zip` Blob (one `<base>-page-<n>.<ext>` per page via jszip); `downloadJob` names zip outputs `.zip` and `JobCard.canPreview` skips zip blobs. Default (`pdfAllPages=false`) keeps the single-page behaviour.
 
+## Text & Markup Output
+
+- Any converter that writes XML or HTML by hand goes through `lib/markup.ts` (`escapeXml`/`escapeHtml`, `xmlName` for keys → legal element names, `rowsToXml`, `rowsToHtmlTable`). Never interpolate cell values or keys raw.
+- HTML → text (htmlToTxt, md/html → PDF) goes through `lib/html-text.ts` `htmlToPlainText`: `DOMParser` (inert — never `innerHTML` on a live-document element, which runs `onerror` handlers), drops script/style, keeps block line breaks.
+- Text → PDF lays out one source line at a time (`textToPdfBlob`); don't round-trip through HTML `textContent`, which loses every line break.
+
+## Media (FFmpeg)
+
+- Command lines come from the pure `buildFfmpegArgs` in `lib/audio-video-converters.ts` — one entry per container in `VIDEO_CONTAINERS` pairing a video codec with an audio codec that muxer accepts. Unit-test args there; don't build them inline.
+- WebM is VP8 + Opus. `libvpx-vp9` in `@ffmpeg/core` 0.12.10 crashes ("memory access out of bounds") on every input; re-test in a browser before switching back after a core upgrade.
+- Every exec checks its exit code and deletes its MEMFS files in `finally`. A failed core load is not cached; the next job retries.
+
 ## Webpack
 
 - `next.config.ts` disables URL-asset parsing (`parser: { url: false }`) inside `@jsquash/*` and `@hyzyla/pdfium` only, to stop their emscripten/wasm-bindgen `new URL('...wasm', import.meta.url)` glue from emitting dead duplicate `.wasm` under `_next/static/media/`. Extend the `include` regex if another wasm vendor is added with the same pattern.

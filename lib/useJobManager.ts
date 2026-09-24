@@ -15,6 +15,45 @@ import { terminateFFmpeg } from '@/lib/audio-video-converters';
 import type { FileJob } from '@/app/components/JobCard';
 import { addHistoryEntry, getHistory, type HistoryEntry } from '@/lib/history';
 
+/**
+ * The download name for a finished job. Multi-page PDF → image comes back as a
+ * zip blob, so it is named .zip whatever image format was picked.
+ */
+export function outputFilename(job: Pick<FileJob, 'file' | 'targetExt' | 'resultBlob'>): string {
+  const base = job.file.name.replace(/\.[^.]+$/, '');
+  const ext = job.resultBlob?.type === 'application/zip' ? 'zip' : job.targetExt;
+  return `${base}.${ext}`;
+}
+
+/**
+ * Keeps zip entries from overwriting each other: `photo.jpg` and `photo.png`
+ * both converted to PNG, or two `IMG_0001.HEIC` from different folders, used to
+ * leave one file in the archive. Later ones become `photo (2).png`, and so on.
+ */
+export function uniqueName(name: string, used: Set<string>): string {
+  const dot = name.lastIndexOf('.');
+  const stem = dot > 0 ? name.slice(0, dot) : name;
+  const ext = dot > 0 ? name.slice(dot) : '';
+  let candidate = name;
+  for (let n = 2; used.has(candidate.toLowerCase()); n++) candidate = `${stem} (${n})${ext}`;
+  used.add(candidate.toLowerCase());
+  return candidate;
+}
+
+// How long a download's object URL outlives the click. Revoking straight after
+// click() races the download itself in Firefox and Safari, which then save a
+// zero-byte or failed file for anything large.
+const REVOKE_DELAY_MS = 60_000;
+
+function saveBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), REVOKE_DELAY_MS);
+}
+
 interface UseJobManagerOptions {
   onHistoryUpdate?: () => void;
   /** Preselected on any added file that supports it; falls back to the first
@@ -215,15 +254,7 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
 
   const downloadJob = useCallback((job: FileJob) => {
     if (!job.resultBlob || !job.targetExt) return;
-    const url = URL.createObjectURL(job.resultBlob);
-    const a = document.createElement('a');
-    const base = job.file.name.replace(/\.[^.]+$/, '');
-    // Multi-page PDF output comes back as a zip blob; name it .zip instead of the image ext.
-    const ext = job.resultBlob.type === 'application/zip' ? 'zip' : job.targetExt;
-    a.href = url;
-    a.download = `${base}.${ext}`;
-    a.click();
-    URL.revokeObjectURL(url);
+    saveBlob(job.resultBlob, outputFilename(job));
   }, []);
 
   const downloadAllAsZip = useCallback(async () => {
@@ -232,19 +263,13 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
 
     const JSZip = (await import('jszip')).default;
     const zip = new JSZip();
+    const used = new Set<string>();
 
     for (const job of doneJobs) {
-      const base = job.file.name.replace(/\.[^.]+$/, '');
-      zip.file(`${base}.${job.targetExt}`, job.resultBlob!);
+      zip.file(uniqueName(outputFilename(job), used), job.resultBlob!);
     }
 
-    const blob = await zip.generateAsync({ type: 'blob' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'converted-files.zip';
-    a.click();
-    URL.revokeObjectURL(url);
+    saveBlob(await zip.generateAsync({ type: 'blob' }), 'converted-files.zip');
   }, [jobs]);
 
   const applyBatchFormat = useCallback((format: string) => {

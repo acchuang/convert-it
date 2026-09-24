@@ -102,3 +102,11 @@ describe('jsonToMd', () => {
     expect(md).toBe('');
   });
 });
+
+describe('htmlToTxt structure', () => {
+  it('keeps block breaks and drops script/style text', async () => {
+    const html = '<style>p{}</style><p>one</p><p>two</p><script>alert(1)</script>';
+    const txt = await (await htmlToTxt(new File([html], 'a.html'), 'html', 'txt')).text();
+    expect(txt).toBe('one\n\ntwo');
+  });
+});

@@ -11,7 +11,14 @@ import {
   tsvToXml,
   tsvToHtml,
 } from '@/lib/csv-converters';
+import { jsonToHtml } from '@/lib/csv-converters';
 import { DEFAULT_SETTINGS } from '@/lib/types';
+
+function parseXml(xml: string): Document {
+  const doc = new DOMParser().parseFromString(xml, 'application/xml');
+  expect(doc.getElementsByTagName('parsererror')).toHaveLength(0);
+  return doc;
+}
 
 const CSV = 'name,age\nAlice,30\nBob,25';
 
@@ -170,5 +177,60 @@ describe('tsvToHtml', () => {
     const text = await blob.text();
     expect(text).toContain('<th>name</th>');
     expect(text).toContain('<td>Alice</td>');
+  });
+});
+
+// Real spreadsheets: headers with spaces and leading digits, values with markup.
+const HOSTILE_CSV = 'First Name,2024,Notes\nAT&T,<b>x</b>,"a < b, ""quoted"""';
+
+describe('XML output is well-formed for real-world headers and values', () => {
+  it('csvToXml', async () => {
+    const blob = await csvToXml(new File([HOSTILE_CSV], 'a.csv'), 'csv', 'xml', DEFAULT_SETTINGS);
+    const doc = parseXml(await blob.text());
+    expect(doc.getElementsByTagName('First_Name')[0].textContent).toBe('AT&T');
+    expect(doc.getElementsByTagName('_2024')[0].textContent).toBe('<b>x</b>');
+    expect(doc.getElementsByTagName('Notes')[0].textContent).toBe('a < b, "quoted"');
+  });
+
+  it('tsvToXml', async () => {
+    const tsv = 'First Name\tNotes\nAT&T\t<i>';
+    const blob = await tsvToXml(new File([tsv], 'a.tsv'), 'tsv', 'xml', DEFAULT_SETTINGS);
+    parseXml(await blob.text());
+  });
+
+  it('sanitises a root element name typed into settings', async () => {
+    const blob = await csvToXml(new File([CSV], 'a.csv'), 'csv', 'xml', {
+      ...DEFAULT_SETTINGS,
+      xmlRootElement: 'my people',
+    });
+    expect(parseXml(await blob.text()).documentElement.tagName).toBe('my_people');
+  });
+});
+
+describe('HTML table output escapes cell content', () => {
+  const evil = 'name,bio\nEve,<script>alert(1)</script>';
+
+  it('csvToHtml', async () => {
+    const html = await (await csvToHtml(new File([evil], 'a.csv'))).text();
+    expect(html).not.toContain('<script>');
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    expect(doc.querySelectorAll('td')[1].textContent).toBe('<script>alert(1)</script>');
+  });
+
+  it('tsvToHtml', async () => {
+    const html = await (
+      await tsvToHtml(new File(['a\n<img src=x onerror=alert(1)>'], 'a.tsv'), 'tsv', 'html')
+    ).text();
+    expect(html).not.toContain('<img');
+  });
+
+  it('jsonToHtml escapes, keeps nested values as JSON, and unions keys', async () => {
+    const json = JSON.stringify([{ a: '<b>' }, { a: 1, extra: { deep: true } }]);
+    const html = await (await jsonToHtml(new File([json], 'a.json'), 'json', 'html')).text();
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    expect([...doc.querySelectorAll('th')].map((th) => th.textContent)).toEqual(['a', 'extra']);
+    expect(doc.querySelector('td')?.textContent).toBe('<b>');
+    expect(html).toContain('{&quot;deep&quot;:true}');
+    expect(html).not.toContain('[object Object]');
   });
 });

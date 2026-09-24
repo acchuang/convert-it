@@ -1,5 +1,6 @@
 import Papa from 'papaparse';
 import type { ConversionSettings } from './types';
+import { rowsToHtmlTable, rowsToXml } from './markup';
 
 export function csvToJson(file: File, _s: string, _t: string, settings?: ConversionSettings, _onProgress?: (pct: number) => void): Promise<Blob> {
   const indent = settings?.jsonIndent ?? 2;
@@ -24,13 +25,7 @@ export function csvToXml(file: File, _s: string, _t: string, settings?: Conversi
   const rootEl = settings?.xmlRootElement ?? 'root';
   return file.text().then(text => {
     const result = Papa.parse<Record<string, string>>(text, { header: true, skipEmptyLines: true });
-    const rows = result.data.map(row => {
-      const fields = Object.entries(row)
-        .map(([k, v]) => `    <${k}>${v ?? ''}</${k}>`)
-        .join('\n');
-      return `  <row>\n${fields}\n  </row>`;
-    });
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<${rootEl}>\n${rows.join('\n')}\n</${rootEl}>`;
+    const xml = rowsToXml(result.data, rootEl);
     return new Blob([xml], { type: 'application/xml' });
   });
 }
@@ -38,13 +33,7 @@ export function csvToXml(file: File, _s: string, _t: string, settings?: Conversi
 export function csvToHtml(file: File): Promise<Blob> {
   return file.text().then(text => {
     const result = Papa.parse<Record<string, string>>(text, { header: true, skipEmptyLines: true });
-    const headers = result.meta.fields ?? [];
-    const thead = `<thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>`;
-    const tbody = result.data.map(row => {
-      const cells = headers.map(h => `<td>${row[h] ?? ''}</td>`).join('');
-      return `<tr>${cells}</tr>`;
-    }).join('\n');
-    const html = `<!DOCTYPE html>\n<html>\n<body>\n<table border="1">\n${thead}\n<tbody>\n${tbody}\n</tbody>\n</table>\n</body>\n</html>`;
+    const html = rowsToHtmlTable(result.meta.fields ?? [], result.data);
     return new Blob([html], { type: 'text/html' });
   });
 }
@@ -92,27 +81,15 @@ export function tsvToJson(file: File, _s: string, _t: string, settings?: Convers
 export async function tsvToXml(file: File, _s: string, _t: string, settings?: ConversionSettings): Promise<Blob> {
   const rootEl = settings?.xmlRootElement ?? 'root';
   const text = await file.text();
-  const result = Papa.parse<Record<string, string>>(text, { header: true, delimiter: '\t', skipEmptyLines: true });
-  const rows = result.data.map(row => {
-    const fields = Object.entries(row)
-      .map(([k, v]) => `    <${k}>${v ?? ''}</${k}>`)
-      .join('\n');
-    return `  <row>\n${fields}\n  </row>`;
-  });
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<${rootEl}>\n${rows.join('\n')}\n</${rootEl}>`;
+  const result = Papa.parse<Record<string, string>>(text, { header: true, delimiter: '	', skipEmptyLines: true });
+  const xml = rowsToXml(result.data, rootEl);
   return new Blob([xml], { type: 'application/xml' });
 }
 
 export async function tsvToHtml(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
   const text = await file.text();
   const result = Papa.parse<Record<string, string>>(text, { header: true, delimiter: '\t', skipEmptyLines: true });
-  const headers = result.meta.fields ?? [];
-  const thead = `<thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>`;
-  const tbody = result.data.map(row => {
-    const cells = headers.map(h => `<td>${row[h] ?? ''}</td>`).join('');
-    return `<tr>${cells}</tr>`;
-  }).join('\n');
-  const html = `<!DOCTYPE html>\n<html>\n<body>\n<table border="1">\n${thead}\n<tbody>\n${tbody}\n</tbody>\n</table>\n</body>\n</html>`;
+  const html = rowsToHtmlTable(result.meta.fields ?? [], result.data);
   return new Blob([html], { type: 'text/html' });
 }
 
@@ -138,13 +115,9 @@ export async function jsonToHtml(file: File, _s: string, _t: string, _settings?:
   const text = await file.text();
   const data = JSON.parse(text);
   const arr = Array.isArray(data) ? data : [data];
-  if (arr.length === 0) return new Blob(['<table></table>'], { type: 'text/html' });
-  const headers = Object.keys(arr[0] as Record<string, unknown>);
-  const thead = `<thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>`;
-  const tbody = arr.map((row: Record<string, unknown>) => {
-    const cells = headers.map(h => `<td>${(row[h] ?? '') as string}</td>`).join('');
-    return `<tr>${cells}</tr>`;
-  }).join('\n');
-  const html = `<!DOCTYPE html>\n<html>\n<body>\n<table border="1">\n${thead}\n<tbody>\n${tbody}\n</tbody>\n</table>\n</body>\n</html>`;
+  const rows = arr.map((row) => (row !== null && typeof row === 'object' ? row : { value: row })) as Record<string, unknown>[];
+  // Union of keys in first-seen order: a column only the third row has still gets a header.
+  const headers = [...new Set(rows.flatMap((row) => Object.keys(row)))];
+  const html = rowsToHtmlTable(headers, rows);
   return new Blob([html], { type: 'text/html' });
 }
