@@ -82,6 +82,7 @@ function SettingsPanel({
   const showAudioBitrate = AUDIO_BITRATE_FORMATS.includes(targetExt);
   const showVideoSettings = VIDEO_SETTINGS_FORMATS.includes(targetExt);
   const showPdfImage = sourceExt === 'pdf' && IMAGE_QUALITY_FORMATS.includes(targetExt);
+  const showXlsxSheets = sourceExt === 'xlsx' && (targetExt === 'csv' || targetExt === 'json');
   // The toolbox runs on decoded pixels: every image source, and PDF pages,
   // which pdfToImage renders and then finishes through the same pipeline.
   const showImageTools =
@@ -211,6 +212,30 @@ function SettingsPanel({
                   }`}
                 >
                   {n}k
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {showXlsxSheets && (
+          <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
+            <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
+              {t('job.xlsxSheets')}
+            </span>
+            <div className="flex gap-1">
+              {([false, true] as const).map((all) => (
+                <button
+                  key={String(all)}
+                  onClick={() => onChange({ xlsxAllSheets: all })}
+                  aria-pressed={settings.xlsxAllSheets === all}
+                  className={`flex-1 py-1 text-xs rounded transition-colors ${
+                    settings.xlsxAllSheets === all
+                      ? 'bg-[var(--accent)] text-[var(--accent-text)] font-semibold'
+                      : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
+                  }`}
+                >
+                  {all ? t('job.xlsxAllSheets') : t('job.xlsxFirstSheet')}
                 </button>
               ))}
             </div>

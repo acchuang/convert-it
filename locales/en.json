@@ -71,6 +71,9 @@
     "pdfPages": "Pages",
     "pdfFirstPage": "First page",
     "pdfAllPages": "All pages",
+    "xlsxSheets": "Sheets",
+    "xlsxFirstSheet": "First sheet",
+    "xlsxAllSheets": "All sheets",
     "pdfScale": "Scale"
   },
   "howItWorks": {

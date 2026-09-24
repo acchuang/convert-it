@@ -67,7 +67,14 @@
     "bitrate": "位元率",
     "preset": "預設",
     "targetFormat": "目標格式",
-    "truncated": "... （已截斷）"
+    "truncated": "... （已截斷）",
+    "pdfPages": "頁面",
+    "pdfFirstPage": "第一頁",
+    "pdfAllPages": "所有頁面",
+    "xlsxSheets": "工作表",
+    "xlsxFirstSheet": "第一個工作表",
+    "xlsxAllSheets": "所有工作表",
+    "pdfScale": "縮放"
   },
   "howItWorks": {
     "heading": "使用方式",

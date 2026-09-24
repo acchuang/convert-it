@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { xlsxToCsv, xlsxToJson, csvToXlsx, jsonToXlsx } from '@/lib/xlsx-converters';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import JSZip from 'jszip';
 import { DEFAULT_SETTINGS } from '@/lib/types';
 
 const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -115,5 +118,81 @@ describe('csvToXlsx type inference', () => {
       ['007', 42, true],
       ['1e5', '3.50', 'no'],
     ]);
+  });
+});
+
+describe('all sheets (xlsxAllSheets)', () => {
+  const fixture = () =>
+    new File([readFileSync(join(__dirname, 'fixtures', 'sheetjs-types.xlsx'))], 'book.xlsx', {
+      type: XLSX_MIME,
+    });
+
+  it('xlsx → csv zips one CSV per sheet', async () => {
+    const blob = await xlsxToCsv(fixture(), 'xlsx', 'csv', {
+      ...DEFAULT_SETTINGS,
+      xlsxAllSheets: true,
+    });
+    expect(blob.type).toBe('application/zip');
+    const zip = await JSZip.loadAsync(await blob.arrayBuffer());
+    expect(Object.keys(zip.files)).toEqual(['book-People.csv', 'book-Other.csv']);
+    expect(await zip.file('book-Other.csv')!.async('string')).toBe('second,sheet');
+  });
+
+  it('first sheet only by default', async () => {
+    const blob = await xlsxToCsv(fixture(), 'xlsx', 'csv', DEFAULT_SETTINGS);
+    expect(blob.type).toBe('text/csv');
+    expect(await blob.text()).toMatch(/^name,age,joined/);
+  });
+
+  it('xlsx → json keys every sheet by name', async () => {
+    const blob = await xlsxToJson(fixture(), 'xlsx', 'json', {
+      ...DEFAULT_SETTINGS,
+      xlsxAllSheets: true,
+    });
+    const data = JSON.parse(await blob.text());
+    expect(Object.keys(data)).toEqual(['People', 'Other']);
+    expect(data.People[0].name).toBe('Alice');
+    expect(data.Other).toEqual([]);
+  });
+
+  it('makes hostile or colliding sheet names safe file names', async () => {
+    const { writeWorkbook } = await import('@/lib/xlsx');
+    // Build a 3-sheet workbook by hand: writeWorkbook emits one sheet, so
+    // clone its sheet part under three names.
+    const one = await JSZip.loadAsync(await (await writeWorkbook([['x']])).arrayBuffer());
+    const sheetXml = await one.file('xl/worksheets/sheet1.xml')!.async('string');
+    const names = ['a/b', 'a:b', '__proto__'];
+    one.file(
+      'xl/workbook.xml',
+      `<workbook xmlns:r="r"><sheets>${names
+        .map((n, i) => `<sheet name="${n}" sheetId="${i + 1}" r:id="rId${i + 10}"/>`)
+        .join('')}</sheets></workbook>`,
+    );
+    one.file(
+      'xl/_rels/workbook.xml.rels',
+      `<Relationships>${names
+        .map(
+          (_, i) =>
+            `<Relationship Id="rId${i + 10}" Type="x/worksheet" Target="worksheets/s${i}.xml"/>`,
+        )
+        .join('')}</Relationships>`,
+    );
+    names.forEach((_, i) => one.file(`xl/worksheets/s${i}.xml`, sheetXml));
+    const file = new File([await one.generateAsync({ type: 'uint8array' })], 'b.xlsx');
+
+    const zip = await JSZip.loadAsync(
+      await (
+        await xlsxToCsv(file, 'xlsx', 'csv', { ...DEFAULT_SETTINGS, xlsxAllSheets: true })
+      ).arrayBuffer(),
+    );
+    expect(Object.keys(zip.files)).toEqual(['b-a_b.csv', 'b-a_b (2).csv', 'b-__proto__.csv']);
+
+    const json = JSON.parse(
+      await (
+        await xlsxToJson(file, 'xlsx', 'json', { ...DEFAULT_SETTINGS, xlsxAllSheets: true })
+      ).text(),
+    );
+    expect(Object.keys(json)).toEqual(['a/b', 'a:b', '__proto__']);
+    expect(Object.prototype).not.toHaveProperty('x');
   });
 });

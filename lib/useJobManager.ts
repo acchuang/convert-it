@@ -13,6 +13,7 @@ import { FILE_SIZE_LIMITS } from '@/lib/types';
 import { CancelledError, cancelInWorker, runInWorker, runsOnMainThread } from '@/lib/worker-pool';
 import { terminateFFmpeg } from '@/lib/audio-video-converters';
 import type { FileJob } from '@/app/components/JobCard';
+import { uniqueName } from './filenames';
 import { addHistoryEntry, getHistory, type HistoryEntry } from '@/lib/history';
 
 /**
@@ -25,20 +26,7 @@ export function outputFilename(job: Pick<FileJob, 'file' | 'targetExt' | 'result
   return `${base}.${ext}`;
 }
 
-/**
- * Keeps zip entries from overwriting each other: `photo.jpg` and `photo.png`
- * both converted to PNG, or two `IMG_0001.HEIC` from different folders, used to
- * leave one file in the archive. Later ones become `photo (2).png`, and so on.
- */
-export function uniqueName(name: string, used: Set<string>): string {
-  const dot = name.lastIndexOf('.');
-  const stem = dot > 0 ? name.slice(0, dot) : name;
-  const ext = dot > 0 ? name.slice(dot) : '';
-  let candidate = name;
-  for (let n = 2; used.has(candidate.toLowerCase()); n++) candidate = `${stem} (${n})${ext}`;
-  used.add(candidate.toLowerCase());
-  return candidate;
-}
+export { uniqueName } from './filenames';
 
 // How long a download's object URL outlives the click. Revoking straight after
 // click() races the download itself in Firefox and Safari, which then save a

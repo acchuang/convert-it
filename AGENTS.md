@@ -65,6 +65,7 @@ Independent Next.js project deployed via Cloudflare Pages.
 
 - XLSX read/write is in-house: `lib/xlsx.ts` on jszip + fast-xml-parser. Do not re-add the npm `xlsx` (SheetJS) package — it is frozen at 0.18.5 with unfixed prototype-pollution and ReDoS advisories.
 - Reader decodes shared/inline/rich strings, numbers (15 significant digits, like Excel), booleans, errors, formula results and dates (from the cell's number format, 1900 and 1904 systems). Writer emits one plain sheet. `lib/__tests__/fixtures/sheetjs-*.xlsx` pin the reader against a third-party producer.
+- XLSX input converts the first sheet unless `ConversionSettings.xlsxAllSheets`: then → CSV is a zip of `<file>-<sheet>.csv` (plain CSV if there is only one sheet; names via `lib/filenames.ts` `safeFileStem` + `uniqueName`) and → JSON is `{ "<sheet>": rows }`.
 
 ## Webpack
 

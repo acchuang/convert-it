@@ -67,7 +67,14 @@
     "bitrate": "ビットレート",
     "preset": "プリセット",
     "targetFormat": "変換先形式",
-    "truncated": "... （省略）"
+    "truncated": "... （省略）",
+    "pdfPages": "ページ",
+    "pdfFirstPage": "最初のページ",
+    "pdfAllPages": "すべてのページ",
+    "xlsxSheets": "シート",
+    "xlsxFirstSheet": "最初のシート",
+    "xlsxAllSheets": "すべてのシート",
+    "pdfScale": "倍率"
   },
   "howItWorks": {
     "heading": "使い方",

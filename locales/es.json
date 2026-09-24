@@ -67,7 +67,14 @@
     "bitrate": "Tasa de bits",
     "preset": "Preajuste",
     "targetFormat": "Formato de destino",
-    "truncated": "... (truncado)"
+    "truncated": "... (truncado)",
+    "pdfPages": "Páginas",
+    "pdfFirstPage": "Primera página",
+    "pdfAllPages": "Todas las páginas",
+    "xlsxSheets": "Hojas",
+    "xlsxFirstSheet": "Primera hoja",
+    "xlsxAllSheets": "Todas las hojas",
+    "pdfScale": "Escala"
   },
   "howItWorks": {
     "heading": "CÓMO FUNCIONA",
