@@ -10,12 +10,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      # Public CDN URL, inlined into the bundle at build time — not a secret.
-      # Must match the value in the Pages project's env vars. The CSP generated
-      # at postbuild allows this origin in connect-src.
-      NEXT_PUBLIC_FFMPEG_BASE_URL: https://cdn.oilygold.xyz/ffmpeg-core/0.12.10
-
     steps:
       - uses: actions/checkout@v4
 
@@ -43,7 +37,13 @@ jobs:
       - run: npm audit --omit=dev --audit-level=high
 
       # postbuild adds the CSP (out/_headers + per-page hashes).
+      # Public CDN URL, inlined into the bundle at build time — not a secret.
+      # Must match the value in the Pages project's env vars; the generated CSP
+      # allows its origin in connect-src. Scoped to this step on purpose: the
+      # unit tests must run without it (they would otherwise hit the real CDN).
       - run: npm run build
+        env:
+          NEXT_PUBLIC_FFMPEG_BASE_URL: https://cdn.oilygold.xyz/ffmpeg-core/0.12.10
 
       # Real codecs in a real browser against the built site with its _headers
       # applied. Checks the downloaded bytes, and fails on any CSP violation.
