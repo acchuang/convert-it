@@ -176,7 +176,7 @@ for (const [fixture, target, label, check] of PAIRS) {
       await page.close();
       continue;
     }
-    await page.setInputFiles('input[type="file"]', join(DIR, fixture));
+    await page.setInputFiles('input[type="file"]:not([webkitdirectory])', join(DIR, fixture));
     await page.waitForSelector('[role="listitem"]', { timeout: 15000 });
 
     const select = page.locator('select[aria-label="Target format"]').first();
@@ -251,7 +251,7 @@ for (const [fixture, target, label, check] of PAIRS) {
   try {
     await page.goto(APP, { waitUntil: 'networkidle' });
     await page.setInputFiles(
-      'input[type="file"]',
+      'input[type="file"]:not([webkitdirectory])',
       ['doc.pdf', 'img.png', 'blue.pdf'].map((f) => join(DIR, f)),
     );
     await page.waitForSelector('[role="listitem"]');

@@ -14,7 +14,8 @@
     "video": "動画",
     "audio": "音声",
     "document": "文書",
-    "data": "データ"
+    "data": "データ",
+    "folder": "またはフォルダーを選択"
   },
   "toolbar": {
     "addFiles": "ファイル追加",
@@ -29,7 +30,10 @@
     "mergePdf": "PDFに結合",
     "merging": "結合中…",
     "moveUp": "上へ",
-    "moveDown": "下へ"
+    "moveDown": "下へ",
+    "addFolder": "フォルダーを追加",
+    "nameAs": "ファイル名",
+    "nameHint": "{name} {ext} {source} {n} {date} {w}x{h}"
   },
   "warning": {
     "largeFile": "大きなファイルを検出",

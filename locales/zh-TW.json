@@ -14,7 +14,8 @@
     "video": "影片",
     "audio": "音訊",
     "document": "文件",
-    "data": "資料"
+    "data": "資料",
+    "folder": "或選擇一個資料夾"
   },
   "toolbar": {
     "addFiles": "新增檔案",
@@ -29,7 +30,10 @@
     "mergePdf": "合併為 PDF",
     "merging": "合併中…",
     "moveUp": "上移",
-    "moveDown": "下移"
+    "moveDown": "下移",
+    "addFolder": "新增資料夾",
+    "nameAs": "命名為",
+    "nameHint": "{name} {ext} {source} {n} {date} {w}x{h}"
   },
   "warning": {
     "largeFile": "偵測到大檔案",

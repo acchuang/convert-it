@@ -14,7 +14,8 @@
     "video": "视频",
     "audio": "音频",
     "document": "文档",
-    "data": "数据"
+    "data": "数据",
+    "folder": "或选择一个文件夹"
   },
   "toolbar": {
     "addFiles": "添加文件",
@@ -29,7 +30,10 @@
     "mergePdf": "合并为 PDF",
     "merging": "合并中…",
     "moveUp": "上移",
-    "moveDown": "下移"
+    "moveDown": "下移",
+    "addFolder": "添加文件夹",
+    "nameAs": "命名为",
+    "nameHint": "{name} {ext} {source} {n} {date} {w}x{h}"
   },
   "warning": {
     "largeFile": "检测到大文件",

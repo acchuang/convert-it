@@ -35,6 +35,13 @@ Independent Next.js project deployed via Cloudflare Pages.
 - `settings` lists the `SettingKey` groups the converter actually reads, in panel order; `SETTING_FIELDS` maps each to its `ConversionSettings` fields. `app/components/SettingsPanel.tsx` shows exactly `settingsFor(source, target)`, and the gear icon hides when it is empty. `lib/__tests__/registry.test.ts` records which fields each data/document converter reads and checks media args, so a declared-but-unused (or used-but-undeclared) setting fails; the `CONVERSION_MAP` snapshot pins the route list.
 - Format metadata (`FORMATS`, `getFormatInfo`, `getFileExtension`, `formatFileSize`) and the single extension → MIME table `mimeFor` live in `lib/formats.ts`, which imports no converter. Don't add per-module MIME maps.
 
+## Files in, names out
+
+- `lib/drop-files.ts`: drops go through `filesFromDrop`, which expands folders via `webkitGetAsEntry` (the entries must be taken inside the drop handler, before any await; `readEntries` is called until empty because Chrome returns at most 100 per call). Pickers go through `filesFromInput` (`webkitRelativePath`). Hidden files, `Thumbs.db` and `desktop.ini` are skipped, and each job keeps its `folder`, which "Download all" rebuilds in the zip.
+- **Every drop is handled by the window listener in ConverterApp.** The drop zone only manages its visual state. It used to call `addFiles` as well, and since the event bubbles to the window, every dropped file was added twice.
+- Output names come from a template (`applyNameTemplate` in `lib/filenames.ts`; toolbar "Name as"; saved per viewer in localStorage). Placeholders: `{name} {ext} {source} {n} {date} {w}x{h}`. `{w}x{h}` is the output image size measured after conversion, and is dropped along with its separator when unknown. The extension is always ensured, and unsafe characters become `_`, so a template can't make a path.
+- The page has two file inputs (files, and a `webkitdirectory` one); tests and suites target `input[type="file"]:not([webkitdirectory])`.
+
 ## Image Encode (WASM)
 
 - Image output (JPEG/PNG/WebP) is encoded via `@jsquash/*` WASM codecs (mozjpeg/libpng/libwebp), not `canvas.toBlob`. Shared helper: `lib/image-encode.ts`.

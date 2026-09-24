@@ -14,7 +14,8 @@
     "video": "VIDEO",
     "audio": "AUDIO",
     "document": "DOCUMENT",
-    "data": "DATA"
+    "data": "DATA",
+    "folder": "or choose a folder"
   },
   "toolbar": {
     "addFiles": "ADD FILES",
@@ -29,7 +30,10 @@
     "mergePdf": "MERGE INTO PDF",
     "merging": "MERGING…",
     "moveUp": "Move up",
-    "moveDown": "Move down"
+    "moveDown": "Move down",
+    "addFolder": "ADD FOLDER",
+    "nameAs": "Name as",
+    "nameHint": "{name} {ext} {source} {n} {date} {w}x{h}"
   },
   "warning": {
     "largeFile": "Large file detected",

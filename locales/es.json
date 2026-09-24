@@ -14,7 +14,8 @@
     "video": "VIDEO",
     "audio": "AUDIO",
     "document": "DOCUMENTO",
-    "data": "DATOS"
+    "data": "DATOS",
+    "folder": "o elige una carpeta"
   },
   "toolbar": {
     "addFiles": "AÑADIR ARCHIVOS",
@@ -29,7 +30,10 @@
     "mergePdf": "UNIR EN PDF",
     "merging": "UNIENDO…",
     "moveUp": "Subir",
-    "moveDown": "Bajar"
+    "moveDown": "Bajar",
+    "addFolder": "AÑADIR CARPETA",
+    "nameAs": "Nombrar como",
+    "nameHint": "{name} {ext} {source} {n} {date} {w}x{h}"
   },
   "warning": {
     "largeFile": "Archivo grande detectado",

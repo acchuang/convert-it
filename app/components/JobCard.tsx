@@ -19,6 +19,11 @@ export interface FileJob {
   progress: number;
   stage?: string;
   settings: ConversionSettings;
+  /** Folder the file came from within a dropped/picked folder ('' or unset: top level). */
+  folder?: string;
+  /** Pixel size of an image result, for {w}x{h} in the name template. */
+  resultWidth?: number;
+  resultHeight?: number;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {

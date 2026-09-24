@@ -423,3 +423,32 @@ describe('reorder and merge', () => {
     });
   });
 });
+
+describe('download names and folders', () => {
+  it('"download all" applies the template and rebuilds dropped folders', async () => {
+    mockConvertFile.mockResolvedValue(new Blob(['{}'], { type: 'application/json' }));
+    const blobs: Blob[] = [];
+    vi.spyOn(URL, 'createObjectURL').mockImplementation((b) => {
+      blobs.push(b as Blob);
+      return 'blob:x';
+    });
+    const { result } = renderHook(() => useJobManager());
+    act(() =>
+      result.current.addFiles([
+        { file: new File(['a,b\n1,2'], 'one.csv'), folder: 'Data/2026' },
+        { file: new File(['a,b\n1,2'], 'two.csv'), folder: '' },
+      ]),
+    );
+    act(() => result.current.setNameTemplate('{n}-{name}'));
+    for (const job of result.current.jobs) await act(() => result.current.convertJob(job));
+    await waitFor(() => expect(result.current.doneCount).toBe(2));
+    await act(() => result.current.downloadAllAsZip());
+    const JSZip = (await import('jszip')).default;
+    const zip = await JSZip.loadAsync(await blobs.at(-1)!.arrayBuffer());
+    expect(
+      Object.keys(zip.files)
+        .filter((n) => !n.endsWith('/'))
+        .sort(),
+    ).toEqual(['2-two.json', 'Data/2026/1-one.json']);
+  });
+});

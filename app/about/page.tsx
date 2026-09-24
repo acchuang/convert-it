@@ -54,13 +54,13 @@ export default function AboutPage() {
     >
       {/* Header */}
       <header
-        className="border-b border-app px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-sm"
+        className="border-b border-app px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-sm"
         style={{ backgroundColor: 'var(--header-bg)' }}
         role="banner"
       >
         <div
           style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
-          className="text-3xl tracking-wide"
+          className="text-2xl sm:text-3xl tracking-wide whitespace-nowrap"
         >
           <Link href="/" className="hover:opacity-80 transition-opacity">
             <span className="text-[var(--accent)]">Convert</span>
