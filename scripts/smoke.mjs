@@ -7,6 +7,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium, webkit } from 'playwright';
+import { createCanvas, loadImage } from 'canvas';
 
 const APP = process.env.SMOKE_URL ?? 'http://localhost:3000';
 const DIR = join(process.cwd(), '.smoke-fixtures');
@@ -24,6 +25,26 @@ const PAIRS = [
   ['img.png', 'jpg', 'mozjpeg', (b) => b[0] === 0xff && b[1] === 0xd8],
   ['img.svg', 'png', 'resvg + oxipng', magic('\x89PNG')],
   ['doc.pdf', 'png', 'pdfium', magic('\x89PNG')],
+  [
+    'blue.pdf',
+    'png',
+    'pdfium colours',
+    async (b) => {
+      // Decode the PNG and check the centre really is blue, not red.
+      const img = await loadImage(b);
+      const canvas = createCanvas(img.width, img.height);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const [r, g, bl] = ctx.getImageData(img.width >> 1, img.height >> 1, 1, 1).data;
+      return r < 20 && g < 20 && bl > 235;
+    },
+  ],
+  [
+    'unicode.txt',
+    'pdf',
+    'noto fonts (worker)',
+    (b) => magic('%PDF')(b) && /NotoSansSC-Regular/.test(b.toString('latin1')),
+  ],
   ['clip.mkv', 'webm', 'ffmpeg vp8+vorbis', (b) => b.readUInt32BE(0) === 0x1a45dfa3],
   ['clip.webm', 'mp4', 'ffmpeg video', magic('ftyp', 4)],
   [
@@ -140,7 +161,7 @@ for (const [fixture, target, label, check] of PAIRS) {
 
     if (cspViolations.length) row.note = `CSP: ${cspViolations[0]}`;
     else if (bytes.length === 0) row.note = 'empty output';
-    else if (!check(bytes))
+    else if (!(await check(bytes)))
       row.note = `bad signature (${bytes.length}B, starts ${bytes.subarray(0, 8).toString('hex')})`;
     else {
       row.ok = true;

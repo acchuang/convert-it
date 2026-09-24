@@ -39,8 +39,9 @@ Independent Next.js project deployed via Cloudflare Pages.
 
 ## PDF
 
-- PDF output (txt/md/html/json → PDF) uses `jspdf` (pure JS) in `lib/pdf-converters.ts`.
-- PDF input (PDF → PNG/JPG/WebP, PDF → TXT/HTML) uses `@hyzyla/pdfium` (MIT wrapper over BSD-3 PDFium; not AGPL mupdf). Page render → RGBA → existing `encodeImageData` pipeline. Text extraction is layout-naive (reading order, no OCR).
+- PDF output (txt/md/html/json → PDF) is typeset by `lib/pdf-layout.ts` (`renderPdf` over `Block`s of styled `Run`s) on `jspdf`. Markdown → blocks comes from `marked.lexer` in `lib/markdown-blocks.ts` (headings, bold/italic/code, links, nested lists, code blocks, quotes, tables); no DOM, so it runs in the worker pool. TXT/JSON keep lines and indentation (`textBlocks`).
+- Fonts: WinAnsi-only documents use jsPDF's built-in Helvetica/Courier (nothing fetched). Anything else uses the Noto subsets in `public/fonts/pdf/`, each fetched only if the document uses its script: `NotoSans-Regular/-Bold` + `NotoSansMono` (Latin, Greek, Cyrillic, Vietnamese), `NotoSansSC` subset (GB 2312 + Big5 level 1 + JIS X 0208 + kana) and `NotoSansKR` (Hangul). jsPDF embeds only the glyphs used. Rebuild with `python3 scripts/build-pdf-fonts.py` (fonttools); `OFL.txt` must ship with them. No italic Noto is shipped: italic sets upright in Unicode mode.
+- PDF input (PDF → PNG/JPG/WebP, PDF → TXT/HTML) uses `@hyzyla/pdfium` (MIT wrapper over BSD-3 PDFium; not AGPL mupdf). Page render → `pdfRenderToImageData` → `finishImage` (so the image toolbox applies). The wrapper's render output is already **RGBA** despite its `colorSpace: "BGRA"` option; never swap channels (pinned by a real-PDFium test and the smoke suite's blue-page pair). Text extraction is layout-naive (reading order, no OCR).
 - PDF → image defaults to page 1 as a single image. With `ConversionSettings.pdfAllPages` it renders every page at `pdfScale` (1×/2×/3×) and returns a `application/zip` Blob (one `<base>-page-<n>.<ext>` per page via jszip); `downloadJob` names zip outputs `.zip` and `JobCard.canPreview` skips zip blobs. Default (`pdfAllPages=false`) keeps the single-page behaviour.
 
 ## EPUB

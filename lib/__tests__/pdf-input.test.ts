@@ -25,12 +25,12 @@ vi.mock('@jsquash/oxipng/optimise', () => ({
 let currentPages: ReturnType<typeof fakePage>[] = [];
 
 function fakePage(text: string, width = 4, height = 4) {
-  // BGRA buffer: red pixel so the BGRA→RGBA swap is exercised.
+  // RGBA, as the real renderer returns it (see pdfRenderToImageData).
   const data = new Uint8Array(width * height * 4);
   for (let i = 0; i < data.length; i += 4) {
-    data[i] = 0; // B
+    data[i] = 255; // R
     data[i + 1] = 0; // G
-    data[i + 2] = 255; // R
+    data[i + 2] = 0; // B
     data[i + 3] = 255; // A
   }
   return {
