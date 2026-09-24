@@ -41,6 +41,7 @@ exports[`converter registry > targets per source, in order (the first is the def
     "jxl",
     "bmp",
     "ico",
+    "txt",
     "pdf",
   ],
   "bmp": [
@@ -49,6 +50,7 @@ exports[`converter registry > targets per source, in order (the first is the def
     "webp",
     "avif",
     "jxl",
+    "txt",
     "pdf",
   ],
   "csv": [
@@ -92,6 +94,7 @@ exports[`converter registry > targets per source, in order (the first is the def
     "jpg",
     "webp",
     "avif",
+    "txt",
     "pdf",
   ],
   "heic": [
@@ -102,6 +105,7 @@ exports[`converter registry > targets per source, in order (the first is the def
     "jxl",
     "bmp",
     "ico",
+    "txt",
     "pdf",
   ],
   "html": [
@@ -125,6 +129,7 @@ exports[`converter registry > targets per source, in order (the first is the def
     "bmp",
     "ico",
     "jpg",
+    "txt",
     "pdf",
   ],
   "jpg": [
@@ -135,6 +140,7 @@ exports[`converter registry > targets per source, in order (the first is the def
     "bmp",
     "ico",
     "jpg",
+    "txt",
     "pdf",
   ],
   "json": [
@@ -153,6 +159,7 @@ exports[`converter registry > targets per source, in order (the first is the def
     "jpg",
     "webp",
     "avif",
+    "txt",
     "pdf",
   ],
   "m4a": [
@@ -258,6 +265,7 @@ exports[`converter registry > targets per source, in order (the first is the def
     "bmp",
     "ico",
     "png",
+    "txt",
     "pdf",
   ],
   "svg": [
@@ -307,6 +315,7 @@ exports[`converter registry > targets per source, in order (the first is the def
     "jxl",
     "bmp",
     "webp",
+    "txt",
     "pdf",
   ],
   "wma": [

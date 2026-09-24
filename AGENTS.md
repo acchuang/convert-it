@@ -62,6 +62,12 @@ Independent Next.js project deployed via Cloudflare Pages.
 - Compression re-renders pages through PDFium as JPEG (medium 150 dpi/q75, strong 100 dpi/q60). Page sizes come from pdf-lib's page box, not the rounded bitmap. The result is kept only if it's smaller. Text stops being selectable, so it's opt-in.
 - `lib/pdf-options.ts` holds the light parts (`parsePageRange`, `isPageRangeSyntax`, `canMerge`) so the UI never imports pdf-lib. A range beyond the document is `ConversionError('invalid-settings')` (its own localized message: fix the setting, not the file). A password-protected PDF is `unsupported`. A merge failure names the file.
 
+## OCR
+
+- tesseract.js 7 (Apache-2.0), **self-hosted** under `public/ocr` (copied by `npm run copy-wasm`): `worker.min.js`, the two LSTM cores (`tesseract-core{-simd,}-lstm.{js,wasm}`, picked with `wasm-feature-detect`), and `lang/<code>.traineddata.gz` (tessdata 4.0.0 best_int for eng, spa, fra, deu, chi_sim, chi_tra, jpn, kor; from the `@tesseract.js-data/*` devDependencies). Its defaults would fetch all of that from third-party CDNs, which the CSP blocks. Nothing loads before the first OCR job; `/ocr` is cached on first use and kept out of the offline pack (about 20 MB).
+- `lib/ocr.ts`: one tesseract worker per language (switching languages terminates the old one), jobs queued, a failed start not kept. It runs as a nested worker started from the conversion worker, so the main thread stays free; without nested workers (old Safari) it fails with `unsupported`. Images are decoded by us (EXIF orientation applied, alpha flattened onto white) and passed as BMP bytes (a `Uint8Array`: tesseract's Node build, used in tests, reads nothing else).
+- Routes: every raster image → txt (`ocr` setting = `ocrLanguage`). PDF → txt/html OCR only the pages with no text layer (scans), rendered at 2× through PDFium. `lib/__tests__/ocr-real.test.ts` runs real tesseract on the shipped language data; the smoke suite checks `ocr.png → txt` and a scanned `scan.pdf → txt`.
+
 ## Word (DOCX)
 
 - Input: mammoth (BSD-2, lazy) → semantic HTML with images inlined as `data:` URIs. DOCX → HTML/TXT run in the worker. DOCX → MD/PDF/EPUB go on through Turndown (DOM), so they're main-thread; PDF is typeset from the Markdown blocks, so headings, lists and tables survive. A non-DOCX (or a legacy binary `.doc`) is `corrupt-input` with a "re-save as .docx" hint. mammoth's browser build takes `{ arrayBuffer }` and its Node build `{ buffer }`, so both are passed.

@@ -6,7 +6,8 @@ import { degrees, PDFDocument, type PDFPage } from 'pdf-lib';
 import type { ConversionSettings } from './types';
 import { ConversionError } from './errors';
 import { getFileExtension } from './formats';
-import { decodeJxl, decodeToImageData, encodeImageData } from './image-encode';
+import { encodeImageData } from './image-encode';
+import { decodeAnyImage } from './image-converters';
 import { safeFileStem } from './filenames';
 import { stripJpegMetadata } from './image-metadata';
 import { canMerge, parsePageRange } from './pdf-options';
@@ -65,19 +66,6 @@ async function embeddable(file: File): Promise<{ bytes: Uint8Array; kind: 'jpg' 
   const kind = opaque ? 'jpg' : 'png';
   const blob = await encodeImageData(image, kind, 0.92);
   return { bytes: new Uint8Array(await blob.arrayBuffer()), kind };
-}
-
-async function decodeAnyImage(file: File, ext: string): Promise<ImageData> {
-  if (ext === 'jxl') return decodeJxl(file);
-  if (ext === 'svg') {
-    const { renderSvgToImageData } = await import('./image-converters');
-    return renderSvgToImageData(await file.text());
-  }
-  if (ext === 'heic') {
-    const { decodeHeicToImageData } = await import('./heic-converter');
-    return decodeHeicToImageData(file);
-  }
-  return decodeToImageData(file);
 }
 
 /** Adds one page holding the image: its own size, or fitted onto A4/Letter. */

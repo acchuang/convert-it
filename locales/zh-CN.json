@@ -119,7 +119,9 @@
     "metaAuthor": "作者",
     "metaWillStrip": "以上内容都不会写入输出文件。",
     "metaWillKeep": "以上内容都会保留在输出文件中。",
-    "metaWillKeepNoGps": "除位置外都会保留在输出文件中。"
+    "metaWillKeepNoGps": "除位置外都会保留在输出文件中。",
+    "ocrLanguage": "文字语言 (OCR)",
+    "ocrHint": "识别图片中的文字。语言数据只需下载一次（1–3 MB），之后可离线使用。"
   },
   "howItWorks": {
     "heading": "使用方式",

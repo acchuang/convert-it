@@ -72,6 +72,17 @@ function TimeField({
 }
 
 const VIDEO_WIDTHS = [0, 1920, 1280, 854];
+// OCR languages by their own names, so each is findable by its readers.
+const OCR_LANGUAGE_NAMES: Record<string, string> = {
+  eng: 'English',
+  spa: 'Español',
+  fra: 'Français',
+  deu: 'Deutsch',
+  chi_sim: '简体中文',
+  chi_tra: '繁體中文',
+  jpn: '日本語',
+  kor: '한국어',
+};
 
 export function SettingsPanel({
   targetExt,
@@ -103,6 +114,7 @@ export function SettingsPanel({
   const showMute = shown.has('mute');
   const mediaKind = getFormatInfo(sourceExt)?.category === 'video' ? 'video' : 'audio';
   const showMetadata = shown.has('metadata');
+  const showOcr = shown.has('ocr');
   const showPdfEdit = shown.has('pdfEdit');
   const showPdfCompress = shown.has('pdfCompress');
   const showPdfPageSize = shown.has('pdfPageSize');
@@ -418,6 +430,25 @@ export function SettingsPanel({
               </div>
             </div>
           </>
+        )}
+
+        {showOcr && (
+          <div className={CARD}>
+            <span className={LABEL}>{t('job.ocrLanguage')}</span>
+            <select
+              value={settings.ocrLanguage}
+              onChange={(e) => onChange({ ocrLanguage: e.target.value })}
+              aria-label={t('job.ocrLanguage')}
+              className="w-full bg-[var(--bg-secondary)] border border-[var(--border-secondary)] text-primary text-xs rounded-lg px-2.5 py-1.5 cursor-pointer focus:outline-none focus:border-[var(--accent)]"
+            >
+              {Object.entries(OCR_LANGUAGE_NAMES).map(([code, name]) => (
+                <option key={code} value={code}>
+                  {name}
+                </option>
+              ))}
+            </select>
+            <span className="text-xs text-[var(--text-muted)]">{t('job.ocrHint')}</span>
+          </div>
         )}
 
         {showMetadata && (

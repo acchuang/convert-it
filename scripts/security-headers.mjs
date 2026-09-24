@@ -162,6 +162,8 @@ function headersFile() {
 # background rather than forever. A codec upgrade still lands within a day.
 /wasm/*
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/ocr/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 /fonts/*
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 `;

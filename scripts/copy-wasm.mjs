@@ -30,6 +30,23 @@ const sources = [
   ['@hyzyla/pdfium/dist/pdfium.wasm', 'pdfium.wasm'],
 ];
 
+// OCR (tesseract.js) under public/ocr: its worker, the two LSTM cores the app
+// picks between (SIMD or not), and each language's tessdata 4.0.0 best_int.
+const ocr = resolve(root, 'public/ocr');
+const OCR_LANGUAGES = ['eng', 'spa', 'fra', 'deu', 'chi_sim', 'chi_tra', 'jpn', 'kor'];
+sources.push(
+  ['tesseract.js/dist/worker.min.js', '../ocr/worker.min.js'],
+  ...['tesseract-core-lstm', 'tesseract-core-simd-lstm'].flatMap((core) => [
+    [`tesseract.js-core/${core}.js`, `../ocr/${core}.js`],
+    [`tesseract.js-core/${core}.wasm`, `../ocr/${core}.wasm`],
+  ]),
+  ...OCR_LANGUAGES.map((lang) => [
+    `@tesseract.js-data/${lang}/4.0.0_best_int/${lang}.traineddata.gz`,
+    `../ocr/lang/${lang}.traineddata.gz`,
+  ]),
+);
+await mkdir(resolve(ocr, 'lang'), { recursive: true });
+
 await mkdir(dest, { recursive: true });
 
 for (const [rel, name] of sources) {

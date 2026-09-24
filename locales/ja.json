@@ -119,7 +119,9 @@
     "metaAuthor": "作成者",
     "metaWillStrip": "これらは出力に含まれません。",
     "metaWillKeep": "これらはすべて出力に保持されます。",
-    "metaWillKeepNoGps": "位置情報以外は出力に保持されます。"
+    "metaWillKeepNoGps": "位置情報以外は出力に保持されます。",
+    "ocrLanguage": "テキストの言語 (OCR)",
+    "ocrHint": "画像内の文字を読み取ります。言語データは初回のみダウンロード (1–3 MB) され、その後はオフラインでも使えます。"
   },
   "howItWorks": {
     "heading": "使い方",

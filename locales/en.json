@@ -119,7 +119,9 @@
     "metaAuthor": "Author",
     "metaWillStrip": "None of this goes into the output.",
     "metaWillKeep": "All of this is kept in the output.",
-    "metaWillKeepNoGps": "Kept in the output, except the location."
+    "metaWillKeepNoGps": "Kept in the output, except the location.",
+    "ocrLanguage": "Text language (OCR)",
+    "ocrHint": "Reads the text in the image. The language data downloads once (1–3 MB), then works offline."
   },
   "howItWorks": {
     "heading": "HOW IT WORKS",

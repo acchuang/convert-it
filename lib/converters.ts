@@ -82,6 +82,7 @@ export type SettingKey =
   | 'videoSize' // videoMaxWidth
   | 'mute' // mute
   | 'metadata' // metadata
+  | 'ocr' // ocrLanguage
   | 'pdfPages' // pdfAllPages
   | 'pdfScale' // pdfScale
   | 'pdfEdit' // pdfPageRange, pdfRotate, pdfSplit
@@ -109,6 +110,7 @@ export const SETTING_FIELDS: Record<SettingKey, (keyof ConversionSettings)[]> = 
   videoSize: ['videoMaxWidth'],
   mute: ['mute'],
   metadata: ['metadata'],
+  ocr: ['ocrLanguage'],
   pdfPages: ['pdfAllPages'],
   pdfScale: ['pdfScale'],
   pdfEdit: ['pdfPageRange', 'pdfRotate', 'pdfSplit'],
@@ -177,6 +179,13 @@ const IMAGE_TARGETS: Record<string, string[]> = {
 for (const [from, targets] of Object.entries(IMAGE_TARGETS)) {
   const run = from === 'heic' ? heic : from === 'avif' ? avif : convertImage;
   for (const to of targets) add(from, to, run, imageSettings(to, from));
+}
+
+// Image → text by OCR (tesseract.js, loaded on first use).
+const imageToText: ConverterFn = async (...args) =>
+  (await import('./ocr-converters')).imageToText(...args);
+for (const from of ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'heic', 'avif', 'jxl']) {
+  add(from, 'txt', imageToText, ['ocr']);
 }
 
 // --- Video and audio (ffmpeg.wasm runs in its own worker, so 'main') ------------
@@ -301,8 +310,9 @@ add('docx', 'epub', docx('docxToEpub'), [], 'main');
 for (const to of ['png', 'jpg', 'webp']) {
   add('pdf', to, pdfToImage, ['pdfPages', 'pdfScale', ...imageSettings(to)]);
 }
-add('pdf', 'txt', pdfToText);
-add('pdf', 'html', pdfToHtml);
+// Pages without a text layer (scans) are read by OCR, in the chosen language.
+add('pdf', 'txt', pdfToText, ['ocr']);
+add('pdf', 'html', pdfToHtml, ['ocr']);
 // PDF tools: pick/reorder/rotate/split pages and compress (pdf-lib, + PDFium
 // to render when compressing); every image format onto a page. Merging
 // several files is a batch action (mergePdf), not a route.

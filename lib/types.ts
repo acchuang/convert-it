@@ -40,6 +40,7 @@ export interface ConversionSettings {
   imageResizeHeight: number; // 0 = derive from width, or from the percent
   imageTargetSizeKb: number; // 0 = off; jpg/webp only — quality is searched to fit
   metadata: string; // image output: 'strip' (default) | 'keep' | 'keep-no-gps'
+  ocrLanguage: string; // image → text, and scanned pages in PDF → text: a tesseract code ('eng')
 }
 
 export const DEFAULT_SETTINGS: ConversionSettings = {
@@ -70,6 +71,7 @@ export const DEFAULT_SETTINGS: ConversionSettings = {
   imageResizeHeight: 0,
   imageTargetSizeKb: 0,
   metadata: 'strip',
+  ocrLanguage: 'eng',
 };
 
 export interface HistoryEntry {

@@ -17,6 +17,25 @@ ctx.fillStyle = '#FF4D00';
 ctx.fillRect(8, 8, 24, 24);
 writeFileSync(join(DIR, 'img.png'), canvas.toBuffer('image/png'));
 
+// OCR: text as pixels, and the same as a "scanned" PDF with no text layer.
+{
+  const text = createCanvas(900, 200);
+  const tctx = text.getContext('2d');
+  tctx.fillStyle = '#fff';
+  tctx.fillRect(0, 0, 900, 200);
+  tctx.fillStyle = '#111';
+  tctx.font = '44px sans-serif';
+  tctx.fillText('Convert-it reads printed text', 30, 80);
+  tctx.fillText('Invoice 2026 total 314 EUR', 30, 150);
+  const png = text.toBuffer('image/png');
+  writeFileSync(join(DIR, 'ocr.png'), png);
+  const { PDFDocument } = await import('pdf-lib');
+  const doc = await PDFDocument.create();
+  const image = await doc.embedPng(new Uint8Array(png));
+  doc.addPage([450, 100]).drawImage(image, { x: 0, y: 0, width: 450, height: 100 });
+  writeFileSync(join(DIR, 'scan.pdf'), await doc.save());
+}
+
 // A Word document from another producer (python-docx on Word's default
 // template), shared with the unit tests.
 copyFileSync(

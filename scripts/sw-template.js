@@ -6,7 +6,7 @@
  *  - Install: precache the app shell (home and About pages, their JS/CSS,
  *    manifest, icons). Enough to open and use the app offline.
  *  - Hashed /_next/static/*: cache-first (content-hashed, never changes).
- *  - /wasm, /fonts, /icons: stale-while-revalidate, cached on first use, so a
+ *  - /wasm, /fonts, /icons, /ocr: stale-while-revalidate, cached on first use, so a
  *    conversion that worked once keeps working offline without a first visit
  *    downloading 20 MB of engines the person may never use.
  *  - FFmpeg cores (versioned CDN URLs): cache-first. The app still checks their
@@ -107,7 +107,7 @@ self.addEventListener('fetch', (event) => {
   if (url.origin === self.location.origin) {
     if (request.mode === 'navigate') return event.respondWith(navigate(request));
     if (url.pathname.startsWith('/_next/static/')) return event.respondWith(cacheFirst(request));
-    if (/^\/(wasm|fonts|icons)\//.test(url.pathname) || url.pathname === '/manifest.json') {
+    if (/^\/(wasm|fonts|icons|ocr)\//.test(url.pathname) || url.pathname === '/manifest.json') {
       return event.respondWith(staleWhileRevalidate(request));
     }
     // RSC payloads for client-side navigation (/about.txt?_rsc=…).

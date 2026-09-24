@@ -98,3 +98,14 @@ export async function withMetadata(
   if (!METADATA_SOURCES.has(sourceExt) || !METADATA_TARGETS.has(targetExt)) return blob;
   return applyMetadata(file, blob, targetExt, settings);
 }
+
+/** Pixels of any image format the app reads (for OCR and image → PDF). */
+export async function decodeAnyImage(file: Blob, ext: string): Promise<ImageData> {
+  if (ext === 'jxl') return decodeJxl(file);
+  if (ext === 'svg') return renderSvgToImageData(await file.text());
+  if (ext === 'heic') {
+    const { decodeHeicToImageData } = await import('./heic-converter');
+    return decodeHeicToImageData(file);
+  }
+  return decodeToImageData(file);
+}

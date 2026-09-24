@@ -35,6 +35,7 @@ const groups = (source: string, target: string) => {
     videoSize: has('job.videoSize'),
     mute: has('job.audioTrack'),
     metadata: has('job.metadata'),
+    ocr: has('job.ocrLanguage'),
   };
 };
 
@@ -98,6 +99,12 @@ describe('SettingsPanel shows what the route reads', () => {
     expect(groups('heic', 'jpg').metadata).toBe(true);
     expect(groups('jpg', 'avif').metadata).toBe(false); // no EXIF writer for AVIF
     expect(groups('gif', 'png').metadata).toBe(false); // GIF carries none
+  });
+
+  it('OCR language for image → text and PDF text extraction', () => {
+    expect(groups('png', 'txt').ocr).toBe(true);
+    expect(groups('pdf', 'txt').ocr).toBe(true);
+    expect(groups('pdf', 'png').ocr).toBe(false);
   });
 
   it('lossless audio targets have no bitrate', () => {

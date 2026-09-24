@@ -119,7 +119,9 @@
     "metaAuthor": "Autor",
     "metaWillStrip": "Nada de esto pasa al resultado.",
     "metaWillKeep": "Todo esto se conserva en el resultado.",
-    "metaWillKeepNoGps": "Se conserva, salvo la ubicación."
+    "metaWillKeepNoGps": "Se conserva, salvo la ubicación.",
+    "ocrLanguage": "Idioma del texto (OCR)",
+    "ocrHint": "Lee el texto de la imagen. Los datos del idioma se descargan una vez (1–3 MB) y luego funcionan sin conexión."
   },
   "howItWorks": {
     "heading": "CÓMO FUNCIONA",
