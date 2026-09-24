@@ -19,8 +19,14 @@
 //     policy lists hashes, only these exact scripts get through, and any
 //     injected inline script is still blocked.
 //
-// The FFmpeg core origin (connect-src) comes from NEXT_PUBLIC_FFMPEG_BASE_URL,
-// the same variable the bundle is built with, so the policy can't drift from it.
+// The FFmpeg core origins (connect-src) come from NEXT_PUBLIC_FFMPEG_BASE_URL
+// and NEXT_PUBLIC_FFMPEG_MT_BASE_URL, the same variables the bundle is built
+// with, so the policy can't drift from them.
+//
+// COOP same-origin + COEP require-corp make every page cross-origin isolated,
+// which is what exposes SharedArrayBuffer to the multi-threaded FFmpeg core.
+// Every subresource is same-origin except the core, which is fetched with CORS
+// (the bucket already allows it), so nothing needs a CORP header.
 
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, writeFileSync, statSync } from 'node:fs';
@@ -28,13 +34,13 @@ import { join, relative } from 'node:path';
 
 const OUT = join(process.cwd(), 'out');
 
-function ffmpegOrigin() {
-  const base = process.env.NEXT_PUBLIC_FFMPEG_BASE_URL;
+function originOf(name) {
+  const base = process.env[name];
   if (!base) return null;
   try {
     return new URL(base).origin;
   } catch {
-    throw new Error(`NEXT_PUBLIC_FFMPEG_BASE_URL is not a URL: ${base}`);
+    throw new Error(`${name} is not a URL: ${base}`);
   }
 }
 
@@ -46,9 +52,10 @@ function assetOrigin() {
 }
 
 function directives(extraScript = []) {
-  const ffmpeg = ffmpegOrigin();
+  const ffmpeg = originOf('NEXT_PUBLIC_FFMPEG_BASE_URL');
+  const ffmpegMt = originOf('NEXT_PUBLIC_FFMPEG_MT_BASE_URL');
   const assets = assetOrigin();
-  const remote = [ffmpeg, assets].filter(Boolean);
+  const remote = [...new Set([ffmpeg, ffmpegMt, assets].filter(Boolean))];
   return {
     'default-src': ["'self'"],
     // wasm-unsafe-eval: WebAssembly.instantiate for every codec, without
@@ -131,6 +138,7 @@ function headersFile() {
   X-Frame-Options: DENY
   Referrer-Policy: no-referrer
   Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
 
 # The service worker and its manifest must always be revalidated, or browsers
@@ -153,7 +161,7 @@ function headersFile() {
 `;
 }
 
-if (!ffmpegOrigin()) {
+if (!originOf('NEXT_PUBLIC_FFMPEG_BASE_URL')) {
   console.warn(
     '[security-headers] NEXT_PUBLIC_FFMPEG_BASE_URL is unset: the CSP will not allow the FFmpeg core.',
   );

@@ -49,15 +49,20 @@ for (const url of [...new Set([...shell, ...pack])].sort()) {
 }
 const version = hash.digest('hex').slice(0, 12);
 
-const base = process.env.NEXT_PUBLIC_FFMPEG_BASE_URL;
-const mediaOrigin = base ? new URL(base).origin : null;
+const mediaOrigins = [
+  ...new Set(
+    [process.env.NEXT_PUBLIC_FFMPEG_BASE_URL, process.env.NEXT_PUBLIC_FFMPEG_MT_BASE_URL]
+      .filter(Boolean)
+      .map((base) => new URL(base).origin),
+  ),
+];
 
 const template = readFileSync(join(process.cwd(), 'scripts', 'sw-template.js'), 'utf8');
 const sw = template
   .replace('__VERSION__', JSON.stringify(version))
   .replace('__SHELL__', JSON.stringify([...shell].sort()))
   .replace('__PACK__', JSON.stringify(pack))
-  .replace('__MEDIA_ORIGIN__', JSON.stringify(mediaOrigin));
+  .replace('__MEDIA_ORIGINS__', JSON.stringify(mediaOrigins));
 if (/__[A-Z_]+__/.test(sw.replace(/\/\*[\s\S]*?\*\//, '')))
   throw new Error('sw.js: unfilled placeholder');
 

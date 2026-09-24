@@ -9,7 +9,7 @@
  *  - /wasm, /fonts, /icons: stale-while-revalidate, cached on first use, so a
  *    conversion that worked once keeps working offline without a first visit
  *    downloading 20 MB of engines the person may never use.
- *  - FFmpeg core (versioned CDN URL): cache-first. The app still checks its
+ *  - FFmpeg cores (versioned CDN URLs): cache-first. The app still checks their
  *    SHA-256 on every load, so a cached copy gets the same integrity check.
  *  - Navigations: network-first; offline, the cached page, or a redirect to
  *    the home converter for pages never visited.
@@ -23,7 +23,7 @@
 const VERSION = __VERSION__;
 const SHELL = __SHELL__;
 const PACK = __PACK__;
-const MEDIA_ORIGIN = __MEDIA_ORIGIN__;
+const MEDIA_ORIGINS = __MEDIA_ORIGINS__;
 
 const SHELL_CACHE = `shell-${VERSION}`;
 const ASSET_CACHE = 'assets';
@@ -115,7 +115,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (MEDIA_ORIGIN && url.origin === MEDIA_ORIGIN) event.respondWith(cacheFirst(request));
+  if (MEDIA_ORIGINS.includes(url.origin)) event.respondWith(cacheFirst(request));
 });
 
 // Offline pack: fetch every app asset not cached yet, reporting progress.

@@ -1,7 +1,14 @@
 import encodeJpeg, { init as initJpeg } from '@jsquash/jpeg/encode';
 import encodePng, { init as initPng } from '@jsquash/png/encode';
 import encodeWebp, { init as initWebp } from '@jsquash/webp/encode';
-import optimiseOxipng, { init as initOxipng } from '@jsquash/oxipng/optimise';
+// oxipng's own entry point switches to its multi-threaded build whenever the
+// page is cross-origin isolated (we are, for FFmpeg), and that build needs its
+// own wasm plus wasm-bindgen-rayon worker helpers. Import the single-threaded
+// glue directly so the wasm in public/wasm/ is always the one it expects.
+import initOxipng, {
+  optimise as oxipngOptimise,
+} from '@jsquash/oxipng/codec/pkg/squoosh_oxipng.js';
+import { defaultOptions as OXIPNG_DEFAULTS } from '@jsquash/oxipng/meta';
 import { encodeIcoBlob } from 'ico-codec';
 import type { ConversionSettings } from './types';
 import { mimeFor } from './formats';
@@ -117,7 +124,9 @@ function ensureOxipng(): Promise<unknown> {
 // smaller without any quality loss.
 async function optimisePngBytes(buffer: ArrayBuffer): Promise<ArrayBuffer> {
   await ensureOxipng();
-  return optimiseOxipng(buffer);
+  const { level, interlace, optimiseAlpha } = OXIPNG_DEFAULTS;
+  const out = oxipngOptimise(new Uint8Array(buffer), level, interlace, optimiseAlpha);
+  return out.buffer as ArrayBuffer;
 }
 
 // JPEG and BMP have no alpha channel. canvas.toBlob composites transparent

@@ -16,9 +16,9 @@ vi.mock('@jsquash/webp/encode', () => ({
   init: vi.fn(() => Promise.resolve()),
   default: vi.fn(() => Promise.resolve(new ArrayBuffer(16))),
 }));
-vi.mock('@jsquash/oxipng/optimise', () => ({
-  init: vi.fn(() => Promise.resolve()),
-  default: vi.fn((buf: ArrayBuffer) => Promise.resolve(buf)),
+vi.mock('@jsquash/oxipng/codec/pkg/squoosh_oxipng.js', () => ({
+  default: vi.fn(() => Promise.resolve()),
+  optimise: vi.fn((data: Uint8Array) => data),
 }));
 
 // Per-test page list the mocked loadDocument should expose.

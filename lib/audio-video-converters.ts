@@ -3,15 +3,17 @@ import { fetchFile } from '@ffmpeg/util';
 import type { ConversionSettings } from './types';
 import { mimeFor } from './formats';
 
-let ffmpeg: FFmpeg | null = null;
-let ffmpegLoading: Promise<FFmpeg> | null = null;
-
 // Self-hosted on R2 rather than unpkg: a third-party CDN is both a single point of
 // failure and an unsigned-wasm supply-chain hole, and Cloudflare Pages rejects files
 // over 25MiB so the 31MB core cannot live in public/. Set this to the R2 custom domain
 // (not the rate-limited *.r2.dev URL) and allow the Pages origin in the bucket's CORS.
 // Inlined at build time by the static export, so a rebuild is needed to change it.
 const FFMPEG_BASE_URL = process.env.NEXT_PUBLIC_FFMPEG_BASE_URL;
+
+// Optional: where @ffmpeg/core-mt's three files live (same bucket, its own
+// directory, since the file names are the same). Unset, media always runs on
+// the single-threaded core.
+const FFMPEG_MT_BASE_URL = process.env.NEXT_PUBLIC_FFMPEG_MT_BASE_URL;
 
 // SHA-256 of @ffmpeg/core@0.12.10 dist/umd, the build uploaded to R2. The core
 // is 31 MB of code fetched cross-origin at runtime, so it is checked before it
@@ -21,6 +23,13 @@ const FFMPEG_BASE_URL = process.env.NEXT_PUBLIC_FFMPEG_BASE_URL;
 export const FFMPEG_CORE_SHA256 = {
   'ffmpeg-core.js': 'b266ab5b952555881dd6310663986994a182acb2b7ff25cf10a25f7a37ac2b21',
   'ffmpeg-core.wasm': '9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7',
+} as const;
+
+// Same for @ffmpeg/core-mt@0.12.10 dist/umd (`npm pack @ffmpeg/core-mt@0.12.10`).
+export const FFMPEG_CORE_MT_SHA256 = {
+  'ffmpeg-core.js': '62f5f5f468a37861da12c4581c321bb5ca8ba2f7b776377e08dd2ab72de293f9',
+  'ffmpeg-core.wasm': 'be2c97605366b78f3f13e21b52e81a55a79e1f29c133b03a68ec187b1a2ec41a',
+  'ffmpeg-core.worker.js': '97322a227c5f3d5ccfd0d0825890a6deeba137106a09b633ca75cadf49ddd2cb',
 } as const;
 
 export async function sha256Hex(data: ArrayBuffer): Promise<string> {
@@ -38,16 +47,82 @@ export async function sha256Hex(data: ArrayBuffer): Promise<string> {
  * could return something else.
  */
 async function verifiedBlobUrl(
-  name: keyof typeof FFMPEG_CORE_SHA256,
+  base: string,
+  name: string,
+  expected: string,
   type: string,
 ): Promise<string> {
-  const res = await fetch(`${FFMPEG_BASE_URL}/${name}`);
+  const res = await fetch(`${base}/${name}`);
   if (!res.ok) throw new Error(`${name}: HTTP ${res.status}`);
   const data = await res.arrayBuffer();
-  if ((await sha256Hex(data)) !== FFMPEG_CORE_SHA256[name]) {
+  if ((await sha256Hex(data)) !== expected) {
     throw new Error(`${name} failed its integrity check — refusing to run it`);
   }
   return URL.createObjectURL(new Blob([data], { type }));
+}
+
+/**
+ * Whether to try the multi-threaded core. It needs SharedArrayBuffer, which
+ * browsers only expose to cross-origin isolated pages (COOP + COEP in
+ * _headers), and it reserves 1 GiB of shared memory and a pool of 32 threads
+ * up front, so small devices stay on the single-threaded core. deviceMemory
+ * is Chromium-only; elsewhere a failed load falls back instead.
+ */
+export function multiThreadEligible(env: {
+  isolated: boolean;
+  cores: number;
+  memoryGb?: number;
+}): boolean {
+  return env.isolated && env.cores >= 4 && (env.memoryGb === undefined || env.memoryGb >= 4);
+}
+
+function browserEnv() {
+  const nav = globalThis.navigator as (Navigator & { deviceMemory?: number }) | undefined;
+  return {
+    isolated: globalThis.crossOriginIsolated === true && typeof SharedArrayBuffer === 'function',
+    cores: nav?.hardwareConcurrency ?? 1,
+    memoryGb: nav?.deviceMemory,
+  };
+}
+
+type CoreMode = 'mt' | 'st';
+
+let ffmpeg: FFmpeg | null = null;
+let ffmpegMode: CoreMode | null = null;
+let ffmpegLoading: Promise<FFmpeg> | null = null;
+// Set once the multi-threaded core fails to load or crashes; the rest of the
+// session uses the single-threaded one.
+let multiThreadBroken = false;
+// Blob URLs the live instance still needs (see loadCore).
+let pinnedUrls: string[] = [];
+
+async function loadCore(mode: CoreMode): Promise<FFmpeg> {
+  const base = (mode === 'mt' ? FFMPEG_MT_BASE_URL : FFMPEG_BASE_URL)!;
+  const hashes: Record<string, string> = mode === 'mt' ? FFMPEG_CORE_MT_SHA256 : FFMPEG_CORE_SHA256;
+  const file = (name: string, type: string) => verifiedBlobUrl(base, name, hashes[name], type);
+  const urls: string[] = [];
+  let ff: FFmpeg | undefined;
+  try {
+    const [coreURL, wasmURL, workerURL] = await Promise.all([
+      file('ffmpeg-core.js', 'text/javascript'),
+      file('ffmpeg-core.wasm', 'application/wasm'),
+      mode === 'mt' ? file('ffmpeg-core.worker.js', 'text/javascript') : undefined,
+    ]);
+    urls.push(coreURL, wasmURL, ...(workerURL ? [workerURL] : []));
+    ff = new FFmpeg();
+    await ff.load({ coreURL, wasmURL, workerURL });
+    // The compiled wasm is handed to every thread, so its 32 MB blob can go.
+    // A thread started after load imports the core JS and the thread script
+    // by URL, so the multi-threaded core keeps those two (130 KB) alive.
+    URL.revokeObjectURL(wasmURL);
+    if (workerURL) pinnedUrls = [coreURL, workerURL];
+    else URL.revokeObjectURL(coreURL);
+    return ff;
+  } catch (err) {
+    ff?.terminate();
+    for (const url of urls) URL.revokeObjectURL(url);
+    throw err;
+  }
 }
 
 // A failed load is not remembered: the next conversion tries again. Caching the
@@ -58,30 +133,35 @@ async function getFFmpeg(): Promise<FFmpeg> {
   if (ffmpegLoading) return ffmpegLoading;
 
   ffmpegLoading = (async () => {
-    const urls: string[] = [];
     try {
       if (!FFMPEG_BASE_URL) {
         throw new Error('NEXT_PUBLIC_FFMPEG_BASE_URL is not set');
       }
-      const [coreURL, wasmURL] = await Promise.all([
-        verifiedBlobUrl('ffmpeg-core.js', 'text/javascript'),
-        verifiedBlobUrl('ffmpeg-core.wasm', 'application/wasm'),
-      ]);
-      urls.push(coreURL, wasmURL);
-      const ff = new FFmpeg();
-      await ff.load({ coreURL, wasmURL });
-      ffmpeg = ff;
-      return ff;
+      if (FFMPEG_MT_BASE_URL && !multiThreadBroken && multiThreadEligible(browserEnv())) {
+        try {
+          ffmpeg = await loadCore('mt');
+          ffmpegMode = 'mt';
+          return ffmpeg;
+        } catch (err) {
+          multiThreadBroken = true;
+          console.warn('Multi-threaded FFmpeg did not load; using the single-threaded core.', err);
+        }
+      }
+      ffmpeg = await loadCore('st');
+      ffmpegMode = 'st';
+      return ffmpeg;
     } catch (err) {
       ffmpegLoading = null;
       throw new Error(`Failed to load FFmpeg: ${err instanceof Error ? err.message : String(err)}`);
-    } finally {
-      // The worker has its own copy once load() settles; don't pin 31 MB of blob.
-      for (const url of urls) URL.revokeObjectURL(url);
     }
   })();
 
   return ffmpegLoading;
+}
+
+/** The core the live instance runs, if one is loaded. */
+export function ffmpegCoreMode(): CoreMode | null {
+  return ffmpegMode;
 }
 
 // One FFmpeg instance backs every job, and every job writes to the same
@@ -97,14 +177,21 @@ function enqueue<T>(work: () => Promise<T>): Promise<T> {
   return run;
 }
 
+function dropInstance(): void {
+  ffmpeg?.terminate();
+  ffmpeg = null;
+  ffmpegMode = null;
+  ffmpegLoading = null;
+  for (const url of pinnedUrls) URL.revokeObjectURL(url);
+  pinnedUrls = [];
+}
+
 /**
  * Kills the shared instance. wasm cannot be interrupted, so this is the only
  * way to stop an exec in flight; the next conversion reloads the core.
  */
 export function terminateFFmpeg(): void {
-  ffmpeg?.terminate();
-  ffmpeg = null;
-  ffmpegLoading = null;
+  dropInstance();
   ffmpegQueue = Promise.resolve();
 }
 
@@ -314,7 +401,33 @@ async function runMedia(
   onProgress?: (pct: number) => void,
 ): Promise<Blob> {
   const ff = await getFFmpeg();
+  const mode = ffmpegMode;
+  try {
+    return await execOnce(ff, file, sourceExt, targetExt, settings, onProgress);
+  } catch (err) {
+    // A crash (an abort or a wasm trap, not a clean non-zero exit) on the
+    // multi-threaded core: retire it for the session and run the job again on
+    // the single-threaded one. ffmpeg !== ff means a cancel dropped the
+    // instance, which is not a crash.
+    if (mode !== 'mt' || err instanceof FfmpegExitError || ffmpeg !== ff) throw err;
+    console.warn('Multi-threaded FFmpeg failed; retrying on the single-threaded core.', err);
+    multiThreadBroken = true;
+    dropInstance();
+    return execOnce(await getFFmpeg(), file, sourceExt, targetExt, settings, onProgress);
+  }
+}
 
+/** FFmpeg ran to completion and reported failure: the input's fault, not the core's. */
+class FfmpegExitError extends Error {}
+
+async function execOnce(
+  ff: FFmpeg,
+  file: File,
+  sourceExt: string,
+  targetExt: string,
+  settings?: ConversionSettings,
+  onProgress?: (pct: number) => void,
+): Promise<Blob> {
   const inputName = `input.${sourceExt}`;
   const outputName = `output.${targetExt}`;
   const args = buildFfmpegArgs(sourceExt, targetExt, inputName, outputName, settings);
@@ -328,7 +441,7 @@ async function runMedia(
     // told the user nothing. The log tail usually names the actual problem.
     if (code !== 0) {
       const detail = log.tail();
-      throw new Error(
+      throw new FfmpegExitError(
         `FFmpeg could not convert this file (exit ${code})${detail ? `: ${detail}` : ''}`,
       );
     }

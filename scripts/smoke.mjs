@@ -4,6 +4,7 @@
 //
 //   node scripts/smoke.mjs            # Chrome
 //   node scripts/smoke.mjs webkit     # Safari engine
+//   SMOKE_EXPECT_MT=1 node scripts/smoke.mjs   # build has the multi-threaded core
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium, webkit } from 'playwright';
@@ -12,6 +13,9 @@ import { createCanvas, loadImage } from 'canvas';
 const APP = process.env.SMOKE_URL ?? 'http://localhost:3000';
 const DIR = join(process.cwd(), '.smoke-fixtures');
 const engine = process.argv[2] === 'webkit' ? 'webkit' : 'chrome';
+// Set when the build has NEXT_PUBLIC_FFMPEG_MT_BASE_URL: media pairs must then
+// run on the multi-threaded core, not quietly fall back.
+const EXPECT_MT = process.env.SMOKE_EXPECT_MT === '1';
 
 // [fixture, target format, engine under test, validator]
 const isText = (b) => b.length > 0 && !b.subarray(0, 512).includes(0);
@@ -88,6 +92,9 @@ for (const [fixture, target, label, check] of PAIRS) {
   const page = await browser.newPage();
   const consoleErrors = [];
   page.on('console', (m) => m.type() === 'error' && consoleErrors.push(m.text()));
+  // The loader warns when it gives up on the multi-threaded FFmpeg core.
+  const mtFallbacks = [];
+  page.on('console', (m) => /Multi-threaded FFmpeg/.test(m.text()) && mtFallbacks.push(m.text()));
   page.on('pageerror', (e) => consoleErrors.push(`pageerror: ${e.message}`));
   // Any CSP violation fails the pair, even if the conversion still succeeded:
   // it means the policy and the app have drifted apart.
@@ -112,6 +119,14 @@ for (const [fixture, target, label, check] of PAIRS) {
     // Not domcontentloaded: the file input is in the static HTML, so setInputFiles
     // succeeds before hydration wires up onChange and the drop is silently lost.
     await page.goto(APP, { waitUntil: 'networkidle' });
+    // COOP + COEP must hold on every page, or SharedArrayBuffer (and with it
+    // the multi-threaded FFmpeg core) silently disappears.
+    if (!(await page.evaluate(() => crossOriginIsolated))) {
+      row.note = 'page is not cross-origin isolated';
+      results.push(row);
+      await page.close();
+      continue;
+    }
     await page.setInputFiles('input[type="file"]', join(DIR, fixture));
     await page.waitForSelector('[role="listitem"]', { timeout: 15000 });
 
@@ -160,6 +175,7 @@ for (const [fixture, target, label, check] of PAIRS) {
     }
 
     if (cspViolations.length) row.note = `CSP: ${cspViolations[0]}`;
+    else if (EXPECT_MT && mtFallbacks.length) row.note = mtFallbacks[0].slice(0, 200);
     else if (bytes.length === 0) row.note = 'empty output';
     else if (!(await check(bytes)))
       row.note = `bad signature (${bytes.length}B, starts ${bytes.subarray(0, 8).toString('hex')})`;
