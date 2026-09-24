@@ -1,9 +1,17 @@
 import { describe, it, expect } from 'vitest';
-import { xmlToJson, xmlToTxt, jsonToXml, xmlToCsv, xmlToYaml, xmlToTsv } from '@/lib/xml-converters';
+import {
+  xmlToJson,
+  xmlToTxt,
+  jsonToXml,
+  xmlToCsv,
+  xmlToYaml,
+  xmlToTsv,
+} from '@/lib/xml-converters';
 import { DEFAULT_SETTINGS } from '@/lib/types';
 
 const XML = '<root><item><name>Alice</name><age>30</age></item></root>';
-const ROW_XML = '<root><row><name>Alice</name><age>30</age></row><row><name>Bob</name><age>25</age></row></root>';
+const ROW_XML =
+  '<root><row><name>Alice</name><age>30</age></row><row><name>Bob</name><age>25</age></row></root>';
 
 describe('xmlToJson', () => {
   it('parses simple XML into a JSON object', async () => {
@@ -37,7 +45,10 @@ describe('jsonToXml', () => {
   it('respects custom xmlRootElement setting', async () => {
     const json = JSON.stringify({ name: 'Alice' });
     const file = new File([json], 'test.json', { type: 'application/json' });
-    const blob = await jsonToXml(file, 'json', 'xml', { ...DEFAULT_SETTINGS, xmlRootElement: 'person' });
+    const blob = await jsonToXml(file, 'json', 'xml', {
+      ...DEFAULT_SETTINGS,
+      xmlRootElement: 'person',
+    });
     const text = await blob.text();
     expect(text).toContain('<person>');
     expect(text).toContain('</person>');
@@ -89,7 +100,9 @@ describe('xmlToCsv', () => {
 
   it('throws when no <row> elements are found', async () => {
     const file = new File([XML], 'test.xml', { type: 'application/xml' });
-    await expect(xmlToCsv(file, 'xml', 'csv', DEFAULT_SETTINGS)).rejects.toThrow('No <row> elements found in XML');
+    await expect(xmlToCsv(file, 'xml', 'csv', DEFAULT_SETTINGS)).rejects.toThrow(
+      'No <row> elements found in XML',
+    );
   });
 });
 
@@ -121,7 +134,9 @@ describe('xmlToTsv', () => {
 
   it('throws when no <row> elements are found', async () => {
     const file = new File([XML], 'test.xml', { type: 'application/xml' });
-    await expect(xmlToTsv(file, 'xml', 'tsv', DEFAULT_SETTINGS)).rejects.toThrow('No <row> elements found in XML');
+    await expect(xmlToTsv(file, 'xml', 'tsv', DEFAULT_SETTINGS)).rejects.toThrow(
+      'No <row> elements found in XML',
+    );
   });
 });
 

@@ -72,10 +72,10 @@ pushing alone builds nothing on Cloudflare's side. Pushing to `main` runs
 [`ci.yml`](.github/workflows/ci.yml), which typechecks, lints, tests, builds, and then uploads
 `out/` with `wrangler pages deploy`. It needs two repo secrets:
 
-| Secret | Value |
-| --- | --- |
-| `CLOUDFLARE_API_TOKEN` | API token with **Account → Cloudflare Pages → Edit** |
-| `CLOUDFLARE_ACCOUNT_ID` | `d583c243261fbfe8d012005d5b59bfeb` |
+| Secret                  | Value                                                |
+| ----------------------- | ---------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | API token with **Account → Cloudflare Pages → Edit** |
+| `CLOUDFLARE_ACCOUNT_ID` | `d583c243261fbfe8d012005d5b59bfeb`                   |
 
 To deploy by hand, build with `NEXT_PUBLIC_FFMPEG_BASE_URL` set — it is inlined at build
 time, and a build without it ships an app whose audio/video conversion throws:
@@ -146,6 +146,7 @@ there and reapplied, or the core fetch fails in the browser while still working 
 ## Adding More Formats
 
 Edit `lib/converters.ts`:
+
 1. Add your format to the `FORMATS` array
 2. Add the converter function to `CONVERTER_REGISTRY` (key format: `sourceExt:targetExt`)
 3. `CONVERSION_MAP` is auto-generated from the registry — no manual sync needed

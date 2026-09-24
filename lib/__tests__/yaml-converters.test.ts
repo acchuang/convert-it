@@ -93,7 +93,10 @@ describe('yamlToXml', () => {
 
   it('respects custom xmlRootElement setting', async () => {
     const file = new File([YAML], 'test.yaml', { type: 'application/yaml' });
-    const blob = await yamlToXml(file, 'yaml', 'xml', { ...DEFAULT_SETTINGS, xmlRootElement: 'person' });
+    const blob = await yamlToXml(file, 'yaml', 'xml', {
+      ...DEFAULT_SETTINGS,
+      xmlRootElement: 'person',
+    });
     const text = await blob.text();
     expect(text).toContain('<person>');
     expect(text).toContain('</person>');

@@ -47,7 +47,8 @@ function text(node: unknown): string {
   if (node === undefined || node === null) return '';
   if (typeof node === 'string' || typeof node === 'number') return String(node);
   if (Array.isArray(node)) return node.map(text).join('');
-  if (typeof node === 'object' && '#text' in (node as XmlNode)) return String((node as XmlNode)['#text']);
+  if (typeof node === 'object' && '#text' in (node as XmlNode))
+    return String((node as XmlNode)['#text']);
   return '';
 }
 
@@ -76,12 +77,16 @@ function resolveTarget(base: string, target: string): string {
   return parts.join('/');
 }
 
-async function relationships(zip: JSZip, partPath: string): Promise<{ id: string; type: string; target: string }[]> {
+async function relationships(
+  zip: JSZip,
+  partPath: string,
+): Promise<{ id: string; type: string; target: string }[]> {
   const dir = partPath.split('/').slice(0, -1).join('/');
   const name = partPath.split('/').pop();
   const relsPath = `${dir ? `${dir}/` : ''}_rels/${name}.rels`;
   const rels = await readXml(zip, relsPath);
-  const list = ((rels?.Relationships as XmlNode | undefined)?.Relationship as XmlNode[] | undefined) ?? [];
+  const list =
+    ((rels?.Relationships as XmlNode | undefined)?.Relationship as XmlNode[] | undefined) ?? [];
   return list.map((rel) => ({
     id: String(rel['@_Id'] ?? ''),
     type: String(rel['@_Type'] ?? ''),
@@ -92,8 +97,8 @@ async function relationships(zip: JSZip, partPath: string): Promise<{ id: string
 // Built-in number formats that render as dates or times (ECMA-376 §18.8.30,
 // plus the 50–58 range the CJK locales use).
 const BUILTIN_DATE_FORMATS = new Set([
-  14, 15, 16, 17, 18, 19, 20, 21, 22, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 45, 46, 47, 50, 51, 52,
-  53, 54, 55, 56, 57, 58,
+  14, 15, 16, 17, 18, 19, 20, 21, 22, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 45, 46, 47, 50, 51,
+  52, 53, 54, 55, 56, 57, 58,
 ]);
 
 function isDateFormat(code: string): boolean {
@@ -111,7 +116,8 @@ async function dateStyles(zip: JSZip, stylesPath: string | undefined): Promise<S
   if (!styles) return dated;
 
   const custom = new Map<number, string>();
-  for (const fmt of ((styles.numFmts as XmlNode | undefined)?.numFmt as XmlNode[] | undefined) ?? []) {
+  for (const fmt of ((styles.numFmts as XmlNode | undefined)?.numFmt as XmlNode[] | undefined) ??
+    []) {
     custom.set(Number(fmt['@_numFmtId']), String(fmt['@_formatCode'] ?? ''));
   }
   const xfs = ((styles.cellXfs as XmlNode | undefined)?.xf as XmlNode[] | undefined) ?? [];
@@ -163,7 +169,9 @@ export async function readWorkbook(data: ArrayBuffer | Uint8Array): Promise<Shee
   try {
     zip = await JSZip.loadAsync(data);
   } catch {
-    throw new Error('Not a valid .xlsx file (it is not a zip archive; legacy .xls is not supported)');
+    throw new Error(
+      'Not a valid .xlsx file (it is not a zip archive; legacy .xls is not supported)',
+    );
   }
 
   const rootRels = await relationships(zip, '');
@@ -184,7 +192,8 @@ export async function readWorkbook(data: ArrayBuffer | Uint8Array): Promise<Shee
   const shared = (((sst as XmlNode | undefined)?.si as unknown[]) ?? []).map(stringItem);
   const dated = await dateStyles(zip, stylesPath);
 
-  const sheetNodes = ((workbook.sheets as XmlNode | undefined)?.sheet as XmlNode[] | undefined) ?? [];
+  const sheetNodes =
+    ((workbook.sheets as XmlNode | undefined)?.sheet as XmlNode[] | undefined) ?? [];
   const sheets: Sheet[] = [];
   let cellBudget = MAX_CELLS;
 
@@ -193,7 +202,8 @@ export async function readWorkbook(data: ArrayBuffer | Uint8Array): Promise<Shee
     // Chartsheets and dialog sheets have no cell grid.
     if (!rel || !rel.type.endsWith('/worksheet')) continue;
     const worksheet = (await readXml(zip, rel.target))?.worksheet as XmlNode | undefined;
-    const rowNodes = ((worksheet?.sheetData as XmlNode | undefined)?.row as XmlNode[] | undefined) ?? [];
+    const rowNodes =
+      ((worksheet?.sheetData as XmlNode | undefined)?.row as XmlNode[] | undefined) ?? [];
 
     const rows: CellValue[][] = [];
     let nextRow = 0;
@@ -227,7 +237,12 @@ export async function readWorkbook(data: ArrayBuffer | Uint8Array): Promise<Shee
   return sheets;
 }
 
-function decodeCell(cell: XmlNode, shared: string[], dated: Set<number>, date1904: boolean): CellValue {
+function decodeCell(
+  cell: XmlNode,
+  shared: string[],
+  dated: Set<number>,
+  date1904: boolean,
+): CellValue {
   const type = String(cell['@_t'] ?? 'n');
   const raw = text(cell.v);
 
@@ -317,7 +332,8 @@ const MAX_CELL_CHARS = 32_767; // Excel's per-cell text limit
 
 function cellXml(ref: string, value: unknown): string {
   if (value === null || value === undefined || value === '') return '';
-  if (typeof value === 'number' && Number.isFinite(value)) return `<c r="${ref}"><v>${value}</v></c>`;
+  if (typeof value === 'number' && Number.isFinite(value))
+    return `<c r="${ref}"><v>${value}</v></c>`;
   if (typeof value === 'boolean') return `<c r="${ref}" t="b"><v>${value ? 1 : 0}</v></c>`;
   const str = (typeof value === 'object' ? JSON.stringify(value) : String(value))
     .replace(XML_ILLEGAL, '')

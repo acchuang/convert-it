@@ -18,16 +18,18 @@ vi.mock('@/lib/worker-pool', async () => {
   const actual = await vi.importActual<typeof import('@/lib/worker-pool')>('@/lib/worker-pool');
   return {
     ...actual,
-    runInWorker: vi.fn(async (
-      _id: string,
-      file: File,
-      targetExt: string,
-      settings: ConversionSettings,
-      onProgress?: (pct: number) => void,
-    ) => {
-      const { convertFile } = await import('@/lib/converters');
-      return convertFile(file, targetExt, settings, onProgress);
-    }),
+    runInWorker: vi.fn(
+      async (
+        _id: string,
+        file: File,
+        targetExt: string,
+        settings: ConversionSettings,
+        onProgress?: (pct: number) => void,
+      ) => {
+        const { convertFile } = await import('@/lib/converters');
+        return convertFile(file, targetExt, settings, onProgress);
+      },
+    ),
     cancelInWorker: vi.fn(() => false),
   };
 });
@@ -97,7 +99,10 @@ describe('useJobManager: convertJob', () => {
   it('transitions idle -> converting -> done and sets resultBlob on success', async () => {
     let resolveConvert!: (blob: Blob) => void;
     mockConvertFile.mockImplementation(
-      () => new Promise<Blob>(resolve => { resolveConvert = resolve; })
+      () =>
+        new Promise<Blob>((resolve) => {
+          resolveConvert = resolve;
+        }),
     );
 
     const { result } = renderHook(() => useJobManager());
@@ -143,7 +148,10 @@ describe('useJobManager: convertJob', () => {
   it('does not invoke convertFile twice when convertJob is called concurrently on the same job', async () => {
     let resolveConvert!: (blob: Blob) => void;
     mockConvertFile.mockImplementation(
-      () => new Promise<Blob>(resolve => { resolveConvert = resolve; })
+      () =>
+        new Promise<Blob>((resolve) => {
+          resolveConvert = resolve;
+        }),
     );
 
     const { result } = renderHook(() => useJobManager());
@@ -202,7 +210,9 @@ describe('useJobManager: worker routing and cancel', () => {
     mockConvertFile.mockResolvedValue(new Blob(['ok']));
 
     const { result } = renderHook(() => useJobManager());
-    act(() => result.current.addFiles([new File(['<p>x</p>'], 'page.html', { type: 'text/html' })]));
+    act(() =>
+      result.current.addFiles([new File(['<p>x</p>'], 'page.html', { type: 'text/html' })]),
+    );
 
     await act(async () => {
       await result.current.convertJob(result.current.jobs[0]);
@@ -237,11 +247,16 @@ describe('useJobManager: worker routing and cancel', () => {
   it('discards the result of a cancelled main-thread job', async () => {
     let resolveConvert!: (blob: Blob) => void;
     mockConvertFile.mockImplementation(
-      () => new Promise<Blob>(resolve => { resolveConvert = resolve; })
+      () =>
+        new Promise<Blob>((resolve) => {
+          resolveConvert = resolve;
+        }),
     );
 
     const { result } = renderHook(() => useJobManager());
-    act(() => result.current.addFiles([new File(['<p>x</p>'], 'page.html', { type: 'text/html' })]));
+    act(() =>
+      result.current.addFiles([new File(['<p>x</p>'], 'page.html', { type: 'text/html' })]),
+    );
     const job = result.current.jobs[0];
 
     let convertPromise!: Promise<void>;
@@ -312,9 +327,13 @@ describe('outputFilename', () => {
   const file = new File(['x'], 'report.final.pdf');
 
   it('swaps the extension for the target', () => {
-    expect(outputFilename({ file, targetExt: 'png', resultBlob: new Blob(['x'], { type: 'image/png' }) })).toBe(
-      'report.final.png',
-    );
+    expect(
+      outputFilename({
+        file,
+        targetExt: 'png',
+        resultBlob: new Blob(['x'], { type: 'image/png' }),
+      }),
+    ).toBe('report.final.png');
   });
 
   it('names a zip result .zip whatever the target', () => {

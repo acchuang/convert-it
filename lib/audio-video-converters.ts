@@ -33,7 +33,10 @@ export async function sha256Hex(data: ArrayBuffer): Promise<string> {
  * so what runs is exactly what was checked; there is no second fetch that
  * could return something else.
  */
-async function verifiedBlobUrl(name: keyof typeof FFMPEG_CORE_SHA256, type: string): Promise<string> {
+async function verifiedBlobUrl(
+  name: keyof typeof FFMPEG_CORE_SHA256,
+  type: string,
+): Promise<string> {
   const res = await fetch(`${FFMPEG_BASE_URL}/${name}`);
   if (!res.ok) throw new Error(`${name}: HTTP ${res.status}`);
   const data = await res.arrayBuffer();
@@ -157,10 +160,16 @@ interface VideoContainer {
 }
 
 const x264 = (crf: number, preset: string) => [
-  '-c:v', 'libx264', '-preset', preset, '-crf', String(crf),
+  '-c:v',
+  'libx264',
+  '-preset',
+  preset,
+  '-crf',
+  String(crf),
   // 10-bit or 4:4:4 sources otherwise come out as High 4:4:4 H.264, which
   // browsers and QuickTime refuse to play.
-  '-pix_fmt', 'yuv420p',
+  '-pix_fmt',
+  'yuv420p',
 ];
 const aac = (kbps: number) => ['-c:a', 'aac', '-b:a', `${kbps}k`];
 const mp3 = (kbps: number) => ['-c:a', 'libmp3lame', '-b:a', `${kbps}k`, '-ar', '44100'];
@@ -177,9 +186,18 @@ const VIDEO_CONTAINERS: Record<string, VideoContainer> = {
   // In constrained-quality mode -b:v is only a ceiling; CRF decides the quality.
   webm: {
     video: (crf, preset) => [
-      '-c:v', 'libvpx', '-crf', crfToVp8(crf), '-b:v', '4M',
-      '-deadline', 'good', '-cpu-used', VP8_CPU_USED[preset] ?? '2',
-      '-pix_fmt', 'yuv420p',
+      '-c:v',
+      'libvpx',
+      '-crf',
+      crfToVp8(crf),
+      '-b:v',
+      '4M',
+      '-deadline',
+      'good',
+      '-cpu-used',
+      VP8_CPU_USED[preset] ?? '2',
+      '-pix_fmt',
+      'yuv420p',
     ],
     audio: (kbps) => ['-c:a', 'libvorbis', '-b:a', `${kbps}k`],
   },
@@ -215,18 +233,34 @@ export function buildFfmpegArgs(
   }
 
   if (category === 'video' && targetExt === 'webp') {
-    return ['-i', inputName, '-c:v', 'libwebp', '-loop', '0', '-lossless', '0', '-q:v', '75', '-an', '-y', outputName];
+    return [
+      '-i',
+      inputName,
+      '-c:v',
+      'libwebp',
+      '-loop',
+      '0',
+      '-lossless',
+      '0',
+      '-q:v',
+      '75',
+      '-an',
+      '-y',
+      outputName,
+    ];
   }
 
   const container = category === 'video' ? VIDEO_CONTAINERS[targetExt] : undefined;
   if (!container) throw new Error(`Unsupported conversion: ${sourceExt} → ${targetExt}`);
 
   return [
-    '-i', inputName,
+    '-i',
+    inputName,
     ...container.video(crf, preset),
     ...container.audio(kbps),
     ...(container.extra ?? []),
-    '-y', outputName,
+    '-y',
+    outputName,
   ];
 }
 
@@ -306,7 +340,9 @@ async function runMedia(
     // told the user nothing. The log tail usually names the actual problem.
     if (code !== 0) {
       const detail = log.tail();
-      throw new Error(`FFmpeg could not convert this file (exit ${code})${detail ? `: ${detail}` : ''}`);
+      throw new Error(
+        `FFmpeg could not convert this file (exit ${code})${detail ? `: ${detail}` : ''}`,
+      );
     }
     const outputData = (await ff.readFile(outputName)) as Uint8Array;
     onProgress?.(100);

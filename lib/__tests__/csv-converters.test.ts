@@ -98,7 +98,10 @@ describe('csvToXml', () => {
 
   it('respects custom xmlRootElement setting', async () => {
     const file = new File([CSV], 'test.csv', { type: 'text/csv' });
-    const blob = await csvToXml(file, 'csv', 'xml', { ...DEFAULT_SETTINGS, xmlRootElement: 'people' });
+    const blob = await csvToXml(file, 'csv', 'xml', {
+      ...DEFAULT_SETTINGS,
+      xmlRootElement: 'people',
+    });
     const text = await blob.text();
     expect(text).toContain('<people>');
     expect(text).toContain('</people>');

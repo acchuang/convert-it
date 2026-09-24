@@ -5,53 +5,88 @@ import type { ConversionSettings } from './types';
 import { htmlToPlainText } from './html-text';
 import { escapeHtml } from './markup';
 
-export function mdToHtml(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
-  return file.text().then(async text => {
+export function mdToHtml(
+  file: File,
+  _s: string,
+  _t: string,
+  _settings?: ConversionSettings,
+): Promise<Blob> {
+  return file.text().then(async (text) => {
     const htmlBody = await marked.parse(text);
     const html = `<!DOCTYPE html>\n<html>\n<head>\n  <meta charset="utf-8">\n</head>\n<body>\n${htmlBody}\n</body>\n</html>`;
     return new Blob([html], { type: 'text/html' });
   });
 }
 
-export function htmlToMd(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
-  return file.text().then(text => {
+export function htmlToMd(
+  file: File,
+  _s: string,
+  _t: string,
+  _settings?: ConversionSettings,
+): Promise<Blob> {
+  return file.text().then((text) => {
     const turndown = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
     const md = turndown.turndown(text);
     return new Blob([md], { type: 'text/markdown' });
   });
 }
 
-export function htmlToTxt(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
-  return file.text().then(text => {
+export function htmlToTxt(
+  file: File,
+  _s: string,
+  _t: string,
+  _settings?: ConversionSettings,
+): Promise<Blob> {
+  return file.text().then((text) => {
     return new Blob([htmlToPlainText(text)], { type: 'text/plain' });
   });
 }
 
-export function txtToHtml(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
-  return file.text().then(text => {
+export function txtToHtml(
+  file: File,
+  _s: string,
+  _t: string,
+  _settings?: ConversionSettings,
+): Promise<Blob> {
+  return file.text().then((text) => {
     const paragraphs = text
       .split('\n')
-      .map(line => `<p>${escapeHtml(line)}</p>`)
+      .map((line) => `<p>${escapeHtml(line)}</p>`)
       .join('\n');
     const html = `<!DOCTYPE html>\n<html>\n<head>\n  <meta charset="utf-8">\n</head>\n<body>\n${paragraphs}\n</body>\n</html>`;
     return new Blob([html], { type: 'text/html' });
   });
 }
 
-export function txtToMd(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
-  return file.text().then(text => {
+export function txtToMd(
+  file: File,
+  _s: string,
+  _t: string,
+  _settings?: ConversionSettings,
+): Promise<Blob> {
+  return file.text().then((text) => {
     return new Blob([text], { type: 'text/markdown' });
   });
 }
 
-export function jsonToTxt(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
-  return file.text().then(text => {
+export function jsonToTxt(
+  file: File,
+  _s: string,
+  _t: string,
+  _settings?: ConversionSettings,
+): Promise<Blob> {
+  return file.text().then((text) => {
     const data = JSON.parse(text);
     return new Blob([JSON.stringify(data, null, 2)], { type: 'text/plain' });
   });
 }
 
-export async function jsonToMd(file: File, _s: string, _t: string, _settings?: ConversionSettings): Promise<Blob> {
+export async function jsonToMd(
+  file: File,
+  _s: string,
+  _t: string,
+  _settings?: ConversionSettings,
+): Promise<Blob> {
   const text = await file.text();
   const data = JSON.parse(text);
   const arr = Array.isArray(data) ? data : [data];
@@ -61,7 +96,7 @@ export async function jsonToMd(file: File, _s: string, _t: string, _settings?: C
   const headerRow = '| ' + headers.join(' | ') + ' |';
   const sepRow = '| ' + headers.map(() => '---').join(' | ') + ' |';
   const bodyRows = arr.map((row: Record<string, unknown>) => {
-    return '| ' + headers.map(h => String(row[h] ?? '')).join(' | ') + ' |';
+    return '| ' + headers.map((h) => String(row[h] ?? '')).join(' | ') + ' |';
   });
 
   const md = [headerRow, sepRow, ...bodyRows].join('\n');

@@ -18,7 +18,7 @@ describe('ErrorBoundary', () => {
     render(
       <ErrorBoundary>
         <NormalChild />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
     expect(screen.getByText('All good')).toBeDefined();
   });
@@ -28,7 +28,7 @@ describe('ErrorBoundary', () => {
     render(
       <ErrorBoundary>
         <ExplodingChild shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
     expect(screen.getByText('Something went wrong')).toBeDefined();
     vi.restoreAllMocks();
@@ -39,7 +39,7 @@ describe('ErrorBoundary', () => {
     const { rerender } = render(
       <ErrorBoundary>
         <ExplodingChild shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
     expect(screen.getByText('Something went wrong')).toBeDefined();
 
@@ -49,7 +49,7 @@ describe('ErrorBoundary', () => {
     rerender(
       <ErrorBoundary>
         <ExplodingChild shouldThrow={false} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
     expect(screen.getByText('Safe')).toBeDefined();
     vi.restoreAllMocks();

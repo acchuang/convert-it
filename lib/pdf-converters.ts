@@ -149,7 +149,8 @@ async function textToPdfBlob(text: string, options: PdfTextOptions = {}): Promis
   // jsPDF draws a tab as a glyph box; expand to spaces so indentation holds.
   const sourceLines = text.replace(/\r\n?/g, '\n').replace(/\t/g, '    ').split('\n');
   for (const sourceLine of sourceLines) {
-    const wrapped: string[] = sourceLine === '' ? [''] : doc.splitTextToSize(sourceLine, pageWidth - margin * 2);
+    const wrapped: string[] =
+      sourceLine === '' ? [''] : doc.splitTextToSize(sourceLine, pageWidth - margin * 2);
     for (const line of wrapped) {
       if (y > pageHeight - margin) {
         doc.addPage();

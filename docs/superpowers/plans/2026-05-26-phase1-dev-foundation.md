@@ -15,6 +15,7 @@
 ### Task 1.1: Install ESLint + Prettier devDependencies
 
 **Files:**
+
 - Modify: `package.json`
 
 - [ ] **Step 1: Install devDependencies**
@@ -31,6 +32,7 @@ Expected: version numbers printed, "OK"
 ### Task 1.2: Create Prettier config
 
 **Files:**
+
 - Create: `.prettierrc`
 - Create: `.prettierignore`
 
@@ -63,6 +65,7 @@ Expected: exit 0, "All matched files use Prettier code style!"
 ### Task 1.3: Create ESLint config
 
 **Files:**
+
 - Create: `.eslintrc.json`
 - Create: `.eslintignore`
 
@@ -85,6 +88,7 @@ node_modules/
 ### Task 1.4: Add npm scripts for lint/format/typecheck
 
 **Files:**
+
 - Modify: `package.json`
 
 - [ ] **Step 1: Add scripts to package.json**
@@ -144,6 +148,7 @@ git commit -m "chore: add ESLint, Prettier, typecheck scripts"
 ### Task 2.1: Install Vitest devDependencies
 
 **Files:**
+
 - Modify: `package.json`
 
 - [ ] **Step 1: Install dependencies**
@@ -160,6 +165,7 @@ Expected: All "OK"
 ### Task 2.2: Create vitest.config.ts
 
 **Files:**
+
 - Create: `vitest.config.ts`
 
 - [ ] **Step 1: Write vitest.config.ts**
@@ -192,6 +198,7 @@ Expected: "No test files found" (config loaded, just no tests yet)
 ### Task 2.3: Add test scripts to package.json
 
 **Files:**
+
 - Modify: `package.json`
 
 - [ ] **Step 1: Add test scripts**
@@ -206,6 +213,7 @@ Add to scripts block:
 ### Task 2.4: Write image-converters tests
 
 **Files:**
+
 - Create: `lib/__tests__/image-converters.test.ts`
 
 - [ ] **Step 1: Read image-converters.ts to understand exports**
@@ -294,6 +302,7 @@ git commit -m "test: add Vitest config and image-converter unit tests"
 ### Task 2.5: Write ErrorBoundary tests
 
 **Files:**
+
 - Create: `app/components/__tests__/ErrorBoundary.test.tsx`
 
 Note: Write the test first (TDD) — it will fail until we create the ErrorBoundary component in Chunk 3. We create the test file now so both test and component are reviewed together.
@@ -375,6 +384,7 @@ git commit -m "test: add ErrorBoundary tests (TDD, will fail until component exi
 ### Task 2.6: Write JobCard tests
 
 **Files:**
+
 - Create: `app/components/__tests__/JobCard.test.tsx`
 
 - [ ] **Step 1: Write test file**
@@ -498,6 +508,7 @@ git commit -m "test: add JobCard component tests"
 ### Task 2.7: Write PreviewPanel tests
 
 **Files:**
+
 - Create: `app/components/__tests__/PreviewPanel.test.tsx`
 
 - [ ] **Step 1: Write test file**
@@ -580,6 +591,7 @@ git commit -m "test: add PreviewPanel component tests"
 ### Task 3.1: Create ErrorBoundary component
 
 **Files:**
+
 - Create: `app/components/ErrorBoundary.tsx`
 
 - [ ] **Step 1: Write ErrorBoundary.tsx**
@@ -649,6 +661,7 @@ Expected: All 3 tests pass
 ### Task 3.2: Wrap converter content in ErrorBoundary
 
 **Files:**
+
 - Modify: `app/page.tsx`
 
 - [ ] **Step 1: Add import**
@@ -667,7 +680,7 @@ Find this line (after the `</header>` closing tag, ~line 195):
       <div className="max-w-5xl mx-auto px-4 py-8">
 ```
 
-Wrap everything from that `<div>` through the `</footer>` (but NOT the header) in `<ErrorBoundary>`. 
+Wrap everything from that `<div>` through the `</footer>` (but NOT the header) in `<ErrorBoundary>`.
 
 The structure becomes:
 
@@ -715,6 +728,7 @@ git commit -m "feat: add ErrorBoundary wrapping converter content"
 ### Task 3.3: Setup Testing Library jest-dom matchers
 
 **Files:**
+
 - Create: `vitest-setup.ts`
 - Modify: `vitest.config.ts`
 
@@ -757,6 +771,7 @@ git commit -m "chore: add Testing Library jest-dom matchers setup"
 ### Task 3.4: Create GitHub Actions CI workflow
 
 **Files:**
+
 - Create: `.github/workflows/ci.yml`
 
 - [ ] **Step 1: Create directory**

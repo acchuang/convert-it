@@ -62,7 +62,10 @@ describe('readWorkbook edge cases', () => {
         (sharedXml ? '<Relationship Id="rId2" Type="x/sharedStrings" Target="/xl/sst.xml"/>' : '') +
         '</Relationships>',
     );
-    zip.file('xl/worksheets/sheet1.xml', `<worksheet><sheetData>${sheetXml}</sheetData></worksheet>`);
+    zip.file(
+      'xl/worksheets/sheet1.xml',
+      `<worksheet><sheetData>${sheetXml}</sheetData></worksheet>`,
+    );
     if (sharedXml) zip.file('xl/sst.xml', `<sst>${sharedXml}</sst>`);
     return zip.generateAsync({ type: 'uint8array' });
   }

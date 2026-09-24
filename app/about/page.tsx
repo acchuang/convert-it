@@ -16,7 +16,11 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 const formats = [
   { catKey: 'image', color: '#FF4D00', exts: 'JPG, PNG, WebP, GIF, BMP, ICO, SVG, HEIC, AVIF' },
-  { catKey: 'video', color: '#FF00C8', exts: 'MP4, WebM, AVI, MOV, MKV, FLV, M4V, 3GP, Animated WebP' },
+  {
+    catKey: 'video',
+    color: '#FF00C8',
+    exts: 'MP4, WebM, AVI, MOV, MKV, FLV, M4V, 3GP, Animated WebP',
+  },
   { catKey: 'audio', color: '#00E5A0', exts: 'MP3, WAV, AAC, OGG, FLAC, M4A, WMA, OPUS' },
   { catKey: 'document', color: '#00C2FF', exts: 'TXT, Markdown, HTML, PDF, ePub' },
   { catKey: 'data', color: '#AAFF44', exts: 'CSV, JSON, XML, YAML, TSV, Excel' },
@@ -73,12 +77,26 @@ export default function AboutPage() {
             aria-label={theme === 'dark' ? t('header.themeLight') : t('header.themeDark')}
           >
             {theme === 'dark' ? (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <circle cx="12" cy="12" r="5" />
                 <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
               </svg>
             ) : (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
               </svg>
             )}
@@ -104,12 +122,9 @@ export default function AboutPage() {
             {t('about.heading')}
           </div>
           <p className="text-lg text-[var(--text-secondary)] leading-relaxed mb-6">
-            <strong className="text-[var(--text-primary)]">Convert-it</strong>{' '}
-            {t('about.intro')}
+            <strong className="text-[var(--text-primary)]">Convert-it</strong> {t('about.intro')}
           </p>
-          <p className="text-[var(--text-muted)] leading-relaxed">
-            {t('about.intro2')}
-          </p>
+          <p className="text-[var(--text-muted)] leading-relaxed">{t('about.intro2')}</p>
         </section>
 
         {/* How it works */}
@@ -121,7 +136,7 @@ export default function AboutPage() {
             {t('about.howHeading')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map(n => (
+            {[1, 2, 3].map((n) => (
               <div
                 key={n}
                 className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6"
@@ -155,7 +170,7 @@ export default function AboutPage() {
             {t('about.formatsHeading')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {formats.map(f => (
+            {formats.map((f) => (
               <div
                 key={f.catKey}
                 className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-5 flex items-start gap-4"
@@ -210,9 +225,7 @@ export default function AboutPage() {
             {t('about.ossHeading')}
           </h2>
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6">
-            <p className="text-[var(--text-secondary)] leading-relaxed mb-4">
-              {t('about.oss1')}
-            </p>
+            <p className="text-[var(--text-secondary)] leading-relaxed mb-4">{t('about.oss1')}</p>
             <div className="flex flex-wrap gap-3">
               <a
                 href="https://github.com/acchuang/convert-it"
@@ -222,7 +235,7 @@ export default function AboutPage() {
                 style={{ fontFamily: 'var(--font-mono)' }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
                 </svg>
                 {t('about.ossGithub')}
               </a>
@@ -234,7 +247,7 @@ export default function AboutPage() {
                 style={{ fontFamily: 'var(--font-mono)' }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M20 8h-1V6c0-2.21-1.79-4-4-4H4c-2.21 0-4 1.79-4 4v10c0 2.21 1.79 4 4 4h11c2.21 0 4-1.79 4-4v-1h1c1.66 0 3-1.34 3-3v-1c0-1.66-1.34-3-3-3zm-9 10H4V6h7v12zm9-3h-1V9h1c.55 0 1 .45 1 1v1c0 .55-.45 1-1 1z"/>
+                  <path d="M20 8h-1V6c0-2.21-1.79-4-4-4H4c-2.21 0-4 1.79-4 4v10c0 2.21 1.79 4 4 4h11c2.21 0 4-1.79 4-4v-1h1c1.66 0 3-1.34 3-3v-1c0-1.66-1.34-3-3-3zm-9 10H4V6h7v12zm9-3h-1V9h1c.55 0 1 .45 1 1v1c0 .55-.45 1-1 1z" />
                 </svg>
                 {t('about.ossSupport')}
               </a>
@@ -251,10 +264,12 @@ export default function AboutPage() {
             {t('about.improvementsHeading')}
           </h2>
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6 space-y-3">
-            {Array.from({ length: 32 }, (_, i) => i + 1).map(n => (
+            {Array.from({ length: 32 }, (_, i) => i + 1).map((n) => (
               <div key={n} className="flex items-start gap-3">
                 <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] flex-shrink-0 mt-2" />
-                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{t(`about.improvement${n}`)}</p>
+                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                  {t(`about.improvement${n}`)}
+                </p>
               </div>
             ))}
           </div>
@@ -269,7 +284,7 @@ export default function AboutPage() {
             {t('about.techHeading')}
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {techStack.map(tech => (
+            {techStack.map((tech) => (
               <div
                 key={tech.labelKey}
                 className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-4 text-center"
@@ -280,9 +295,7 @@ export default function AboutPage() {
                 >
                   {t(tech.labelKey)}
                 </div>
-                <div className="text-sm text-[var(--text-primary)] font-semibold">
-                  {tech.val}
-                </div>
+                <div className="text-sm text-[var(--text-primary)] font-semibold">{tech.val}</div>
               </div>
             ))}
           </div>
@@ -291,8 +304,17 @@ export default function AboutPage() {
 
       {/* Footer */}
       <Footer maxWidth="max-w-3xl" navLabel="Navigation">
-        <Link href="/" className="hover:text-[var(--text-primary)] transition-colors">{t('header.home').replace('← ', '')}</Link>
-        <a href="https://github.com/acchuang/convert-it" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--text-primary)] transition-colors">{t('footer.github')}</a>
+        <Link href="/" className="hover:text-[var(--text-primary)] transition-colors">
+          {t('header.home').replace('← ', '')}
+        </Link>
+        <a
+          href="https://github.com/acchuang/convert-it"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-[var(--text-primary)] transition-colors"
+        >
+          {t('footer.github')}
+        </a>
       </Footer>
     </main>
   );

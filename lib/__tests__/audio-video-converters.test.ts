@@ -27,7 +27,7 @@ describe('missing NEXT_PUBLIC_FFMPEG_BASE_URL', () => {
 
   it('convertAudioVideo rejects and names the missing variable', async () => {
     await expect(convertAudioVideo(file, 'mp4', 'webm')).rejects.toThrow(
-      /NEXT_PUBLIC_FFMPEG_BASE_URL is not set/
+      /NEXT_PUBLIC_FFMPEG_BASE_URL is not set/,
     );
   });
 
@@ -116,7 +116,8 @@ describe('createLogWatcher', () => {
 
   it('keeps the last lines for error messages', () => {
     const { handler, tail } = createLogWatcher();
-    for (const message of ['a', 'b', 'c', 'Unknown encoder', '', 'Conversion failed!']) handler({ message });
+    for (const message of ['a', 'b', 'c', 'Unknown encoder', '', 'Conversion failed!'])
+      handler({ message });
     expect(tail()).toBe('c · Unknown encoder · Conversion failed!');
   });
 });
