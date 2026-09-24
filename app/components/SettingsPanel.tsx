@@ -116,6 +116,7 @@ export function SettingsPanel({
   const showMetadata = shown.has('metadata');
   const showOcr = shown.has('ocr');
   const showSubtitleOffset = shown.has('subtitleOffset');
+  const showBurn = shown.has('burnSubtitles');
   const showPdfEdit = shown.has('pdfEdit');
   const showPdfCompress = shown.has('pdfCompress');
   const showPdfPageSize = shown.has('pdfPageSize');
@@ -433,6 +434,40 @@ export function SettingsPanel({
           </>
         )}
 
+        {showBurn && (
+          <div className={CARD}>
+            <span className={LABEL}>{t('job.burnSubtitles')}</span>
+            {settings.subtitleFile ? (
+              <div className="flex items-center gap-2 text-xs">
+                <span className="flex-1 truncate text-primary">{settings.subtitleFile.name}</span>
+                <button
+                  type="button"
+                  onClick={() => onChange({ subtitleFile: null })}
+                  className="px-2 py-1 rounded border border-[var(--border-secondary)] text-[var(--text-secondary)] hover:border-[var(--border-hover)]"
+                >
+                  {t('job.burnRemove')}
+                </button>
+              </div>
+            ) : (
+              <label className="cursor-pointer text-center py-1 text-xs rounded bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-dashed border-[var(--border-secondary)] hover:border-[var(--border-hover)]">
+                {t('job.burnChoose')}
+                <input
+                  type="file"
+                  accept=".srt,.vtt"
+                  className="sr-only"
+                  aria-label={t('job.burnSubtitles')}
+                  onChange={(e) => {
+                    const picked = e.target.files?.[0];
+                    if (picked) onChange({ subtitleFile: picked });
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+            )}
+            <span className="text-xs text-[var(--text-muted)]">{t('job.burnHint')}</span>
+          </div>
+        )}
+
         {showSubtitleOffset && (
           <div className={CARD}>
             <span className={LABEL}>{t('job.subtitleOffset')}</span>
@@ -636,12 +671,31 @@ export function SettingsPanel({
               />
             </div>
             <span className="text-xs text-[var(--text-muted)]">{t('job.trimHint')}</span>
+            <span className={LABEL}>{t('job.cutOut')}</span>
+            <div className="flex items-center gap-1.5">
+              <TimeField
+                seconds={settings.cutStart}
+                onCommit={(cutStart) => onChange({ cutStart })}
+                label={t('job.cutFrom')}
+                placeholder={t('job.cutFrom')}
+              />
+              <span className="text-[var(--text-muted)] text-xs">→</span>
+              <TimeField
+                seconds={settings.cutEnd}
+                onCommit={(cutEnd) => onChange({ cutEnd })}
+                label={t('job.cutTo')}
+                placeholder={t('job.cutTo')}
+              />
+            </div>
+            <span className="text-xs text-[var(--text-muted)]">{t('job.cutHint')}</span>
             {file && (
               <TrimScrubber
                 file={file}
                 kind={mediaKind}
                 start={settings.trimStart}
                 end={settings.trimEnd}
+                cutStart={settings.cutStart}
+                cutEnd={settings.cutEnd}
                 onChange={onChange}
                 t={t}
               />

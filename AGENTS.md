@@ -72,7 +72,7 @@ Independent Next.js project deployed via Cloudflare Pages.
 ## Subtitles
 
 - `lib/subtitles.ts`: SRT and VTT are read leniently by one parser (BOM, CRLF/CR, missing cue numbers, `.` or `,` before milliseconds, missing hours, NOTE/STYLE/REGION blocks, cue ids and settings) and written strictly. Only `<b>`, `<i>` and `<u>` survive; `<v Speaker>` becomes "Speaker: ", and `<font>`, class spans, karaoke timestamps and `{\an8}` overrides are dropped. VTT output can't hold `-->` or a blank line inside a cue.
-- Routes: SRT ⇄ VTT, each to itself for re-timing (`subtitleOffset` in seconds; cues moved before 0 are clipped or dropped), and → TXT as a transcript. Burn-in isn't offered: it needs the video and the subtitles as two inputs.
+- Routes: SRT ⇄ VTT, each to itself for re-timing (`subtitleOffset` in seconds; cues moved before 0 are clipped or dropped), and → TXT as a transcript. Burning subtitles into a video is a setting on the video's job (see Media).
 
 ## OCR
 
@@ -108,6 +108,8 @@ Independent Next.js project deployed via Cloudflare Pages.
 - `buildFfmpegArgs` reads settings lazily (`knobsFrom` getters), and `registry.test.ts` records which fields each route's command line reads against what the route declares. So AVI/FLV (fixed quantiser) declare `videoQuality` but not `videoPreset`, and lossless audio declares no bitrate.
 - Trim (`trimStart`/`trimEnd`, seconds) applies to every media route: `-ss`/`-t` as input options in ffmpeg (`trimArgs`), mediabunny's `trim` on the WebCodecs path (`trimRange`, same rules). An end at or before the start means "to the end". The panel takes `1:30.5` or `90` via `lib/timecode.ts`.
 - Video → video can be resized (`videoMaxWidth`: ffmpeg `scale='min(W,iw)':-2`; WebCodecs `fitWidth` gives the same even-sided size) and muted (`mute`: `-an`, or discarding the audio track in mediabunny). The trim card has a scrubber (`app/components/TrimScrubber.tsx`): the browser's own player plus "set start/end" at the playhead. Formats the browser can't play just show the typed fields.
+- Cut (`cutStart`/`cutEnd`, source time, part of the `trim` group): `cutRange` converts it to the trimmed clip's timeline. Video uses `select='not(between(t,a,b))'` + `setpts='PTS-gte(T,b)*(b-a)/TB'`, which keeps variable frame rates intact (never `N/FRAME_RATE/TB`). Audio uses `aselect` + `asetpts=N/SR/TB`. WebCodecs declines a cut (mediabunny only trims).
+- Subtitle burn-in (`subtitleFile`, video targets): `prepareSubtitles` shifts the cues by the trim and writes **ASS** (`toAss`) plus only the Noto fonts the text needs into `/fonts` (fetched once per instance from `/fonts/pdf`). The core has libass but no fontconfig, so libass never falls back to another font: `toAss` names a font per script run (`{\fn…}`), spaces included, since the CJK/Hangul subsets have no space glyph. The `subtitles` filter runs before the cut and the scale. WebCodecs declines.
 - Video → GIF is one ffmpeg pass: `fps,scale` then `split` into `palettegen=stats_mode=diff` / `paletteuse=dither=bayer:diff_mode=rectangle`. GIF and animated WebP share `animFps`/`animWidth` (default 12 fps, 480 px, only ever scaled down; 0 = source width).
 - WebM is VP8 + Vorbis. In `@ffmpeg/core` 0.12.10 `libvpx-vp9` crashes ("memory access out of bounds") on every input and `libopus` on any stereo source; re-test both in a browser (the smoke suite's mkv → webm pair) before switching after a core upgrade.
 - Every exec checks its exit code and deletes its MEMFS files in `finally`. A failed core load is not cached; the next job retries.

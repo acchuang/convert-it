@@ -163,6 +163,25 @@ describe('convertWithWebCodecs', () => {
     expect(initOptions?.audio).toEqual({ discard: true });
   });
 
+  it('leaves cuts and burnt-in subtitles to ffmpeg', async () => {
+    const { convertWithWebCodecs } = await load();
+    const base = settings as object;
+    expect(
+      await convertWithWebCodecs(file(), 'mkv', 'webm', {
+        ...base,
+        cutStart: 1,
+        cutEnd: 2,
+      } as never),
+    ).toBeNull();
+    expect(
+      await convertWithWebCodecs(file(), 'mkv', 'webm', {
+        ...base,
+        subtitleFile: new File([''], 's.srt'),
+      } as never),
+    ).toBeNull();
+    expect(initOptions).toBeUndefined();
+  });
+
   it('passes the trim through', async () => {
     const { convertWithWebCodecs } = await load();
     await convertWithWebCodecs(file(), 'mkv', 'webm', {

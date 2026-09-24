@@ -245,3 +245,60 @@ describe('resize and mute (video → video)', () => {
     expect(args({})).toContain('-c:a');
   });
 });
+
+describe('cut a section out', () => {
+  const s = (extra: Partial<typeof DEFAULT_SETTINGS>) => ({ ...DEFAULT_SETTINGS, ...extra });
+
+  it('cutRange is relative to the trim, and needs an end after its start', async () => {
+    const { cutRange } = await import('@/lib/audio-video-converters');
+    expect(cutRange(s({ cutStart: 3, cutEnd: 6 }))).toEqual([3, 6]);
+    expect(cutRange(s({ trimStart: 2, cutStart: 3, cutEnd: 6 }))).toEqual([1, 4]);
+    expect(cutRange(s({ trimStart: 5, cutStart: 3, cutEnd: 6 }))).toEqual([0, 1]);
+    expect(cutRange(s({ trimStart: 7, cutStart: 3, cutEnd: 6 }))).toBeNull();
+    expect(cutRange(s({ cutStart: 5, cutEnd: 5 }))).toBeNull();
+  });
+
+  it('video: select drops the section, setpts closes the gap without assuming a frame rate', () => {
+    const a = buildFfmpegArgs(
+      'mp4',
+      'mkv',
+      'in',
+      'out.mkv',
+      s({ cutStart: 3, cutEnd: 6, videoMaxWidth: 1280 }),
+    );
+    expect(a[a.indexOf('-vf') + 1]).toBe(
+      "select='not(between(t,3,6))',setpts='PTS-gte(T,6)*3/TB',scale='min(1280,iw)':-2",
+    );
+    expect(a[a.indexOf('-af') + 1]).toBe("aselect='not(between(t,3,6))',asetpts=N/SR/TB");
+  });
+
+  it('audio targets and GIFs get their side of the cut; mute has no audio to cut', () => {
+    const mp3 = buildFfmpegArgs('mp4', 'mp3', 'in', 'out.mp3', s({ cutStart: 1, cutEnd: 2 }));
+    expect(mp3).toContain('-af');
+    const gif = buildFfmpegArgs('mp4', 'gif', 'in', 'out.gif', s({ cutStart: 1, cutEnd: 2 }));
+    expect(gif[gif.indexOf('-filter_complex') + 1]).toMatch(
+      /^select='not\(between\(t,1,2\)\)',setpts=/,
+    );
+    const muted = buildFfmpegArgs(
+      'mp4',
+      'mkv',
+      'in',
+      'out.mkv',
+      s({ cutStart: 1, cutEnd: 2, mute: true }),
+    );
+    expect(muted).not.toContain('-af');
+  });
+
+  it('burnt-in subtitles come first, before the cut and the scale', () => {
+    const a = buildFfmpegArgs(
+      'mp4',
+      'mp4',
+      'in',
+      'out.mp4',
+      s({ subtitleFile: new File([''], 'x.srt'), cutStart: 1, cutEnd: 2, videoMaxWidth: 854 }),
+    );
+    expect(a[a.indexOf('-vf') + 1]).toMatch(
+      /^subtitles=filename=burn\.ass:fontsdir=\/fonts,select=.*,scale='min\(854,iw\)':-2$/,
+    );
+  });
+});

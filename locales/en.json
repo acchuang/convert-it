@@ -127,7 +127,17 @@
     "ocrLanguage": "Text language (OCR)",
     "ocrHint": "Reads the text in the image. The language data downloads once (1–3 MB), then works offline.",
     "subtitleOffset": "Shift timing",
-    "subtitleOffsetHint": "Seconds added to every line: 1.5 shows them later, -1.5 earlier."
+    "subtitleOffsetHint": "Seconds added to every line: 1.5 shows them later, -1.5 earlier.",
+    "cutOut": "Cut out",
+    "cutFrom": "From",
+    "cutTo": "To",
+    "cutHint": "A section to remove from the middle; blank = nothing cut",
+    "setCutStart": "Cut from",
+    "setCutEnd": "Cut to",
+    "burnSubtitles": "Burn in subtitles",
+    "burnChoose": "Choose .srt or .vtt",
+    "burnRemove": "Remove",
+    "burnHint": "Drawn into the picture, so every player shows them."
   },
   "howItWorks": {
     "heading": "HOW IT WORKS",
@@ -248,7 +258,8 @@
     "improvement45": "Word documents: DOCX to HTML, Markdown, text, PDF or ePub, and Markdown, HTML or text to DOCX; tables now survive HTML → Markdown",
     "improvement46": "Read text from images and scanned PDFs (OCR) in eight languages, on your device",
     "improvement47": "Subtitles: SRT ⇄ WebVTT, fix their timing, or pull out a transcript",
-    "improvement48": "Drop whole folders (their structure is kept in the zip), name outputs with templates like {name}-{w}x{h}, and dropped files are no longer added twice"
+    "improvement48": "Drop whole folders (their structure is kept in the zip), name outputs with templates like {name}-{w}x{h}, and dropped files are no longer added twice",
+    "improvement49": "Cut a section out of the middle of a clip, and burn subtitles (.srt or .vtt, in any of the supported scripts) into a video"
   },
   "errors": {
     "tooLarge": {

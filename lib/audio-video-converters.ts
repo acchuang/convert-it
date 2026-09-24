@@ -2,6 +2,8 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
 import type { ConversionSettings } from './types';
 import { mimeFor } from './formats';
+import { ConversionError } from './errors';
+import { isCjk, isHangul } from './scripts';
 import { cancelWebCodecs, convertWithWebCodecs } from './webcodecs-converter';
 
 // Self-hosted on R2 rather than unpkg: a third-party CDN is both a single point of
@@ -338,6 +340,53 @@ export function trimArgs(settings?: Partial<ConversionSettings>): string[] {
   return args;
 }
 
+/**
+ * The section to cut out, in the trimmed clip's timeline (-ss restarts it at
+ * 0). The settings give it in the source's own time, like the trim.
+ */
+export function cutRange(settings?: Partial<ConversionSettings>): [number, number] | null {
+  const from = settings?.cutStart ?? 0;
+  const to = settings?.cutEnd ?? 0;
+  if (!(to > from)) return null;
+  const offset = Math.max(0, settings?.trimStart ?? 0);
+  const a = +Math.max(0, from - offset).toFixed(3);
+  const b = +(to - offset).toFixed(3);
+  return b > a ? [a, b] : null;
+}
+
+/** Subtitle burn-in: the files runMedia writes into ffmpeg's filesystem. */
+export const BURN = { subtitles: 'burn.ass', fontsDir: '/fonts' } as const;
+
+/**
+ * Video filters that come before any scaling: burnt-in subtitles first (their
+ * times are the trimmed clip's), then the cut. The cut drops the frames in
+ * [a, b] and moves everything after it back by b - a, which keeps variable
+ * frame rates intact (N/FRAME_RATE/TB would not).
+ */
+function videoPre(settings?: Partial<ConversionSettings>): string[] {
+  const filters: string[] = [];
+  // The style and per-script fonts are in the ASS file itself (toAss).
+  if (settings?.subtitleFile) {
+    filters.push(`subtitles=filename=${BURN.subtitles}:fontsdir=${BURN.fontsDir}`);
+  }
+  const cut = cutRange(settings);
+  if (cut) {
+    const [a, b] = cut;
+    filters.push(
+      `select='not(between(t,${a},${b}))'`,
+      `setpts='PTS-gte(T,${b})*${+(b - a).toFixed(3)}/TB'`,
+    );
+  }
+  return filters;
+}
+
+/** The audio side of the cut: audio runs at a fixed sample rate, so N/SR/TB is exact. */
+function audioCut(settings?: Partial<ConversionSettings>): string[] {
+  const cut = cutRange(settings);
+  if (!cut) return [];
+  return ['-af', `aselect='not(between(t,${cut[0]},${cut[1]}))',asetpts=N/SR/TB`];
+}
+
 /** fps and width for animated output; width 0 keeps the source width. */
 function animationFilter(settings?: Partial<ConversionSettings>): string {
   const fps = settings?.animFps || 12;
@@ -363,11 +412,12 @@ export function buildFfmpegArgs(
 
   const k = knobsFrom(settings);
   const input = [...trimArgs(settings), '-i', inputName];
+  const cutAudio = audioCut(settings);
 
   const audioTarget = AUDIO_CODECS[targetExt];
   if (audioTarget) {
     // -vn also drops embedded cover art, which ogg and wav can't carry anyway.
-    const args = [...input, '-vn', '-c:a', audioTarget.codec];
+    const args = [...input, '-vn', ...cutAudio, '-c:a', audioTarget.codec];
     if (audioTarget.bitrate) args.push('-b:a', `${k.kbps}k`, '-ar', '44100');
     return [...args, '-y', outputName];
   }
@@ -379,7 +429,8 @@ export function buildFfmpegArgs(
     // only what changed between frames, which keeps static areas from
     // shimmering and the file smaller.
     const filter =
-      `${animationFilter(settings)},split[a][b];[a]palettegen=stats_mode=diff[p];` +
+      [...videoPre(settings), animationFilter(settings)].join(',') +
+      ',split[a][b];[a]palettegen=stats_mode=diff[p];' +
       '[b][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle';
     return [...input, '-filter_complex', filter, '-loop', '0', '-y', outputName];
   }
@@ -388,7 +439,7 @@ export function buildFfmpegArgs(
     return [
       ...input,
       '-vf',
-      animationFilter(settings),
+      [...videoPre(settings), animationFilter(settings)].join(','),
       '-c:v',
       'libwebp',
       '-loop',
@@ -409,12 +460,15 @@ export function buildFfmpegArgs(
   // Resize: only ever down, keeping the aspect ratio and an even height
   // (x264 and libvpx need even dimensions). Mute drops the audio stream.
   const maxWidth = settings?.videoMaxWidth ?? 0;
-  const scale = maxWidth > 0 ? ['-vf', `scale='min(${maxWidth},iw)':-2`] : [];
+  const video = [
+    ...videoPre(settings),
+    ...(maxWidth > 0 ? [`scale='min(${maxWidth},iw)':-2`] : []),
+  ];
   return [
     ...input,
-    ...scale,
+    ...(video.length ? ['-vf', video.join(',')] : []),
     ...container.video(k),
-    ...(settings?.mute ? ['-an'] : container.audio(k)),
+    ...(settings?.mute ? ['-an'] : [...cutAudio, ...container.audio(k)]),
     ...(container.extra ?? []),
     '-y',
     outputName,
@@ -501,11 +555,12 @@ async function execOnce(
 ): Promise<Blob> {
   const inputName = `input.${sourceExt}`;
   const outputName = `output.${targetExt}`;
-  const args = buildFfmpegArgs(sourceExt, targetExt, inputName, outputName, settings);
 
   const log = createLogWatcher(onProgress);
   ff.on('log', log.handler);
   try {
+    await prepareSubtitles(ff, settings);
+    const args = buildFfmpegArgs(sourceExt, targetExt, inputName, outputName, settings);
     await ff.writeFile(inputName, await fetchFile(file));
     const code = await ff.exec(args);
     // A non-zero exit leaves no output file, and readFile's "no such file"
@@ -527,8 +582,59 @@ async function execOnce(
     // MEMFS for the next one to run out of memory on.
     await removeQuietly(ff, inputName);
     await removeQuietly(ff, outputName);
+    await removeQuietly(ff, BURN.subtitles);
   }
 }
+
+// Fonts already written into this instance's filesystem (the CJK subset alone
+// is 5 MB): fetched once per instance, not per job.
+const fontsWritten = new WeakMap<FFmpeg, Set<string>>();
+
+/**
+ * For burn-in: the subtitles, moved by the trim so their times match the
+ * trimmed clip, as an ASS file whose text names a font per script (see
+ * toAss: without fontconfig, libass never falls back), plus just the Noto
+ * fonts that text needs.
+ */
+async function prepareSubtitles(ff: FFmpeg, settings?: ConversionSettings): Promise<void> {
+  const source = settings?.subtitleFile;
+  if (!source) return;
+  const { parseSubtitles, shift, toAss } = await import('./subtitles');
+  const cues = shift(parseSubtitles(await source.text()), -Math.max(0, settings.trimStart ?? 0));
+  if (!cues.length) {
+    throw new ConversionError(
+      'invalid-settings',
+      `${source.name} has no subtitle cues in the clip (expected lines like 00:00:01,000 --> 00:00:04,000)`,
+    );
+  }
+  const fonts = new Set(['noto-sans-regular.ttf']);
+  const ass = toAss(cues, (cp) => {
+    if (isHangul(cp)) {
+      fonts.add('noto-sans-hangul-regular.ttf');
+      return 'Noto Sans KR';
+    }
+    if (isCjk(cp)) {
+      fonts.add('noto-sans-cjk-regular.ttf');
+      return 'Noto Sans SC';
+    }
+    return 'Noto Sans';
+  });
+
+  const written = fontsWritten.get(ff) ?? new Set<string>();
+  fontsWritten.set(ff, written);
+  if (!written.size) await ff.createDir(BURN.fontsDir).catch(() => {});
+  for (const font of fonts) {
+    if (written.has(font)) continue;
+    const res = await fetch(`${SUBTITLE_FONT_BASE}/${font}`);
+    if (!res.ok) throw new ConversionError('engine-load', `${font}: HTTP ${res.status}`);
+    await ff.writeFile(`${BURN.fontsDir}/${font}`, new Uint8Array(await res.arrayBuffer()));
+    written.add(font);
+  }
+  await ff.writeFile(BURN.subtitles, new TextEncoder().encode(ass));
+}
+
+// The same Noto subsets the PDF typesetter uses.
+const SUBTITLE_FONT_BASE = '/fonts/pdf';
 
 // deleteFile rejects when the file was never written, or when a cancel already
 // terminated the instance; neither is worth surfacing.

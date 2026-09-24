@@ -119,3 +119,73 @@ export async function subtitlesTo(
     ? new Blob([toVtt(timed)], { type: 'text/vtt;charset=utf-8' })
     : new Blob([toSrt(timed)], { type: 'application/x-subrip;charset=utf-8' });
 }
+
+/**
+ * Advanced SubStation Alpha, for burning subtitles in with libass. Without
+ * fontconfig libass never falls back to another font for a missing glyph, so
+ * each run of text names its font: Noto Sans for Latin, Greek and Cyrillic,
+ * Noto Sans SC for CJK and kana, Noto Sans KR for Hangul (`fontFor`).
+ * <b>/<i>/<u> become ASS override tags; literal braces become parentheses,
+ * since ASS reads braces as tags.
+ */
+export function toAss(
+  cues: Cue[],
+  fontFor: (cp: number) => string,
+  baseFont = 'Noto Sans',
+): string {
+  const time = (t: number) => {
+    const cs = Math.max(0, Math.round(t * 100));
+    const h = Math.floor(cs / 360000);
+    const m = Math.floor((cs % 360000) / 6000);
+    const s = Math.floor((cs % 6000) / 100);
+    return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(cs % 100).padStart(2, '0')}`;
+  };
+  const TAG = { b: 'b', i: 'i', u: 'u' } as const;
+  const line = (text: string) => {
+    let out = '';
+    let font = baseFont;
+    // Split into markup tags and characters; switch font only on visible text.
+    for (const part of text
+      .replace(/[{}]/g, (c) => (c === '{' ? '(' : ')'))
+      .split(/(<\/?[biu]>)/)) {
+      const tag = part.match(/^<(\/?)([biu])>$/);
+      if (tag) {
+        out += `{\\${TAG[tag[2] as keyof typeof TAG]}${tag[1] ? 0 : 1}}`;
+        continue;
+      }
+      for (const ch of part) {
+        if (ch === '\n') {
+          out += '\\N';
+          continue;
+        }
+        // Spaces too: the CJK and Hangul subsets have no space glyph.
+        const wanted = fontFor(ch.codePointAt(0)!);
+        if (wanted !== font) {
+          out += `{\\fn${wanted}}`;
+          font = wanted;
+        }
+        out += ch === '\\' ? '\\​' : ch;
+      }
+    }
+    return out;
+  };
+  return [
+    '[Script Info]',
+    'ScriptType: v4.00+',
+    'PlayResX: 384',
+    'PlayResY: 288',
+    'WrapStyle: 0',
+    'ScaledBorderAndShadow: yes',
+    '',
+    '[V4+ Styles]',
+    'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding',
+    `Style: Default,${baseFont},18,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,0,0,0,0,100,100,0,0,1,1.2,0,2,16,16,14,1`,
+    '',
+    '[Events]',
+    'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',
+    ...cues.map(
+      (c) => `Dialogue: 0,${time(c.start)},${time(c.end)},Default,,0,0,0,,${line(c.text)}`,
+    ),
+    '',
+  ].join('\n');
+}

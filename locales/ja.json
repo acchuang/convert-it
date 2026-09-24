@@ -127,7 +127,17 @@
     "ocrLanguage": "テキストの言語 (OCR)",
     "ocrHint": "画像内の文字を読み取ります。言語データは初回のみダウンロード (1–3 MB) され、その後はオフラインでも使えます。",
     "subtitleOffset": "タイミング調整",
-    "subtitleOffsetHint": "各行に加える秒数: 1.5 で遅く、-1.5 で早く表示します。"
+    "subtitleOffsetHint": "各行に加える秒数: 1.5 で遅く、-1.5 で早く表示します。",
+    "cutOut": "区間を削除",
+    "cutFrom": "開始",
+    "cutTo": "終了",
+    "cutHint": "途中から削除する区間。空欄なら削除なし",
+    "setCutStart": "削除開始",
+    "setCutEnd": "削除終了",
+    "burnSubtitles": "字幕を焼き込む",
+    "burnChoose": ".srt または .vtt を選択",
+    "burnRemove": "外す",
+    "burnHint": "映像に描き込むので、どのプレーヤーでも表示されます。"
   },
   "howItWorks": {
     "heading": "使い方",
@@ -248,7 +258,8 @@
     "improvement45": "Word文書：DOCX から HTML・Markdown・テキスト・PDF・ePub へ、Markdown・HTML・テキストから DOCX へ。HTML → Markdown で表が崩れなくなりました",
     "improvement46": "画像やスキャンPDFの文字を読み取り（OCR）、8言語対応、処理はすべて端末内で",
     "improvement47": "字幕：SRT ⇄ WebVTT の変換、タイミング調整、書き起こしテキストの抽出",
-    "improvement48": "フォルダーごとドロップ（zip でも構成を維持）、{name}-{w}x{h} のようなテンプレートでファイル名を指定、ドロップしたファイルが二重に追加されなくなりました"
+    "improvement48": "フォルダーごとドロップ（zip でも構成を維持）、{name}-{w}x{h} のようなテンプレートでファイル名を指定、ドロップしたファイルが二重に追加されなくなりました",
+    "improvement49": "クリップの途中の区間を削除し、字幕（.srt / .vtt、対応するどの文字体系でも）を動画に焼き込めるように"
   },
   "errors": {
     "tooLarge": {

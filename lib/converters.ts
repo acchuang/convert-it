@@ -79,7 +79,8 @@ export type SettingKey =
   | 'videoQuality' // videoQuality
   | 'videoPreset' // videoPreset
   | 'animation' // animFps, animWidth
-  | 'trim' // trimStart, trimEnd
+  | 'trim' // trimStart, trimEnd, cutStart, cutEnd
+  | 'burnSubtitles' // subtitleFile
   | 'videoSize' // videoMaxWidth
   | 'mute' // mute
   | 'metadata' // metadata
@@ -108,7 +109,8 @@ export const SETTING_FIELDS: Record<SettingKey, (keyof ConversionSettings)[]> = 
   videoQuality: ['videoQuality'],
   videoPreset: ['videoPreset'],
   animation: ['animFps', 'animWidth'],
-  trim: ['trimStart', 'trimEnd'],
+  trim: ['trimStart', 'trimEnd', 'cutStart', 'cutEnd'],
+  burnSubtitles: ['subtitleFile'],
   videoSize: ['videoMaxWidth'],
   mute: ['mute'],
   metadata: ['metadata'],
@@ -200,11 +202,19 @@ const audioSettings = (to: string): SettingKey[] =>
 
 // mpeg4 (AVI) and Sorenson (FLV) take a fixed quantiser: no speed preset.
 function videoSettings(to: string): SettingKey[] {
-  if (to === 'gif' || to === 'webp') return ['animation', 'trim'];
+  if (to === 'gif' || to === 'webp') return ['animation', 'trim', 'burnSubtitles'];
   if (to === 'avi' || to === 'flv') {
-    return ['videoQuality', 'videoSize', 'audioBitrate', 'mute', 'trim'];
+    return ['videoQuality', 'videoSize', 'audioBitrate', 'mute', 'trim', 'burnSubtitles'];
   }
-  return ['videoQuality', 'videoPreset', 'videoSize', 'audioBitrate', 'mute', 'trim'];
+  return [
+    'videoQuality',
+    'videoPreset',
+    'videoSize',
+    'audioBitrate',
+    'mute',
+    'trim',
+    'burnSubtitles',
+  ];
 }
 
 const VIDEO_TARGETS = [

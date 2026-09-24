@@ -36,6 +36,8 @@ const groups = (source: string, target: string) => {
     mute: has('job.audioTrack'),
     metadata: has('job.metadata'),
     ocr: has('job.ocrLanguage'),
+    burn: has('job.burnSubtitles'),
+    cut: has('job.cutOut'),
   };
 };
 
@@ -105,6 +107,13 @@ describe('SettingsPanel shows what the route reads', () => {
     expect(groups('png', 'txt').ocr).toBe(true);
     expect(groups('pdf', 'txt').ocr).toBe(true);
     expect(groups('pdf', 'png').ocr).toBe(false);
+  });
+
+  it('subtitle burn-in for video output only; the cut wherever there is a trim', () => {
+    expect(groups('mp4', 'mkv')).toMatchObject({ burn: true, cut: true });
+    expect(groups('mp4', 'gif')).toMatchObject({ burn: true, cut: true });
+    expect(groups('mp4', 'mp3')).toMatchObject({ burn: false, cut: true });
+    expect(groups('wav', 'mp3')).toMatchObject({ burn: false, cut: true });
   });
 
   it('lossless audio targets have no bitrate', () => {

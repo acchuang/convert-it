@@ -12,6 +12,8 @@ export function TrimScrubber({
   kind,
   start,
   end,
+  cutStart = 0,
+  cutEnd = 0,
   onChange,
   t,
 }: {
@@ -19,7 +21,14 @@ export function TrimScrubber({
   kind: 'video' | 'audio';
   start: number;
   end: number;
-  onChange: (patch: { trimStart?: number; trimEnd?: number }) => void;
+  cutStart?: number;
+  cutEnd?: number;
+  onChange: (patch: {
+    trimStart?: number;
+    trimEnd?: number;
+    cutStart?: number;
+    cutEnd?: number;
+  }) => void;
   t: (key: string) => string;
 }) {
   const media = useRef<HTMLVideoElement & HTMLAudioElement>(null);
@@ -71,26 +80,40 @@ export function TrimScrubber({
               }}
               data-testid="trim-selection"
             />
+            {cutEnd > cutStart && (
+              <div
+                className="absolute inset-y-0"
+                style={{
+                  left: pct(cutStart),
+                  width: `calc(${pct(cutEnd)} - ${pct(cutStart)})`,
+                  backgroundColor: 'var(--error)',
+                }}
+                data-testid="cut-selection"
+              />
+            )}
             <div
               className="absolute -inset-y-1 w-0.5"
               style={{ left: pct(now), backgroundColor: 'var(--text-primary)' }}
             />
           </div>
-          <div className="flex gap-1">
-            <button
-              type="button"
-              onClick={() => onChange({ trimStart: round(now) })}
-              className="flex-1 py-1 text-xs rounded bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]"
-            >
-              {t('job.setStart')} · {formatTimecode(round(now)) || '0:00'}
-            </button>
-            <button
-              type="button"
-              onClick={() => onChange({ trimEnd: round(now) })}
-              className="flex-1 py-1 text-xs rounded bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]"
-            >
-              {t('job.setEnd')} · {formatTimecode(round(now)) || '0:00'}
-            </button>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
+            {(
+              [
+                ['trimStart', 'job.setStart'],
+                ['trimEnd', 'job.setEnd'],
+                ['cutStart', 'job.setCutStart'],
+                ['cutEnd', 'job.setCutEnd'],
+              ] as const
+            ).map(([field, label]) => (
+              <button
+                key={field}
+                type="button"
+                onClick={() => onChange({ [field]: round(now) })}
+                className="py-1 text-xs rounded bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]"
+              >
+                {t(label)} · {formatTimecode(round(now)) || '0:00'}
+              </button>
+            ))}
           </div>
         </>
       )}

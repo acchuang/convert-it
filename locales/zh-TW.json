@@ -127,7 +127,17 @@
     "ocrLanguage": "文字語言 (OCR)",
     "ocrHint": "辨識圖片中的文字。語言資料只需下載一次（1–3 MB），之後可離線使用。",
     "subtitleOffset": "調整時間",
-    "subtitleOffsetHint": "每行加上的秒數：1.5 延後顯示，-1.5 提前顯示。"
+    "subtitleOffsetHint": "每行加上的秒數：1.5 延後顯示，-1.5 提前顯示。",
+    "cutOut": "刪除片段",
+    "cutFrom": "從",
+    "cutTo": "到",
+    "cutHint": "要從中間刪除的一段；留空則不刪除",
+    "setCutStart": "從此刪除",
+    "setCutEnd": "刪除到此",
+    "burnSubtitles": "燒錄字幕",
+    "burnChoose": "選擇 .srt 或 .vtt",
+    "burnRemove": "移除",
+    "burnHint": "字幕會畫進畫面，任何播放器都能顯示。"
   },
   "howItWorks": {
     "heading": "使用方式",
@@ -248,7 +258,8 @@
     "improvement45": "Word 文件：DOCX 轉 HTML、Markdown、文字、PDF 或 ePub，Markdown、HTML 或文字轉 DOCX；HTML 轉 Markdown 時表格不再遺失",
     "improvement46": "辨識圖片與掃描版 PDF 中的文字（OCR），支援八種語言，全程在本機完成",
     "improvement47": "字幕：SRT ⇄ WebVTT 互轉、調整時間軸，或匯出逐字稿",
-    "improvement48": "可拖入整個資料夾（壓縮檔中保留目錄結構），用 {name}-{w}x{h} 這類範本命名輸出檔案，拖入的檔案也不會再被重複加入"
+    "improvement48": "可拖入整個資料夾（壓縮檔中保留目錄結構），用 {name}-{w}x{h} 這類範本命名輸出檔案，拖入的檔案也不會再被重複加入",
+    "improvement49": "可刪除片段中間的一段，並把字幕（.srt 或 .vtt，支援的任一文字）燒錄進影片"
   },
   "errors": {
     "tooLarge": {

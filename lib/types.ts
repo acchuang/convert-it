@@ -20,6 +20,9 @@ export interface ConversionSettings {
   mute: boolean; // video→video: drop the audio track
   trimStart: number; // seconds into the source; 0 = from the start
   trimEnd: number; // seconds into the source; 0 (or ≤ trimStart) = to the end
+  cutStart: number; // seconds into the source: a section to remove from the middle…
+  cutEnd: number; // …up to here; 0 (or ≤ cutStart) = no cut
+  subtitleFile: File | null; // video output: an .srt/.vtt to burn into the picture
   animFps: number; // video → GIF / animated WebP frame rate
   animWidth: number; // video → GIF / animated WebP max width in px; 0 = source width
   // PDF input settings
@@ -56,6 +59,9 @@ export const DEFAULT_SETTINGS: ConversionSettings = {
   mute: false,
   trimStart: 0,
   trimEnd: 0,
+  cutStart: 0,
+  cutEnd: 0,
+  subtitleFile: null,
   animFps: 12,
   animWidth: 480,
   pdfAllPages: false,

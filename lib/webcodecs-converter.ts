@@ -112,6 +112,8 @@ export async function convertWithWebCodecs(
   onProgress?: (pct: number) => void,
 ): Promise<Blob | null> {
   if (!webCodecsCandidate(sourceExt, targetExt)) return null;
+  // mediabunny trims but can't cut a section out or draw subtitles: ffmpeg does those.
+  if ((settings?.cutEnd ?? 0) > (settings?.cutStart ?? 0) || settings?.subtitleFile) return null;
   const started = generation;
   const target = TARGETS[targetExt.toLowerCase()];
   const mb = await import('mediabunny');

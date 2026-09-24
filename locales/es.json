@@ -127,7 +127,17 @@
     "ocrLanguage": "Idioma del texto (OCR)",
     "ocrHint": "Lee el texto de la imagen. Los datos del idioma se descargan una vez (1–3 MB) y luego funcionan sin conexión.",
     "subtitleOffset": "Desplazar tiempos",
-    "subtitleOffsetHint": "Segundos sumados a cada línea: 1.5 las muestra más tarde, -1.5 antes."
+    "subtitleOffsetHint": "Segundos sumados a cada línea: 1.5 las muestra más tarde, -1.5 antes.",
+    "cutOut": "Quitar tramo",
+    "cutFrom": "Desde",
+    "cutTo": "Hasta",
+    "cutHint": "Un tramo que eliminar del medio; vacío = no se quita nada",
+    "setCutStart": "Quitar desde",
+    "setCutEnd": "Quitar hasta",
+    "burnSubtitles": "Incrustar subtítulos",
+    "burnChoose": "Elige .srt o .vtt",
+    "burnRemove": "Quitar",
+    "burnHint": "Se dibujan en la imagen, así que cualquier reproductor los muestra."
   },
   "howItWorks": {
     "heading": "CÓMO FUNCIONA",
@@ -248,7 +258,8 @@
     "improvement45": "Documentos de Word: DOCX a HTML, Markdown, texto, PDF o ePub, y Markdown, HTML o texto a DOCX; las tablas ya sobreviven de HTML a Markdown",
     "improvement46": "Lee el texto de imágenes y PDF escaneados (OCR) en ocho idiomas, en tu dispositivo",
     "improvement47": "Subtítulos: SRT ⇄ WebVTT, corrige su sincronía o extrae una transcripción",
-    "improvement48": "Suelta carpetas enteras (su estructura se mantiene en el zip), nombra los resultados con plantillas como {name}-{w}x{h}, y los archivos soltados ya no se añaden dos veces"
+    "improvement48": "Suelta carpetas enteras (su estructura se mantiene en el zip), nombra los resultados con plantillas como {name}-{w}x{h}, y los archivos soltados ya no se añaden dos veces",
+    "improvement49": "Quita un tramo del medio de un clip e incrusta subtítulos (.srt o .vtt, en cualquiera de los alfabetos admitidos) en un vídeo"
   },
   "errors": {
     "tooLarge": {

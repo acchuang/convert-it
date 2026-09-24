@@ -49,7 +49,7 @@ _Reviewed at `7a92641` (2026-09-24). Scope: every file in `lib/`, the app shell,
   - **4 Media editing:**
     - trim on every audio/video route (ffmpeg and WebCodecs), with a scrubber
     - resize and mute for video
-    - "Cut" means in/out points; removing a middle section needs a concat filter and was not done.
+    - Removing a section from the middle of a clip (select/aselect, keeping variable frame rates).
   - **5 Metadata:**
     - The panel shows what a photo carries. Remove all (the default), keep without location, or keep.
     - Kept EXIF is written fresh: no maker notes or thumbnails, Orientation 1.
@@ -58,7 +58,7 @@ _Reviewed at `7a92641` (2026-09-24). Scope: every file in `lib/`, the app shell,
     - Word's schema element order is enforced by a test.
     - Validated with mammoth and python-docx, including a third-party fixture.
   - **7 OCR:** tesseract.js, fully self-hosted: worker, cores and 8 languages under `/ocr`, since the CDN defaults would break the CSP and the privacy promise. Scanned PDF pages are OCR'd automatically.
-  - **8 Subtitles:** SRT ⇄ VTT, re-timing, and transcripts. Checked against Chromium's own WebVTT parser. Burn-in was not done (it needs two inputs).
+  - **8 Subtitles:** SRT ⇄ VTT, re-timing, and transcripts, checked against Chromium's own WebVTT parser. Burn-in attaches an .srt/.vtt to a video job; it is rendered by libass from generated ASS that names a font per script (no fontconfig means no fallback), and verified frame by frame with Latin, CJK, Hangul and Greek.
   - **9 Folders and names:** folder drop and pick with the structure kept in the zip; output name templates with measured `{w}x{h}`.
   - **10 Analytics:** not done. It needs a decision against the "no tracking" promise.
   - **Bugs found and fixed along the way:**

@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { parseSubtitles, shift, subtitlesTo, toSrt, toTranscript, toVtt } from '@/lib/subtitles';
+import {
+  parseSubtitles,
+  shift,
+  subtitlesTo,
+  toAss,
+  toSrt,
+  toTranscript,
+  toVtt,
+} from '@/lib/subtitles';
 import { DEFAULT_SETTINGS } from '@/lib/types';
 
 // The kind of SRT that actually circulates: BOM, CRLF, a missing cue number,
@@ -108,5 +116,30 @@ describe('subtitlesTo', () => {
     await expect(
       subtitlesTo(new File(['hello'], 'x.srt'), 'srt', 'vtt', DEFAULT_SETTINGS),
     ).rejects.toMatchObject({ code: 'corrupt-input' });
+  });
+});
+
+describe('toAss (for burn-in)', () => {
+  const fontFor = (cp: number) =>
+    cp >= 0xac00 && cp <= 0xd7a3 ? 'KR' : cp >= 0x3040 && cp <= 0x9fff ? 'SC' : 'Latin';
+  const ass = (cues: Parameters<typeof toAss>[0]) => toAss(cues, fontFor, 'Latin');
+
+  it('names a font per script run, spaces included (the CJK subsets have no space)', () => {
+    const out = ass([{ start: 1.5, end: 62.345, text: 'Hi 你好 안녕' }]);
+    expect(out).toContain(
+      'Dialogue: 0,0:00:01.50,0:01:02.35,Default,,0,0,0,,Hi {\\fnSC}你好{\\fnLatin} {\\fnKR}안녕',
+    );
+  });
+
+  it('turns b/i/u into override tags, newlines into \\N, braces into parentheses', () => {
+    const out = ass([{ start: 0, end: 1, text: '<i>a</i> {b}\n<b>c</b>' }]);
+    expect(out).toContain(',,{\\i1}a{\\i0} (b)\\N{\\b1}c{\\b0}');
+  });
+
+  it('carries a complete script header and style', () => {
+    const out = ass([]);
+    expect(out).toMatch(/^\[Script Info\]\nScriptType: v4\.00\+/);
+    expect(out).toMatch(/\nStyle: Default,Latin,18,/);
+    expect(out).toContain('[Events]\nFormat: Layer, Start, End, Style');
   });
 });
