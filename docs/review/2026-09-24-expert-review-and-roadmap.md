@@ -15,6 +15,19 @@ _Reviewed at `7a92641` (2026-09-24). Scope: every file in `lib/`, the app shell,
   - **S5:** the FFmpeg core is checked against a pinned SHA-256 and loaded from a `blob:` URL.
   - **Hygiene:** caching headers, Prettier check in CI, and the browser smoke suite in CI against the built site with `_headers` applied (it fails on any CSP violation). Also Dependabot and an updated `lib/AGENTS.md`.
   - **Open:** dev-only audit advisories remain because `npm audit fix` crashes on the `overrides` field; they are left for Dependabot.
+- **Phase 2: done.**
+  - **C2 (PDF output):** Unicode typesetting via Noto subsets loaded per script. WinAnsi-only documents still fetch nothing. Markdown is styled: headings, emphasis, lists, code, quotes, tables and links.
+  - **C6 (EPUB):** EPUB 3 now passes W3C epubcheck with 0 errors and 0 warnings, enforced in CI.
+  - **C13:** PDF pages go through the image toolbox, and text extraction reports progress per page.
+  - **C14:** XML → table works on real-world XML and runs in the worker pool.
+  - **C15:** XLSX input can convert every sheet.
+  - **§5:** CSV now streams.
+  - **C16:** CSV → TSV escaping.
+  - **P2 (downscaling):** closed on evidence. Chromium's single 'high' draw already averages correctly, and step-halving was worse (60/127 vs 1/127 max error).
+  - **New bugs found and fixed:**
+    - **PDF → image colours:** every PDF → image had red and blue swapped. The pdfium wrapper already returns RGBA and the app swapped the channels again.
+    - **CSV streaming:** Papa Parse's `File` streamer corrupts multi-byte characters on slice boundaries.
+    - **EPUB:** every EPUB, even plain text, failed epubcheck.
 
 ## 1. Executive summary
 
