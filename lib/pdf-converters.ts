@@ -1,13 +1,8 @@
 import type { ConversionSettings } from './types';
-import { ASSET_BASE, encodeImageData } from './image-encode';
+import { ASSET_BASE, finishImage } from './image-encode';
 import { htmlToPlainText } from './html-text';
 import { escapeHtml } from './markup';
-
-// Lazy-load jsPDF to avoid bloating initial bundle
-async function getJsPDF() {
-  const { jsPDF } = await import('jspdf');
-  return jsPDF;
-}
+import { renderPdf, textBlocks } from './pdf-layout';
 
 // PDFium (BSD-3) wrapped by @hyzyla/pdfium (MIT). The ~265 KB glue and ~4 MB wasm
 // are lazy: the module is dynamically imported only when a PDF is converted, and
@@ -23,17 +18,18 @@ function ensurePdfium(): Promise<PDFiumLibrary> {
   return pdfiumReady;
 }
 
-// PDFium renders to a BGRA byte buffer; ImageData expects RGBA, so swap R/B.
-function bgraToRgba(render: { width: number; height: number; data: Uint8Array }): ImageData {
+// @hyzyla/pdfium's default renderer already converts PDFium's BGRA bitmap to
+// RGBA, whatever its "BGRA" colorSpace option suggests: a pure-blue page comes
+// back as [0, 0, 255, 255]. The old code swapped R and B a second time, so every
+// PDF → image had red and blue exchanged. Pinned against real PDFium in
+// lib/__tests__/pdf-converters.test.ts and the smoke suite's blue-page pair.
+export function pdfRenderToImageData(render: {
+  width: number;
+  height: number;
+  data: Uint8Array;
+}): ImageData {
   const { width, height, data } = render;
-  const rgba = new Uint8ClampedArray(data.length);
-  for (let i = 0; i < data.length; i += 4) {
-    rgba[i] = data[i + 2];
-    rgba[i + 1] = data[i + 1];
-    rgba[i + 2] = data[i];
-    rgba[i + 3] = data[i + 3];
-  }
-  return new ImageData(rgba, width, height);
+  return new ImageData(new Uint8ClampedArray(data), width, height);
 }
 
 async function loadPdfDocument(file: File) {
@@ -52,7 +48,6 @@ export async function pdfToImage(
   settings?: ConversionSettings,
   onProgress?: (pct: number) => void,
 ): Promise<Blob> {
-  const quality = settings?.quality ?? 0.92;
   const scale = settings?.pdfScale ?? 1;
   const allPages = settings?.pdfAllPages ?? false;
   const doc = await loadPdfDocument(file);
@@ -60,20 +55,23 @@ export async function pdfToImage(
     const pageCount = doc.getPageCount();
     if (pageCount < 1) throw new Error('PDF has no pages');
 
+    // Pages go through finishImage like any decoded image, so the toolbox
+    // (crop, resize, compress-to-size) applies to PDF pages too.
     if (!allPages) {
-      const rendered = await doc.getPage(0).render({ scale });
-      const imageData = bgraToRgba(rendered);
+      const imageData = pdfRenderToImageData(await doc.getPage(0).render({ scale }));
+      const blob = await finishImage(imageData, targetExt, settings, onProgress);
       onProgress?.(100);
-      return encodeImageData(imageData, targetExt, quality);
+      return blob;
     }
 
     const base = file.name.replace(/\.[^.]+$/, '');
     const JSZip = (await import('jszip')).default;
     const zip = new JSZip();
     for (let i = 0; i < pageCount; i++) {
-      const rendered = await doc.getPage(i).render({ scale });
-      const imageData = bgraToRgba(rendered);
-      const imageBlob = await encodeImageData(imageData, targetExt, quality);
+      const imageData = pdfRenderToImageData(await doc.getPage(i).render({ scale }));
+      // No per-page progress from the target-size search: it would make the
+      // bar jump back on every page. Pages done is the honest measure.
+      const imageBlob = await finishImage(imageData, targetExt, settings);
       zip.file(`${base}-page-${i + 1}.${targetExt}`, imageBlob);
       onProgress?.(Math.round(((i + 1) / pageCount) * 100));
     }
@@ -83,20 +81,31 @@ export async function pdfToImage(
   }
 }
 
+type PdfDocument = Awaited<ReturnType<typeof loadPdfDocument>>;
+
+// Text of every page, reporting progress per page: a 500-page PDF otherwise
+// sits at 10% until it's suddenly done.
+function pageTexts(doc: PdfDocument, onProgress?: (pct: number) => void): string[] {
+  const count = doc.getPageCount();
+  const parts: string[] = [];
+  for (let i = 0; i < count; i++) {
+    parts.push(doc.getPage(i).getText());
+    onProgress?.(Math.round(((i + 1) / count) * 100));
+  }
+  return parts;
+}
+
 // Extract text from every page into a single plain-text Blob.
 export async function pdfToText(
   file: File,
   _sourceExt: string,
   _targetExt: string,
   _settings?: ConversionSettings,
-  _onProgress?: (pct: number) => void,
+  onProgress?: (pct: number) => void,
 ): Promise<Blob> {
   const doc = await loadPdfDocument(file);
   try {
-    const parts: string[] = [];
-    for (const page of doc.pages()) {
-      parts.push(page.getText());
-    }
+    const parts = pageTexts(doc, onProgress);
     return new Blob([parts.join('\n\n')], { type: 'text/plain;charset=utf-8' });
   } finally {
     doc.destroy();
@@ -109,14 +118,11 @@ export async function pdfToHtml(
   _sourceExt: string,
   _targetExt: string,
   _settings?: ConversionSettings,
-  _onProgress?: (pct: number) => void,
+  onProgress?: (pct: number) => void,
 ): Promise<Blob> {
   const doc = await loadPdfDocument(file);
   try {
-    const parts: string[] = [];
-    for (const page of doc.pages()) {
-      parts.push(`<pre>${escapeHtml(page.getText())}</pre>`);
-    }
+    const parts = pageTexts(doc, onProgress).map((text) => `<pre>${escapeHtml(text)}</pre>`);
     const html =
       '<!DOCTYPE html>\n<html><head><meta charset="utf-8"><title>Converted PDF</title></head>\n' +
       `<body>\n${parts.join('\n')}\n</body></html>`;
@@ -124,44 +130,6 @@ export async function pdfToHtml(
   } finally {
     doc.destroy();
   }
-}
-
-interface PdfTextOptions {
-  monospace?: boolean;
-}
-
-// Lays plain text out on A4 pages, one source line at a time, so the input's
-// line breaks and blank lines survive. splitTextToSize only wraps what is too
-// wide; it never has to guess where a line ended.
-async function textToPdfBlob(text: string, options: PdfTextOptions = {}): Promise<Blob> {
-  const jsPDF = await getJsPDF();
-  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-  const fontSize = options.monospace ? 9 : 11;
-  doc.setFont(options.monospace ? 'courier' : 'helvetica', 'normal');
-  doc.setFontSize(fontSize);
-
-  const margin = 40;
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const lineHeight = fontSize * 1.35;
-  let y = margin + fontSize;
-
-  // jsPDF draws a tab as a glyph box; expand to spaces so indentation holds.
-  const sourceLines = text.replace(/\r\n?/g, '\n').replace(/\t/g, '    ').split('\n');
-  for (const sourceLine of sourceLines) {
-    const wrapped: string[] =
-      sourceLine === '' ? [''] : doc.splitTextToSize(sourceLine, pageWidth - margin * 2);
-    for (const line of wrapped) {
-      if (y > pageHeight - margin) {
-        doc.addPage();
-        y = margin + fontSize;
-      }
-      if (line) doc.text(line, margin, y);
-      y += lineHeight;
-    }
-  }
-
-  return doc.output('blob');
 }
 
 // --- PDF output (generation via jsPDF) below ---
@@ -172,7 +140,7 @@ export async function txtToPdf(
   _t: string,
   _settings?: ConversionSettings,
 ): Promise<Blob> {
-  return textToPdfBlob(await file.text());
+  return renderPdf(textBlocks(await file.text()));
 }
 
 export async function mdToPdf(
@@ -181,10 +149,8 @@ export async function mdToPdf(
   _t: string,
   _settings?: ConversionSettings,
 ): Promise<Blob> {
-  const { marked } = await import('marked');
-  const text = await file.text();
-  const html = await marked.parse(text);
-  return textToPdfBlob(htmlToPlainText(html));
+  const { markdownBlocks } = await import('./markdown-blocks');
+  return renderPdf(markdownBlocks(await file.text()));
 }
 
 export async function htmlToPdf(
@@ -193,7 +159,7 @@ export async function htmlToPdf(
   _t: string,
   _settings?: ConversionSettings,
 ): Promise<Blob> {
-  return textToPdfBlob(htmlToPlainText(await file.text()));
+  return renderPdf(textBlocks(htmlToPlainText(await file.text())));
 }
 
 export async function jsonToPdf(
@@ -204,5 +170,5 @@ export async function jsonToPdf(
 ): Promise<Blob> {
   const text = await file.text();
   const data = JSON.parse(text);
-  return textToPdfBlob(JSON.stringify(data, null, 2), { monospace: true });
+  return renderPdf(textBlocks(JSON.stringify(data, null, 2), true));
 }

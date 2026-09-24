@@ -22,7 +22,7 @@ Independent Next.js project deployed via Cloudflare Pages.
 - Build: `npm run build`
 - Lint: `npx eslint .`
 - Format: `npx prettier --check .`
-- Test: `npx vitest run`
+- Test: `npx vitest run` (set `EPUBCHECK_JAR` to an epubcheck 5 jar to also validate EPUB output, as CI does)
 - Type-check: `npx tsc --noEmit`
 - Serve the export as Pages would (applies `out/_headers`): `npm run serve`
 - Browser smoke suite (real codecs, CSP violations fail it): `npm run fixtures`, `npm run serve`, then `npm run smoke`. Set `SMOKE_CHROMIUM_PATH` if Google Chrome isn't installed.
@@ -39,15 +39,26 @@ Independent Next.js project deployed via Cloudflare Pages.
 
 ## PDF
 
-- PDF output (txt/md/html/json → PDF) uses `jspdf` (pure JS) in `lib/pdf-converters.ts`.
-- PDF input (PDF → PNG/JPG/WebP, PDF → TXT/HTML) uses `@hyzyla/pdfium` (MIT wrapper over BSD-3 PDFium; not AGPL mupdf). Page render → RGBA → existing `encodeImageData` pipeline. Text extraction is layout-naive (reading order, no OCR).
+- PDF output (txt/md/html/json → PDF) is typeset by `lib/pdf-layout.ts` (`renderPdf` over `Block`s of styled `Run`s) on `jspdf`. Markdown → blocks comes from `marked.lexer` in `lib/markdown-blocks.ts` (headings, bold/italic/code, links, nested lists, code blocks, quotes, tables); no DOM, so it runs in the worker pool. TXT/JSON keep lines and indentation (`textBlocks`).
+- Fonts: WinAnsi-only documents use jsPDF's built-in Helvetica/Courier (nothing fetched). Anything else uses the Noto subsets in `public/fonts/pdf/`, each fetched only if the document uses its script: `NotoSans-Regular/-Bold` + `NotoSansMono` (Latin, Greek, Cyrillic, Vietnamese), `NotoSansSC` subset (GB 2312 + Big5 level 1 + JIS X 0208 + kana) and `NotoSansKR` (Hangul). jsPDF embeds only the glyphs used. Rebuild with `python3 scripts/build-pdf-fonts.py` (fonttools); `OFL.txt` must ship with them. No italic Noto is shipped: italic sets upright in Unicode mode.
+- PDF input (PDF → PNG/JPG/WebP, PDF → TXT/HTML) uses `@hyzyla/pdfium` (MIT wrapper over BSD-3 PDFium; not AGPL mupdf). Page render → `pdfRenderToImageData` → `finishImage` (so the image toolbox applies). The wrapper's render output is already **RGBA** despite its `colorSpace: "BGRA"` option; never swap channels (pinned by a real-PDFium test and the smoke suite's blue-page pair). Text extraction is layout-naive (reading order, no OCR).
 - PDF → image defaults to page 1 as a single image. With `ConversionSettings.pdfAllPages` it renders every page at `pdfScale` (1×/2×/3×) and returns a `application/zip` Blob (one `<base>-page-<n>.<ext>` per page via jszip); `downloadJob` names zip outputs `.zip` and `JobCard.canPreview` skips zip blobs. Default (`pdfAllPages=false`) keeps the single-page behaviour.
+
+## EPUB
+
+- `lib/epub-converter.ts` writes EPUB 3 that passes W3C epubcheck with zero errors and warnings (CI runs it on hostile samples). Package: `mimetype` first and stored, `nav.xhtml` (required) plus `toc.ncx`, `dcterms:modified` as `CCYY-MM-DDThh:mm:ssZ`, one `chapter-N.xhtml` per h1/h2 section (a title-only heading merges into the next).
+- MD/HTML → XHTML goes DOMParser → `sanitise` (element/attribute whitelist, obsolete tags mapped, forms/scripts/media dropped, unique ids) → XMLSerializer, so md/html → EPUB runs on the main thread. `data:` images are packaged under `images/`; images that can't be packaged become their alt text; `#fragment` links are rewritten to the chapter that holds the id.
+- `dc:language`: `<html lang>`, else the dominant script, else `und`.
 
 ## Text & Markup Output
 
 - Any converter that writes XML or HTML by hand goes through `lib/markup.ts` (`escapeXml`/`escapeHtml`, `xmlName` for keys → legal element names, `rowsToXml`, `rowsToHtmlTable`). Never interpolate cell values or keys raw.
 - HTML → text (htmlToTxt, md/html → PDF) goes through `lib/html-text.ts` `htmlToPlainText`: `DOMParser` (inert — never `innerHTML` on a live-document element, which runs `onerror` handlers), drops script/style, keeps block line breaks.
 - Text → PDF lays out one source line at a time (`textToPdfBlob`); don't round-trip through HTML `textContent`, which loses every line break.
+
+- XML → CSV/TSV/YAML (`xmlToRecords` in `lib/xml-converters.ts`) finds the records: the largest run of same-named sibling elements (ties to the shallowest); otherwise the whole document, unwrapped, is one record. Columns: attributes first (`@id`), nested elements as dotted paths, repeated children joined with `; `. fast-xml-parser, no DOM, so XML runs in the worker pool.
+
+- CSV/TSV → JSON and CSV ⇄ TSV stream (`lib/csv-stream.ts`): the File is read in `Papa.LocalChunkSize` slices through a streaming `TextDecoder` and fed to Papa Parse as a stream, so rows are serialised as they arrive (`JsonArrayWriter` output is byte-identical to `JSON.stringify(rows, null, indent)`). Never hand Papa the `File` directly: its own file streamer decodes each slice separately and corrupts multi-byte characters on slice boundaries.
 
 ## Media (FFmpeg)
 
@@ -65,6 +76,7 @@ Independent Next.js project deployed via Cloudflare Pages.
 
 - XLSX read/write is in-house: `lib/xlsx.ts` on jszip + fast-xml-parser. Do not re-add the npm `xlsx` (SheetJS) package — it is frozen at 0.18.5 with unfixed prototype-pollution and ReDoS advisories.
 - Reader decodes shared/inline/rich strings, numbers (15 significant digits, like Excel), booleans, errors, formula results and dates (from the cell's number format, 1900 and 1904 systems). Writer emits one plain sheet. `lib/__tests__/fixtures/sheetjs-*.xlsx` pin the reader against a third-party producer.
+- XLSX input converts the first sheet unless `ConversionSettings.xlsxAllSheets`: then → CSV is a zip of `<file>-<sheet>.csv` (plain CSV if there is only one sheet; names via `lib/filenames.ts` `safeFileStem` + `uniqueName`) and → JSON is `{ "<sheet>": rows }`.
 
 ## Webpack
 

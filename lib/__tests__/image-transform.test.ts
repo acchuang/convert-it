@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { planImageTransform } from '@/lib/image-encode';
+import { planImageTransform, transformImageData } from '@/lib/image-encode';
 import { DEFAULT_SETTINGS } from '@/lib/types';
 import type { ConversionSettings } from '@/lib/types';
 
@@ -70,5 +70,44 @@ describe('planImageTransform', () => {
       width: 1,
       height: 1,
     });
+  });
+});
+
+describe('transformImageData downscaling', () => {
+  // One-pixel black/white stripes: the worst case for downscaling. A resampler
+  // that skips source pixels lands on black or white bands instead of the true
+  // average grey.
+  function stripes(size: number): ImageData {
+    const data = new Uint8ClampedArray(size * size * 4);
+    for (let yy = 0; yy < size; yy++) {
+      for (let xx = 0; xx < size; xx++) {
+        const v = xx % 2 === 0 ? 0 : 255;
+        const i = (yy * size + xx) * 4;
+        data.set([v, v, v, 255], i);
+      }
+    }
+    return new ImageData(data, size, size);
+  }
+
+  it('averages fine detail instead of aliasing when shrinking 16×', () => {
+    const out = transformImageData(stripes(256), { width: 16, height: 16 });
+    expect([out.width, out.height]).toEqual([16, 16]);
+    for (let i = 0; i < out.data.length; i += 4) {
+      expect(Math.abs(out.data[i] - 127.5)).toBeLessThan(20);
+    }
+  });
+
+  it('crops then resizes, and handles non-power-of-two sizes', () => {
+    const out = transformImageData(stripes(300), {
+      crop: { x: 10, y: 20, width: 250, height: 100 },
+      width: 37,
+      height: 11,
+    });
+    expect([out.width, out.height]).toEqual([37, 11]);
+  });
+
+  it('upscales', () => {
+    const out = transformImageData(stripes(4), { width: 40, height: 40 });
+    expect([out.width, out.height]).toEqual([40, 40]);
   });
 });

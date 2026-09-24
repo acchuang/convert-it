@@ -67,7 +67,14 @@
     "bitrate": "ビットレート",
     "preset": "プリセット",
     "targetFormat": "変換先形式",
-    "truncated": "... （省略）"
+    "truncated": "... （省略）",
+    "pdfPages": "ページ",
+    "pdfFirstPage": "最初のページ",
+    "pdfAllPages": "すべてのページ",
+    "xlsxSheets": "シート",
+    "xlsxFirstSheet": "最初のシート",
+    "xlsxAllSheets": "すべてのシート",
+    "pdfScale": "倍率"
   },
   "howItWorks": {
     "heading": "使い方",
@@ -152,6 +159,10 @@
     "improvement30": "XML・HTML 出力で特殊文字をエスケープし、「First Name」のような見出しを有効なタグに変換。TXT・Markdown・JSON → PDF で改行を保持",
     "improvement31": "動画 → WebM が再び動作（VP8 + Vorbis）。FFmpeg のエラー内容を表示し、進捗はクリップの実際の長さに基づくように",
     "improvement32": "ZIP ダウンロードで同名ファイルが上書きされなくなり、HTML 入力はスクリプトを実行せずに解析",
+    "improvement33": "Unicode対応PDF：ギリシャ語・キリル文字・ベトナム語・中国語・日本語・韓国語が正しい文字として表示され、Markdownの見出し・リスト・コード・引用・表も保持",
+    "improvement34": "PDF → 画像の色を修正（赤と青が入れ替わっていた）。PDFページも画像と同様にトリミング・リサイズ・圧縮が可能に",
+    "improvement35": "ePub出力がW3Cのバリデーターに合格。章ごとに分割され、目次・埋め込み画像・正しい言語設定付き",
+    "improvement36": "実際のXMLをCSV/TSV/YAMLに変換、Excelは全シートを変換、大きなCSVは進捗表示付きでストリーミング処理",
     "ossHeading": "オープンソース",
     "oss1": "Convert-itはMITライセンスのオープンソースです。完全なコードベースはGitHubで公開されています。貢献、バグ報告、機能リクエストを歓迎します。",
     "ossGithub": "GITHUB",

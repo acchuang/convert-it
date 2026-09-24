@@ -67,7 +67,14 @@
     "bitrate": "比特率",
     "preset": "预设",
     "targetFormat": "目标格式",
-    "truncated": "... （已截断）"
+    "truncated": "... （已截断）",
+    "pdfPages": "页面",
+    "pdfFirstPage": "第一页",
+    "pdfAllPages": "所有页面",
+    "xlsxSheets": "工作表",
+    "xlsxFirstSheet": "第一个工作表",
+    "xlsxAllSheets": "所有工作表",
+    "pdfScale": "缩放"
   },
   "howItWorks": {
     "heading": "使用方式",
@@ -152,6 +159,10 @@
     "improvement30": "XML 和 HTML 导出会转义特殊字符，并将“First Name”等表头转换为合法标签；TXT、Markdown 和 JSON → PDF 保留换行",
     "improvement31": "视频 → WebM 恢复可用（VP8 + Vorbis），FFmpeg 失败时给出原因，进度按片段实际时长计算",
     "improvement32": "ZIP 下载不再覆盖同名文件，HTML 输入的解析不会执行其中的脚本",
+    "improvement33": "Unicode PDF：希腊文、西里尔文、越南文、中文、日文和韩文均以真实文字呈现，Markdown 保留标题、列表、代码、引用和表格",
+    "improvement34": "修复 PDF → 图片的颜色（红色和蓝色被互换）；PDF 页面现在也可以像图片一样裁剪、缩放和压缩",
+    "improvement35": "ePub 输出通过 W3C 验证器，按章节拆分，并包含目录、嵌入图片和正确的语言",
+    "improvement36": "真实世界的 XML 可转换为 CSV/TSV/YAML，Excel 文件转换所有工作表，大型 CSV 流式处理并实时显示进度",
     "ossHeading": "开源",
     "oss1": "Convert-it 采用 MIT 许可并开源。完整代码可在 GitHub 上获取。欢迎贡献、报告问题和提出功能请求。",
     "ossGithub": "GITHUB",

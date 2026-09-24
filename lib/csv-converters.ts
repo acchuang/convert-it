@@ -1,29 +1,38 @@
 import Papa from 'papaparse';
 import type { ConversionSettings } from './types';
 import { rowsToHtmlTable, rowsToXml } from './markup';
+import { BlobBuilder, JsonArrayWriter, streamRows } from './csv-stream';
 
-export function csvToJson(
+export async function csvToJson(
   file: File,
   _s: string,
   _t: string,
   settings?: ConversionSettings,
-  _onProgress?: (pct: number) => void,
+  onProgress?: (pct: number) => void,
 ): Promise<Blob> {
-  const indent = settings?.jsonIndent ?? 2;
-  return file.text().then((text) => {
-    const result = Papa.parse(text, { header: true, skipEmptyLines: true, dynamicTyping: true });
-    const json =
-      indent === 0 ? JSON.stringify(result.data) : JSON.stringify(result.data, null, indent);
-    return new Blob([json], { type: 'application/json' });
-  });
+  const writer = new JsonArrayWriter(settings?.jsonIndent ?? 2);
+  await streamRows(file, { header: true, dynamicTyping: true, onProgress }, (row) =>
+    writer.push(row),
+  );
+  return writer.toBlob();
 }
 
-export function csvToTsv(file: File): Promise<Blob> {
-  return file.text().then((text) => {
-    const result = Papa.parse<string[]>(text, { header: false, skipEmptyLines: true });
-    const tsv = result.data.map((row) => row.join('\t')).join('\n');
-    return new Blob([tsv], { type: 'text/tab-separated-values' });
+// Cells are quoted when they contain a tab, quote or newline (the old version
+// joined raw cells with tabs, so one such cell broke every column after it).
+export async function csvToTsv(
+  file: File,
+  _s?: string,
+  _t?: string,
+  _settings?: ConversionSettings,
+  onProgress?: (pct: number) => void,
+): Promise<Blob> {
+  const out = new BlobBuilder();
+  let first = true;
+  await streamRows<string[]>(file, { header: false, onProgress }, (row) => {
+    out.append((first ? '' : '\n') + Papa.unparse([row], { delimiter: '\t', newline: '\n' }));
+    first = false;
   });
+  return out.toBlob('text/tab-separated-values');
 }
 
 export function csvToXml(
@@ -75,40 +84,37 @@ export async function csvToTxt(file: File): Promise<Blob> {
   return new Blob([lines.join('\n')], { type: 'text/plain' });
 }
 
-export function tsvToCsv(
+export async function tsvToCsv(
   file: File,
   _s: string,
   _t: string,
   settings?: ConversionSettings,
-  _onProgress?: (pct: number) => void,
+  onProgress?: (pct: number) => void,
 ): Promise<Blob> {
   const delimiter = settings?.csvDelimiter ?? ',';
-  return file.text().then((text) => {
-    const result = Papa.parse(text, { header: false, delimiter: '\t', skipEmptyLines: true });
-    const csv = Papa.unparse(result.data, { delimiter });
-    return new Blob([csv], { type: 'text/csv' });
+  const out = new BlobBuilder();
+  let first = true;
+  await streamRows<string[]>(file, { header: false, delimiter: '\t', onProgress }, (row) => {
+    out.append((first ? '' : '\r\n') + Papa.unparse([row], { delimiter }));
+    first = false;
   });
+  return out.toBlob('text/csv');
 }
 
-export function tsvToJson(
+export async function tsvToJson(
   file: File,
   _s: string,
   _t: string,
   settings?: ConversionSettings,
-  _onProgress?: (pct: number) => void,
+  onProgress?: (pct: number) => void,
 ): Promise<Blob> {
-  const indent = settings?.jsonIndent ?? 2;
-  return file.text().then((text) => {
-    const result = Papa.parse(text, {
-      header: true,
-      delimiter: '\t',
-      skipEmptyLines: true,
-      dynamicTyping: true,
-    });
-    const json =
-      indent === 0 ? JSON.stringify(result.data) : JSON.stringify(result.data, null, indent);
-    return new Blob([json], { type: 'application/json' });
-  });
+  const writer = new JsonArrayWriter(settings?.jsonIndent ?? 2);
+  await streamRows(
+    file,
+    { header: true, delimiter: '\t', dynamicTyping: true, onProgress },
+    (row) => writer.push(row),
+  );
+  return writer.toBlob();
 }
 
 export async function tsvToXml(

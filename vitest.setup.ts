@@ -69,6 +69,12 @@ function blobToDataUrl(blob: Blob): Promise<string> {
     // tests, so the pixels are irrelevant — swallow it rather than make every
     // caller construct a real bitmap.
     ctx.drawImage = ((...args: unknown[]) => {
+      // Drawing one mock OffscreenCanvas onto another: hand node-canvas the
+      // real canvas inside, as a browser would draw the canvas itself.
+      const [source] = args;
+      if (source && typeof source === 'object' && 'canvas' in source) {
+        args[0] = (source as { canvas: unknown }).canvas;
+      }
       try {
         (drawImage as (...a: unknown[]) => void)(...args);
       } catch {

@@ -1,7 +1,20 @@
 import Papa from 'papaparse';
 import type { ConversionSettings } from './types';
 import { XLSX_MIME, cellToText, readWorkbook, sheetToObjects, writeWorkbook } from './xlsx';
+import type { Sheet } from './xlsx';
+import { safeFileStem, uniqueName } from './filenames';
 
+function sheetToCsv(sheet: Sheet, delimiter: string): string {
+  return Papa.unparse(
+    sheet.rows.map((row) => row.map(cellToText)),
+    { delimiter },
+  );
+}
+
+/**
+ * First sheet by default. With `xlsxAllSheets`, every sheet: one CSV each in a
+ * zip (`<file>-<sheet>.csv`), or the plain CSV when there is only one sheet.
+ */
 export async function xlsxToCsv(
   file: File,
   _s: string,
@@ -9,15 +22,24 @@ export async function xlsxToCsv(
   settings?: ConversionSettings,
   _onProgress?: (pct: number) => void,
 ): Promise<Blob> {
-  const [sheet] = await readWorkbook(await file.arrayBuffer());
+  const sheets = await readWorkbook(await file.arrayBuffer());
   const delimiter = settings?.csvDelimiter ?? ',';
-  const csv = Papa.unparse(
-    sheet.rows.map((row) => row.map(cellToText)),
-    { delimiter },
-  );
-  return new Blob([csv], { type: 'text/csv' });
+  if (!settings?.xlsxAllSheets || sheets.length === 1) {
+    return new Blob([sheetToCsv(sheets[0], delimiter)], { type: 'text/csv' });
+  }
+
+  const JSZip = (await import('jszip')).default;
+  const zip = new JSZip();
+  const base = file.name.replace(/\.[^.]+$/, '');
+  const used = new Set<string>();
+  for (const sheet of sheets) {
+    const name = uniqueName(`${base}-${safeFileStem(sheet.name, 'sheet')}.csv`, used);
+    zip.file(name, sheetToCsv(sheet, delimiter));
+  }
+  return zip.generateAsync({ type: 'blob', mimeType: 'application/zip' });
 }
 
+/** First sheet's rows by default; with `xlsxAllSheets`, `{ "<sheet name>": rows, … }`. */
 export async function xlsxToJson(
   file: File,
   _s: string,
@@ -26,8 +48,17 @@ export async function xlsxToJson(
   _onProgress?: (pct: number) => void,
 ): Promise<Blob> {
   const indent = settings?.jsonIndent ?? 2;
-  const [sheet] = await readWorkbook(await file.arrayBuffer());
-  const data = sheetToObjects(sheet);
+  const sheets = await readWorkbook(await file.arrayBuffer());
+  let data: unknown;
+  if (settings?.xlsxAllSheets) {
+    // A null-prototype object: sheet names are user data, and "__proto__" is a
+    // legal one.
+    const bySheet: Record<string, unknown> = Object.create(null);
+    for (const sheet of sheets) bySheet[sheet.name] = sheetToObjects(sheet);
+    data = bySheet;
+  } else {
+    data = sheetToObjects(sheets[0]);
+  }
   const json = indent === 0 ? JSON.stringify(data) : JSON.stringify(data, null, indent);
   return new Blob([json], { type: 'application/json' });
 }

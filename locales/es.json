@@ -67,7 +67,14 @@
     "bitrate": "Tasa de bits",
     "preset": "Preajuste",
     "targetFormat": "Formato de destino",
-    "truncated": "... (truncado)"
+    "truncated": "... (truncado)",
+    "pdfPages": "Páginas",
+    "pdfFirstPage": "Primera página",
+    "pdfAllPages": "Todas las páginas",
+    "xlsxSheets": "Hojas",
+    "xlsxFirstSheet": "Primera hoja",
+    "xlsxAllSheets": "Todas las hojas",
+    "pdfScale": "Escala"
   },
   "howItWorks": {
     "heading": "CÓMO FUNCIONA",
@@ -152,6 +159,10 @@
     "improvement30": "Las exportaciones XML y HTML escapan los caracteres especiales y convierten encabezados como “First Name” en etiquetas válidas; TXT, Markdown y JSON → PDF conservan los saltos de línea",
     "improvement31": "Vídeo → WebM vuelve a funcionar (VP8 + Vorbis), los fallos de FFmpeg se explican y el progreso sigue la duración real del clip",
     "improvement32": "Las descargas en zip ya no sobrescriben archivos con el mismo nombre, y el HTML de entrada se analiza sin ejecutar sus scripts",
+    "improvement33": "PDF con Unicode: griego, cirílico, vietnamita, chino, japonés y coreano se muestran como texto real, y Markdown conserva títulos, listas, código, citas y tablas",
+    "improvement34": "Corregidos los colores de PDF → imagen (el rojo y el azul estaban invertidos); las páginas PDF ahora se pueden recortar, redimensionar y comprimir como cualquier imagen",
+    "improvement35": "La salida ePub pasa el validador del W3C y se divide en capítulos, con índice, imágenes incrustadas y el idioma correcto",
+    "improvement36": "El XML real se convierte a CSV/TSV/YAML, los archivos de Excel convierten todas las hojas y los CSV grandes se procesan por partes con progreso en vivo",
     "ossHeading": "CÓDIGO ABIERTO",
     "oss1": "Convert-it tiene licencia MIT y es de código abierto. El código completo está disponible en GitHub. Las contribuciones, informes de errores y solicitudes de funciones son bienvenidos.",
     "ossGithub": "GITHUB",

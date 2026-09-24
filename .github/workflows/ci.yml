@@ -30,7 +30,18 @@ jobs:
 
       - run: npx prettier --check .
 
+      # W3C epubcheck (Java, preinstalled on the runner) validates every EPUB
+      # the converters produce; the test runs only when EPUBCHECK_JAR is set.
+      # Pinned by hash like any other executable we download.
+      - name: Fetch epubcheck
+        run: |
+          curl -sSL -o /tmp/epubcheck.zip https://github.com/w3c/epubcheck/releases/download/v5.2.1/epubcheck-5.2.1.zip
+          echo "0532f6291faa2bb729dd253f958868a2a57dbd2c32f881a97c7c980c5940309e  /tmp/epubcheck.zip" | sha256sum -c -
+          unzip -q /tmp/epubcheck.zip -d /tmp
+
       - run: npm run test
+        env:
+          EPUBCHECK_JAR: /tmp/epubcheck-5.2.1/epubcheck.jar
 
       # Runtime dependencies only: every one of them parses untrusted files in
       # the user's browser. Dev tooling advisories are handled by Dependabot.

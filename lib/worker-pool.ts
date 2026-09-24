@@ -11,16 +11,18 @@ export class CancelledError extends Error {
 /**
  * Converters that still have to run on the UI thread.
  *
- * ponytail: xml and html parsing go through DOMParser, PDF output strips tags
- * with a detached element, and none of those exist in a worker. Audio and video
- * stay here on purpose — ffmpeg.wasm already runs in its own worker, so moving
- * it would nest workers and re-download the 31 MB core per pool slot for no
- * gain. Move the DOM-bound three off by swapping DOMParser for fast-xml-parser
- * (already a dependency) and a plain tag-strip.
+ * HTML input (DOMParser, and turndown for html → md) and Markdown → EPUB
+ * (sanitised and serialised as XHTML through the DOM) need a DOM, which a
+ * worker lacks. XML parses with fast-xml-parser, and every other → PDF path
+ * typesets from text or marked's token tree, so those run in the pool. Audio
+ * and video stay here on purpose: ffmpeg.wasm already runs in its own worker,
+ * so moving it would nest workers and re-download the 31 MB core per pool slot
+ * for no gain.
  */
 export function runsOnMainThread(sourceExt: string, targetExt: string, category?: string): boolean {
   if (category === 'video' || category === 'audio') return true;
-  return sourceExt === 'xml' || sourceExt === 'html' || targetExt === 'pdf';
+  if (sourceExt === 'html') return true;
+  return sourceExt === 'md' && targetExt === 'epub';
 }
 
 interface Task extends ConvertRequest {
