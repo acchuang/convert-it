@@ -133,6 +133,24 @@ describe('core selection and fallback', () => {
     expect(loads).toEqual(['mt', 'st', 'st']);
   });
 
+  it('skips ffmpeg entirely when WebCodecs takes the job, and cancels it on terminate', async () => {
+    const cancelWebCodecs = vi.fn();
+    vi.doMock('@/lib/webcodecs-converter', () => ({
+      convertWithWebCodecs: async () => new Blob(['wc']),
+      cancelWebCodecs,
+    }));
+    try {
+      const { mod, convert } = await load();
+      expect(await convert()).toBe('wc');
+      expect(loads).toEqual([]);
+      expect(fetch).not.toHaveBeenCalled();
+      mod.terminateFFmpeg();
+      expect(cancelWebCodecs).toHaveBeenCalledOnce();
+    } finally {
+      vi.doUnmock('@/lib/webcodecs-converter');
+    }
+  });
+
   it('does not rerun a clean ffmpeg failure: that is the input, not the core', async () => {
     behaviour.mtExec = 'exit1';
     const { mod, convert } = await load();

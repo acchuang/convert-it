@@ -2,6 +2,7 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
 import type { ConversionSettings } from './types';
 import { mimeFor } from './formats';
+import { cancelWebCodecs, convertWithWebCodecs } from './webcodecs-converter';
 
 // Self-hosted on R2 rather than unpkg: a third-party CDN is both a single point of
 // failure and an unsigned-wasm supply-chain hole, and Cloudflare Pages rejects files
@@ -187,10 +188,12 @@ function dropInstance(): void {
 }
 
 /**
- * Kills the shared instance. wasm cannot be interrupted, so this is the only
- * way to stop an exec in flight; the next conversion reloads the core.
+ * Kills the shared instance (and cancels a WebCodecs job in flight). wasm
+ * cannot be interrupted, so this is the only way to stop an exec; the next
+ * conversion reloads the core.
  */
 export function terminateFFmpeg(): void {
+  cancelWebCodecs();
   dropInstance();
   ffmpegQueue = Promise.resolve();
 }
@@ -400,6 +403,11 @@ async function runMedia(
   settings?: ConversionSettings,
   onProgress?: (pct: number) => void,
 ): Promise<Blob> {
+  // The browser's own codecs first; the 31 MB core is only fetched for jobs
+  // they can't do.
+  const fast = await convertWithWebCodecs(file, sourceExt, targetExt, settings, onProgress);
+  if (fast) return fast;
+
   const ff = await getFFmpeg();
   const mode = ffmpegMode;
   try {

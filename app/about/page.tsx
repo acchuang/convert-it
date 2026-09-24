@@ -31,7 +31,7 @@ const techStack = [
   { labelKey: 'about.techLanguage', val: 'TypeScript' },
   { labelKey: 'about.techCSS', val: 'Tailwind CSS' },
   { labelKey: 'about.techMotion', val: 'Framer Motion' },
-  { labelKey: 'about.techVideo', val: 'FFmpeg WASM' },
+  { labelKey: 'about.techVideo', val: 'WebCodecs + mediabunny, FFmpeg WASM' },
   { labelKey: 'about.techImages', val: 'jSquash WASM' },
   { labelKey: 'about.techSvg', val: 'resvg WASM' },
   { labelKey: 'about.techPng', val: 'oxipng' },

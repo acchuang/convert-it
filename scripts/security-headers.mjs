@@ -112,9 +112,15 @@ function injectMetaCsp(file) {
     throw new Error(`${relative(OUT, file)} already has a CSP meta tag — build output reused?`);
   }
   const hashes = hashInlineScripts(html);
-  // Only script-src here: the header policy carries everything else, and
-  // frame-ancestors is ignored in a meta policy anyway.
-  const policy = `script-src ${directives(hashes)['script-src'].join(' ')}`;
+  // script-src here, plus worker-src so it doesn't fall back to script-src:
+  // mediabunny (the WebCodecs path) starts small blob: workers from the page.
+  // A blob: worker can only be made by a script already allowed to run, and
+  // has no DOM, so page scripts still can't be loaded from blob:. The header
+  // policy carries everything else; frame-ancestors is ignored in a meta.
+  const policy = [
+    `script-src ${directives(hashes)['script-src'].join(' ')}`,
+    `worker-src ${directives()['worker-src'].join(' ')}`,
+  ].join('; ');
   const meta = `<meta http-equiv="Content-Security-Policy" content="${policy}"/>`;
   // The meta must come before the first script it governs, so it goes first in <head>.
   const at = html.indexOf('<head>');

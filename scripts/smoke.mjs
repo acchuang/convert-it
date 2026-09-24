@@ -50,6 +50,10 @@ const PAIRS = [
     (b) => magic('%PDF')(b) && /NotoSansSC-Regular/.test(b.toString('latin1')),
   ],
   ['clip.mkv', 'webm', 'ffmpeg vp8+vorbis', (b) => b.readUInt32BE(0) === 0x1a45dfa3],
+  // Same fixtures through the browser's codecs. VP8/Opus in, VP9/Opus and PCM
+  // out, which every Chromium has (Playwright's own lacks H.264 and AAC).
+  ['clip.mkv', 'webm', 'webcodecs vp9+opus', (b) => b.readUInt32BE(0) === 0x1a45dfa3],
+  ['clip.webm', 'wav', 'webcodecs extract', (b) => magic('RIFF')(b) && magic('WAVE', 8)(b)],
   ['clip.webm', 'mp4', 'ffmpeg video', magic('ftyp', 4)],
   [
     'audio.wav',
@@ -88,6 +92,12 @@ const browser = await (engine === 'webkit' ? webkit.launch() : chromium.launch(c
 
 const results = [];
 
+// Media pairs pin their engine. ffmpeg pairs hide WebCodecs, so they keep
+// testing the wasm core even in browsers where the fast path would take them;
+// both kinds check whether the core was actually fetched.
+const engineOf = (label) =>
+  label.startsWith('ffmpeg') ? 'ffmpeg' : label.startsWith('webcodecs') ? 'webcodecs' : null;
+
 for (const [fixture, target, label, check] of PAIRS) {
   const page = await browser.newPage();
   const consoleErrors = [];
@@ -114,6 +124,16 @@ for (const [fixture, target, label, check] of PAIRS) {
   page.on('worker', (worker) => worker.on('console', watchCsp));
 
   const row = { pair: `${fixture.split('.').pop()} → ${target}`, label, ok: false, note: '' };
+
+  const expected = engineOf(label);
+  if (expected === 'ffmpeg') {
+    await page.addInitScript(() => {
+      delete window.VideoEncoder;
+      delete window.AudioEncoder;
+    });
+  }
+  let coreFetched = false;
+  page.on('request', (r) => /ffmpeg-core\.wasm/.test(r.url()) && (coreFetched = true));
 
   try {
     // Not domcontentloaded: the file input is in the static HTML, so setInputFiles
@@ -175,7 +195,10 @@ for (const [fixture, target, label, check] of PAIRS) {
     }
 
     if (cspViolations.length) row.note = `CSP: ${cspViolations[0]}`;
-    else if (EXPECT_MT && mtFallbacks.length) row.note = mtFallbacks[0].slice(0, 200);
+    else if (EXPECT_MT && expected === 'ffmpeg' && mtFallbacks.length)
+      row.note = mtFallbacks[0].slice(0, 200);
+    else if (expected === 'ffmpeg' && !coreFetched) row.note = 'ffmpeg core was never loaded';
+    else if (expected === 'webcodecs' && coreFetched) row.note = 'fell back to ffmpeg';
     else if (bytes.length === 0) row.note = 'empty output';
     else if (!(await check(bytes)))
       row.note = `bad signature (${bytes.length}B, starts ${bytes.subarray(0, 8).toString('hex')})`;
