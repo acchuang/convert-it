@@ -28,6 +28,16 @@ _Reviewed at `7a92641` (2026-09-24). Scope: every file in `lib/`, the app shell,
     - **PDF → image colours:** every PDF → image had red and blue swapped. The pdfium wrapper already returns RGBA and the app swapped the channels again.
     - **CSV streaming:** Papa Parse's `File` streamer corrupts multi-byte characters on slice boundaries.
     - **EPUB:** every EPUB, even plain text, failed epubcheck.
+- **Phase 3: done.**
+  - **Typed errors:** every failure is classified (too large, out of memory, damaged input, unsupported, engine failed to load, unknown) and shown with a localized title, a hint, and the technical detail behind a disclosure.
+  - **Worker pool:** idle workers are reaped after 60 s. Transfer lists were measured and left out: results are Blobs, which already cross by reference.
+  - **Offline:** a generated service worker precaches the shell and caches engines on first use (FFmpeg core cache-first, still hash-checked), and "Save for offline use" caches everything. Real PNG and maskable icons were added. An offline suite in CI stops the server to prove it.
+  - **Registry:** one list of routes drives target formats, threads and the settings panel. Tests check that each route's declared settings are exactly the ones its converter reads. This removed no-op controls and surfaced two hidden ones (audio bitrate for video, the image toolbox for `.jpeg`). JobCard and ConverterApp were split.
+  - **COOP/COEP + core-mt:** every page is cross-origin isolated. `@ffmpeg/core-mt` is used on capable devices when `NEXT_PUBLIC_FFMPEG_MT_BASE_URL` is set, falling back to single-threaded on load failure or crash. It gives 2.8× on x264 and 1.9× on VP8 on 4 cores, but stays off in production until its files are uploaded to R2 (README).
+  - **WebCodecs:** a fast path via mediabunny, with ffmpeg as the fallback. 720p MKV → WebM takes 4.4 s vs 26 s (multi-threaded core) or about 10× the single-threaded core. Trim was not built; it needs a timeline UI (Phase 4 item 4).
+  - **New bugs found and fixed:**
+    - **"Add files":** after the first file, "Add files" and the compact drop target did nothing. The only file input unmounted with the drop zone.
+    - **oxipng under isolation:** `@jsquash/oxipng` switched to its parallel build (whose wasm isn't shipped), which would have broken every PNG output. It is now pinned to the single-threaded glue.
 
 ## 1. Executive summary
 
