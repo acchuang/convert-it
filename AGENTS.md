@@ -28,6 +28,13 @@ Independent Next.js project deployed via Cloudflare Pages.
 - Browser smoke suite (real codecs, CSP violations fail it): `npm run fixtures`, `npm run serve`, then `npm run smoke`; offline behaviour: `node scripts/offline-smoke.mjs`. Set `SMOKE_CHROMIUM_PATH` if Google Chrome isn't installed.
 - Sync wasm assets: `npm run copy-wasm` (run after install or upgrading `@jsquash/*`, `@resvg/resvg-wasm`, or `@hyzyla/pdfium`; copies all codec/library `.wasm` files from `node_modules` into `public/wasm/`). Files are committed, not gitignored.
 
+## Converter Registry
+
+- `lib/converters.ts` is the one registry: each supported pair is a `Route` `{ from, to, run, thread, settings }` added with `add(...)`. `CONVERSION_MAP`, `findRoute`, `getTargetFormats`, `convertFile`, the worker pool's `runsOnMainThread` and the settings panel all read it. Adding a conversion is one `add` line; never special-case a pair elsewhere.
+- `thread: 'main'` for anything that drives ffmpeg.wasm (it has its own worker) or needs the DOM (HTML input, MD → EPUB); everything else runs in the worker pool.
+- `settings` lists the `SettingKey` groups the converter actually reads, in panel order; `SETTING_FIELDS` maps each to its `ConversionSettings` fields. `app/components/SettingsPanel.tsx` shows exactly `settingsFor(source, target)`, and the gear icon hides when it is empty. `lib/__tests__/registry.test.ts` records which fields each data/document converter reads and checks media args, so a declared-but-unused (or used-but-undeclared) setting fails; the `CONVERSION_MAP` snapshot pins the route list.
+- Format metadata (`FORMATS`, `getFormatInfo`, `getFileExtension`, `formatFileSize`) and the single extension → MIME table `mimeFor` live in `lib/formats.ts`, which imports no converter. Don't add per-module MIME maps.
+
 ## Image Encode (WASM)
 
 - Image output (JPEG/PNG/WebP) is encoded via `@jsquash/*` WASM codecs (mozjpeg/libpng/libwebp), not `canvas.toBlob`. Shared helper: `lib/image-encode.ts`.

@@ -1,6 +1,7 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
 import type { ConversionSettings } from './types';
+import { mimeFor } from './formats';
 
 let ffmpeg: FFmpeg | null = null;
 let ffmpegLoading: Promise<FFmpeg> | null = null;
@@ -267,22 +268,6 @@ export function buildFfmpegArgs(
   ];
 }
 
-const MIME_TYPES: Record<string, string> = {
-  mp4: 'video/mp4',
-  webm: 'video/webm',
-  avi: 'video/x-msvideo',
-  mov: 'video/quicktime',
-  mkv: 'video/x-matroska',
-  flv: 'video/x-flv',
-  webp: 'image/webp',
-  mp3: 'audio/mpeg',
-  wav: 'audio/wav',
-  aac: 'audio/aac',
-  ogg: 'audio/ogg',
-  flac: 'audio/flac',
-  m4a: 'audio/mp4',
-};
-
 function parseTimestamp(h: string, m: string, s: string): number {
   return parseInt(h, 10) * 3600 + parseInt(m, 10) * 60 + parseFloat(s);
 }
@@ -350,7 +335,7 @@ async function runMedia(
     const outputData = (await ff.readFile(outputName)) as Uint8Array;
     onProgress?.(100);
     return new Blob([outputData.buffer as ArrayBuffer], {
-      type: MIME_TYPES[targetExt] || 'application/octet-stream',
+      type: mimeFor(targetExt),
     });
   } finally {
     ff.off('log', log.handler);

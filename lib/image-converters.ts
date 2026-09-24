@@ -1,8 +1,6 @@
 import type { ConversionSettings } from './types';
 import { ASSET_BASE, decodeToImageData, finishImage } from './image-encode';
 
-export { IMAGE_MIME_MAP } from './image-encode';
-
 // resvg's JS glue is small but the wasm is ~2.4 MB, so both load lazily: the
 // module is dynamically imported only when an SVG is actually converted (non-SVG
 // image conversions never touch it), and initWasm (one-shot, throws if called

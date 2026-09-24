@@ -4,6 +4,7 @@ import encodeWebp, { init as initWebp } from '@jsquash/webp/encode';
 import optimiseOxipng, { init as initOxipng } from '@jsquash/oxipng/optimise';
 import { encodeIcoBlob } from 'ico-codec';
 import type { ConversionSettings } from './types';
+import { mimeFor } from './formats';
 
 // jSquash ships its .wasm beside its JS in node_modules. We copy those files
 // into public/wasm/ (see scripts/copy-wasm.mjs) and point each codec at them via
@@ -12,14 +13,6 @@ import type { ConversionSettings } from './types';
 // hosting the assets elsewhere (e.g. a CDN); default '/wasm' serves them from
 // the static export's public/ directory.
 export const ASSET_BASE = process.env.NEXT_PUBLIC_ASSET_BASE ?? '/wasm';
-
-export const IMAGE_MIME_MAP: Record<string, string> = {
-  jpg: 'image/jpeg',
-  jpeg: 'image/jpeg',
-  png: 'image/png',
-  webp: 'image/webp',
-  bmp: 'image/bmp',
-};
 
 const FLATTEN_EXTS = new Set(['jpg', 'jpeg', 'bmp']);
 
@@ -153,7 +146,7 @@ export async function encodeImageData(
   quality: number,
 ): Promise<Blob> {
   const ext = targetExt.toLowerCase();
-  const mime = IMAGE_MIME_MAP[ext] ?? 'image/png';
+  const mime = mimeFor(ext);
   const input = FLATTEN_EXTS.has(ext) ? flattenOverWhite(imageData) : imageData;
 
   if (ext === 'jpg' || ext === 'jpeg') {

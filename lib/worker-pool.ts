@@ -1,6 +1,7 @@
 import type { ConvertRequest, ConvertResponse } from './convert.worker';
 import type { ConversionSettings } from './types';
 import { ConversionError } from './errors';
+import { findRoute } from './converters';
 
 export class CancelledError extends Error {
   constructor() {
@@ -24,10 +25,12 @@ export class CancelledError extends Error {
  * ~200 KB), but HTML and Markdown inputs are small documents that convert in
  * milliseconds; the shim would cost more load time than it saves.
  */
-export function runsOnMainThread(sourceExt: string, targetExt: string, category?: string): boolean {
-  if (category === 'video' || category === 'audio') return true;
-  if (sourceExt === 'html') return true;
-  return sourceExt === 'md' && targetExt === 'epub';
+export function runsOnMainThread(
+  sourceExt: string,
+  targetExt: string,
+  _category?: string,
+): boolean {
+  return findRoute(sourceExt, targetExt)?.thread === 'main';
 }
 
 // No transfer lists: the File going in and the Blob coming back are both

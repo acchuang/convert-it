@@ -1,5 +1,6 @@
-import type { FileCategory, FormatInfo, ConverterFn, ConversionSettings } from './types';
+import type { ConverterFn, ConversionSettings } from './types';
 import { ConversionError } from './errors';
+import { getFileExtension } from './formats';
 import {
   csvToJson,
   csvToTsv,
@@ -44,57 +45,90 @@ import { txtToEpub, mdToEpub, htmlToEpub } from './epub-converter';
 
 export type { FileCategory, FormatInfo, ConverterFn, ConversionSettings } from './types';
 export { DEFAULT_SETTINGS } from './types';
+export { FORMATS, getFormatInfo, getFileExtension, formatFileSize, mimeFor } from './formats';
 
-export const FORMATS: FormatInfo[] = [
-  // Images
-  { ext: 'jpg', label: 'JPEG', mimeType: 'image/jpeg', category: 'image' },
-  { ext: 'png', label: 'PNG', mimeType: 'image/png', category: 'image' },
-  { ext: 'webp', label: 'WebP', mimeType: 'image/webp', category: 'image' },
-  { ext: 'gif', label: 'GIF', mimeType: 'image/gif', category: 'image' },
-  { ext: 'bmp', label: 'BMP', mimeType: 'image/bmp', category: 'image' },
-  { ext: 'ico', label: 'ICO', mimeType: 'image/x-icon', category: 'image' },
-  { ext: 'svg', label: 'SVG', mimeType: 'image/svg+xml', category: 'image' },
-  { ext: 'heic', label: 'HEIC', mimeType: 'image/heic', category: 'image' },
-  { ext: 'avif', label: 'AVIF', mimeType: 'image/avif', category: 'image' },
-  // Video
-  { ext: 'mp4', label: 'MP4', mimeType: 'video/mp4', category: 'video' },
-  { ext: 'webm', label: 'WebM', mimeType: 'video/webm', category: 'video' },
-  { ext: 'avi', label: 'AVI', mimeType: 'video/x-msvideo', category: 'video' },
-  { ext: 'mov', label: 'MOV', mimeType: 'video/quicktime', category: 'video' },
-  { ext: 'mkv', label: 'MKV', mimeType: 'video/x-matroska', category: 'video' },
-  { ext: 'flv', label: 'FLV', mimeType: 'video/x-flv', category: 'video' },
-  { ext: 'm4v', label: 'M4V', mimeType: 'video/mp4', category: 'video' },
-  { ext: '3gp', label: '3GP', mimeType: 'video/3gpp', category: 'video' },
-  // Audio
-  { ext: 'mp3', label: 'MP3', mimeType: 'audio/mpeg', category: 'audio' },
-  { ext: 'wav', label: 'WAV', mimeType: 'audio/wav', category: 'audio' },
-  { ext: 'aac', label: 'AAC', mimeType: 'audio/aac', category: 'audio' },
-  { ext: 'ogg', label: 'OGG', mimeType: 'audio/ogg', category: 'audio' },
-  { ext: 'flac', label: 'FLAC', mimeType: 'audio/flac', category: 'audio' },
-  { ext: 'm4a', label: 'M4A', mimeType: 'audio/mp4', category: 'audio' },
-  { ext: 'wma', label: 'WMA', mimeType: 'audio/x-ms-wma', category: 'audio' },
-  { ext: 'opus', label: 'OPUS', mimeType: 'audio/opus', category: 'audio' },
-  // Documents
-  { ext: 'txt', label: 'TXT', mimeType: 'text/plain', category: 'document' },
-  { ext: 'md', label: 'Markdown', mimeType: 'text/markdown', category: 'document' },
-  { ext: 'html', label: 'HTML', mimeType: 'text/html', category: 'document' },
-  { ext: 'pdf', label: 'PDF', mimeType: 'application/pdf', category: 'document' },
-  { ext: 'epub', label: 'ePub', mimeType: 'application/epub+zip', category: 'document' },
-  // Data
-  { ext: 'csv', label: 'CSV', mimeType: 'text/csv', category: 'data' },
-  { ext: 'json', label: 'JSON', mimeType: 'application/json', category: 'data' },
-  { ext: 'xml', label: 'XML', mimeType: 'application/xml', category: 'data' },
-  { ext: 'yaml', label: 'YAML', mimeType: 'application/yaml', category: 'data' },
-  { ext: 'tsv', label: 'TSV', mimeType: 'text/tab-separated-values', category: 'data' },
-  {
-    ext: 'xlsx',
-    label: 'Excel',
-    mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    category: 'data',
-  },
-];
+// The converter registry: every supported (source, target) pair as one
+// route, holding what runs it, where it runs, and which settings it reads.
+// Before this, that knowledge was spread across three family maps, special
+// cases in convertFile, runsOnMainThread in the worker pool, and about ten
+// format lists in JobCard that decided which controls to show. Some of those
+// lists offered controls that did nothing (a quality slider for PNG, a bitrate
+// for WAV, CSV options for XLSX output).
 
-const IMAGE_CONVERSIONS: Record<string, string[]> = {
+/** A group of controls in the settings panel, and the fields it edits. */
+export type SettingKey =
+  | 'quality' // quality
+  | 'imageTransform' // imageCropAspect, imageResizePercent, imageResizeWidth, imageResizeHeight
+  | 'targetSize' // imageTargetSizeKb
+  | 'csvDelimiter' // csvDelimiter
+  | 'jsonIndent' // jsonIndent
+  | 'xmlRoot' // xmlRootElement
+  | 'audioBitrate' // audioBitrate
+  | 'video' // videoQuality, videoPreset
+  | 'pdfPages' // pdfAllPages
+  | 'pdfScale' // pdfScale
+  | 'xlsxSheets'; // xlsxAllSheets
+
+export const SETTING_FIELDS: Record<SettingKey, (keyof ConversionSettings)[]> = {
+  quality: ['quality'],
+  imageTransform: [
+    'imageCropAspect',
+    'imageResizePercent',
+    'imageResizeWidth',
+    'imageResizeHeight',
+  ],
+  targetSize: ['imageTargetSizeKb'],
+  csvDelimiter: ['csvDelimiter'],
+  jsonIndent: ['jsonIndent'],
+  xmlRoot: ['xmlRootElement'],
+  audioBitrate: ['audioBitrate'],
+  video: ['videoQuality', 'videoPreset'],
+  pdfPages: ['pdfAllPages'],
+  pdfScale: ['pdfScale'],
+  xlsxSheets: ['xlsxAllSheets'],
+};
+
+export interface Route {
+  from: string;
+  to: string;
+  run: ConverterFn;
+  /** 'main' when the converter needs the DOM or drives ffmpeg.wasm (its own worker). */
+  thread: 'worker' | 'main';
+  /** The settings this conversion actually reads, in panel order. */
+  settings: SettingKey[];
+}
+
+const ROUTES: Route[] = [];
+const byPair = new Map<string, Route>();
+
+function add(
+  from: string,
+  to: string,
+  run: ConverterFn,
+  settings: SettingKey[] = [],
+  thread: Route['thread'] = 'worker',
+) {
+  const route = { from, to, run, thread, settings };
+  ROUTES.push(route);
+  byPair.set(`${from}:${to}`, route);
+}
+
+// --- Images -----------------------------------------------------------------
+
+// Lossy targets have a quality knob and can be compressed to a size budget;
+// lossless ones only take crop/resize.
+function imageSettings(to: string): SettingKey[] {
+  return to === 'jpg' || to === 'jpeg' || to === 'webp'
+    ? ['quality', 'imageTransform', 'targetSize']
+    : ['imageTransform'];
+}
+
+const heic: ConverterFn = (file, _s, to, settings, onProgress) =>
+  convertHeic(file, to, settings, onProgress);
+const avif: ConverterFn = (file, _s, to, settings, onProgress) =>
+  convertAvif(file, to, settings, onProgress);
+
+const IMAGE_TARGETS: Record<string, string[]> = {
   jpg: ['png', 'webp', 'bmp', 'ico', 'jpg'],
   jpeg: ['png', 'webp', 'bmp', 'ico', 'jpg'],
   png: ['jpg', 'webp', 'bmp', 'ico', 'png'],
@@ -106,115 +140,137 @@ const IMAGE_CONVERSIONS: Record<string, string[]> = {
   heic: ['jpg', 'png', 'webp', 'bmp', 'ico'],
   avif: ['jpg', 'png', 'webp', 'bmp', 'ico'],
 };
-
-const VIDEO_CONVERSIONS: Record<string, string[]> = {
-  mp4: ['webm', 'avi', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg', 'webp'],
-  webm: ['mp4', 'avi', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg', 'webp'],
-  avi: ['mp4', 'webm', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg', 'webp'],
-  mov: ['mp4', 'webm', 'avi', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg', 'webp'],
-  mkv: ['mp4', 'webm', 'avi', 'mov', 'flv', 'mp3', 'wav', 'aac', 'ogg', 'webp'],
-  flv: ['mp4', 'webm', 'avi', 'mov', 'mkv', 'mp3', 'wav', 'aac', 'ogg', 'webp'],
-  m4v: ['mp4', 'webm', 'avi', 'mov', 'mkv', 'flv', 'mp3', 'wav', 'aac', 'ogg', 'webp'],
-  '3gp': ['mp4', 'webm', 'avi', 'mov', 'mkv', 'mp3', 'wav', 'aac', 'webp'],
-};
-
-const AUDIO_CONVERSIONS: Record<string, string[]> = {
-  mp3: ['wav', 'aac', 'ogg', 'flac', 'm4a'],
-  wav: ['mp3', 'aac', 'ogg', 'flac', 'm4a'],
-  aac: ['mp3', 'wav', 'ogg', 'flac', 'm4a'],
-  ogg: ['mp3', 'wav', 'aac', 'flac', 'm4a'],
-  flac: ['mp3', 'wav', 'aac', 'ogg', 'm4a'],
-  m4a: ['mp3', 'wav', 'aac', 'ogg', 'flac'],
-  wma: ['mp3', 'wav', 'aac', 'ogg', 'm4a'],
-  opus: ['mp3', 'wav', 'aac', 'ogg', 'm4a'],
-};
-
-const CONVERTER_REGISTRY: Record<string, ConverterFn> = {
-  'csv:json': csvToJson,
-  'csv:tsv': csvToTsv,
-  'csv:xml': csvToXml,
-  'csv:html': csvToHtml,
-  'csv:xlsx': csvToXlsx,
-  'csv:yaml': csvToYaml,
-  'csv:txt': csvToTxt,
-  'tsv:csv': tsvToCsv,
-  'tsv:json': tsvToJson,
-  'tsv:xml': tsvToXml,
-  'tsv:html': tsvToHtml,
-  'json:csv': jsonToCsv,
-  'json:xml': jsonToXml,
-  'json:yaml': jsonToYaml,
-  'json:txt': jsonToTxt,
-  'json:xlsx': jsonToXlsx,
-  'json:tsv': jsonToTsv,
-  'json:html': jsonToHtml,
-  'json:md': jsonToMd,
-  'json:pdf': jsonToPdf,
-  'xml:json': xmlToJson,
-  'xml:txt': xmlToTxt,
-  'xml:csv': xmlToCsv,
-  'xml:yaml': xmlToYaml,
-  'xml:tsv': xmlToTsv,
-  'yaml:json': yamlToJson,
-  'yaml:csv': yamlToCsv,
-  'yaml:xml': yamlToXml,
-  'yaml:tsv': yamlToTsv,
-  'md:html': mdToHtml,
-  'md:pdf': mdToPdf,
-  'html:md': htmlToMd,
-  'html:txt': htmlToTxt,
-  'html:pdf': htmlToPdf,
-  'txt:html': txtToHtml,
-  'txt:md': txtToMd,
-  'txt:pdf': txtToPdf,
-  'xlsx:csv': xlsxToCsv,
-  'xlsx:json': xlsxToJson,
-  'txt:epub': txtToEpub,
-  'md:epub': mdToEpub,
-  'html:epub': htmlToEpub,
-  'pdf:png': pdfToImage,
-  'pdf:jpg': pdfToImage,
-  'pdf:webp': pdfToImage,
-  'pdf:txt': pdfToText,
-  'pdf:html': pdfToHtml,
-};
-
-function buildConversionMap(): Record<string, string[]> {
-  const map: Record<string, string[]> = {
-    ...IMAGE_CONVERSIONS,
-    ...VIDEO_CONVERSIONS,
-    ...AUDIO_CONVERSIONS,
-  };
-
-  for (const key of Object.keys(CONVERTER_REGISTRY)) {
-    const [source, target] = key.split(':');
-    if (!map[source]) map[source] = [];
-    if (!map[source].includes(target)) {
-      map[source].push(target);
-    }
-  }
-
-  return map;
+for (const [from, targets] of Object.entries(IMAGE_TARGETS)) {
+  const run = from === 'heic' ? heic : from === 'avif' ? avif : convertImage;
+  for (const to of targets) add(from, to, run, imageSettings(to));
 }
 
-export const CONVERSION_MAP: Record<string, string[]> = buildConversionMap();
+// --- Video and audio (ffmpeg.wasm runs in its own worker, so 'main') ------------
 
-export function getFormatInfo(ext: string): FormatInfo | undefined {
-  return FORMATS.find((f) => f.ext === ext.toLowerCase());
+// Lossless audio has no bitrate (buildFfmpegArgs leaves -b:a out for them).
+const audioSettings = (to: string): SettingKey[] =>
+  AUDIO_CODECS[to]?.bitrate ? ['audioBitrate'] : [];
+
+const VIDEO_TARGETS = [
+  'mp4',
+  'webm',
+  'avi',
+  'mov',
+  'mkv',
+  'flv',
+  'mp3',
+  'wav',
+  'aac',
+  'ogg',
+  'webp',
+];
+const VIDEO_SOURCES: Record<string, string[]> = {
+  mp4: VIDEO_TARGETS.filter((t) => t !== 'mp4'),
+  webm: VIDEO_TARGETS.filter((t) => t !== 'webm'),
+  avi: VIDEO_TARGETS.filter((t) => t !== 'avi'),
+  mov: VIDEO_TARGETS.filter((t) => t !== 'mov'),
+  mkv: VIDEO_TARGETS.filter((t) => t !== 'mkv'),
+  flv: VIDEO_TARGETS.filter((t) => t !== 'flv'),
+  m4v: VIDEO_TARGETS,
+  '3gp': VIDEO_TARGETS.filter((t) => t !== 'flv' && t !== 'ogg'),
+};
+for (const [from, targets] of Object.entries(VIDEO_SOURCES)) {
+  for (const to of targets) {
+    if (AUDIO_CODECS[to]) add(from, to, extractAudio, audioSettings(to), 'main');
+    else if (to === 'webp')
+      add(from, to, convertAudioVideo, [], 'main'); // animated WebP: fixed quality
+    else add(from, to, convertAudioVideo, ['video', 'audioBitrate'], 'main');
+  }
+}
+
+const AUDIO_TARGETS = ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a'];
+for (const from of ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'wma', 'opus']) {
+  const targets =
+    from === 'wma' || from === 'opus'
+      ? ['mp3', 'wav', 'aac', 'ogg', 'm4a']
+      : AUDIO_TARGETS.filter((t) => t !== from);
+  for (const to of targets) add(from, to, convertAudioVideo, audioSettings(to), 'main');
+}
+
+// --- Data --------------------------------------------------------------------
+
+add('csv', 'json', csvToJson, ['jsonIndent']);
+add('csv', 'tsv', csvToTsv);
+add('csv', 'xml', csvToXml, ['xmlRoot']);
+add('csv', 'html', csvToHtml);
+add('csv', 'xlsx', csvToXlsx);
+add('csv', 'yaml', csvToYaml);
+add('csv', 'txt', csvToTxt);
+add('tsv', 'csv', tsvToCsv, ['csvDelimiter']);
+add('tsv', 'json', tsvToJson, ['jsonIndent']);
+add('tsv', 'xml', tsvToXml, ['xmlRoot']);
+add('tsv', 'html', tsvToHtml);
+add('json', 'csv', jsonToCsv, ['csvDelimiter']);
+add('json', 'xml', jsonToXml, ['xmlRoot']);
+add('json', 'yaml', jsonToYaml);
+add('json', 'txt', jsonToTxt);
+add('json', 'xlsx', jsonToXlsx);
+add('json', 'tsv', jsonToTsv);
+add('json', 'html', jsonToHtml);
+add('json', 'md', jsonToMd);
+add('json', 'pdf', jsonToPdf);
+add('xml', 'json', xmlToJson, ['jsonIndent']);
+add('xml', 'txt', xmlToTxt);
+add('xml', 'csv', xmlToCsv, ['csvDelimiter']);
+add('xml', 'yaml', xmlToYaml);
+add('xml', 'tsv', xmlToTsv);
+add('yaml', 'json', yamlToJson, ['jsonIndent']);
+add('yaml', 'csv', yamlToCsv, ['csvDelimiter']);
+add('yaml', 'xml', yamlToXml, ['xmlRoot']);
+add('yaml', 'tsv', yamlToTsv);
+add('xlsx', 'csv', xlsxToCsv, ['csvDelimiter', 'xlsxSheets']);
+add('xlsx', 'json', xlsxToJson, ['jsonIndent', 'xlsxSheets']);
+
+// --- Documents ------------------------------------------------------------------
+// HTML input and MD → EPUB need the DOM (see worker-pool.ts for why they
+// stay on the main thread); everything else here is DOM-free.
+
+add('md', 'html', mdToHtml);
+add('md', 'pdf', mdToPdf);
+add('md', 'epub', mdToEpub, [], 'main');
+add('html', 'md', htmlToMd, [], 'main');
+add('html', 'txt', htmlToTxt, [], 'main');
+add('html', 'pdf', htmlToPdf, [], 'main');
+add('html', 'epub', htmlToEpub, [], 'main');
+add('txt', 'html', txtToHtml);
+add('txt', 'md', txtToMd);
+add('txt', 'pdf', txtToPdf);
+add('txt', 'epub', txtToEpub);
+
+// --- PDF input ---------------------------------------------------------------------
+
+for (const to of ['png', 'jpg', 'webp']) {
+  add('pdf', to, pdfToImage, ['pdfPages', 'pdfScale', ...imageSettings(to)]);
+}
+add('pdf', 'txt', pdfToText);
+add('pdf', 'html', pdfToHtml);
+
+// --- Queries -------------------------------------------------------------------------
+
+/** Targets per source, in registry order (the first is the default choice). */
+export const CONVERSION_MAP: Record<string, string[]> = {};
+for (const route of ROUTES) (CONVERSION_MAP[route.from] ??= []).push(route.to);
+
+export function findRoute(sourceExt: string, targetExt: string): Route | undefined {
+  return byPair.get(`${sourceExt.toLowerCase()}:${targetExt.toLowerCase()}`);
 }
 
 export function getTargetFormats(sourceExt: string): string[] {
   return CONVERSION_MAP[sourceExt.toLowerCase()] ?? [];
 }
 
-export function getFileExtension(filename: string): string {
-  return filename.split('.').pop()?.toLowerCase() ?? '';
+/** The settings groups the panel shows for this pair (none: no gear icon). */
+export function settingsFor(sourceExt: string, targetExt: string | null): SettingKey[] {
+  return targetExt ? (findRoute(sourceExt, targetExt)?.settings ?? []) : [];
 }
 
-export function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+export function allRoutes(): readonly Route[] {
+  return ROUTES;
 }
 
 export async function convertFile(
@@ -224,28 +280,9 @@ export async function convertFile(
   onProgress?: (pct: number) => void,
 ): Promise<Blob> {
   const sourceExt = getFileExtension(file.name);
-
-  if (sourceExt === 'heic') return convertHeic(file, targetExt, settings, onProgress);
-  if (sourceExt === 'avif') return convertAvif(file, targetExt, settings, onProgress);
-
-  const category = getFormatInfo(sourceExt)?.category;
-
-  if (category === 'image') {
-    return convertImage(file, sourceExt, targetExt, settings, onProgress);
+  const route = findRoute(sourceExt, targetExt);
+  if (!route) {
+    throw new ConversionError('unsupported', `Unsupported conversion: ${sourceExt} → ${targetExt}`);
   }
-
-  if (category === 'video' || category === 'audio') {
-    if (category === 'video' && Object.keys(AUDIO_CODECS).includes(targetExt)) {
-      return extractAudio(file, sourceExt, targetExt, settings, onProgress);
-    }
-    return convertAudioVideo(file, sourceExt, targetExt, settings, onProgress);
-  }
-
-  const key = `${sourceExt}:${targetExt}`;
-  const converter = CONVERTER_REGISTRY[key];
-  if (converter) {
-    return converter(file, sourceExt, targetExt, settings, onProgress);
-  }
-
-  throw new ConversionError('unsupported', `Unsupported conversion: ${sourceExt} → ${targetExt}`);
+  return route.run(file, sourceExt, targetExt, settings, onProgress);
 }
