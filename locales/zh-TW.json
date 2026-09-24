@@ -121,7 +121,9 @@
     "metaWillKeep": "以上內容都會保留在輸出檔案中。",
     "metaWillKeepNoGps": "除位置外都會保留在輸出檔案中。",
     "ocrLanguage": "文字語言 (OCR)",
-    "ocrHint": "辨識圖片中的文字。語言資料只需下載一次（1–3 MB），之後可離線使用。"
+    "ocrHint": "辨識圖片中的文字。語言資料只需下載一次（1–3 MB），之後可離線使用。",
+    "subtitleOffset": "調整時間",
+    "subtitleOffsetHint": "每行加上的秒數：1.5 延後顯示，-1.5 提前顯示。"
   },
   "howItWorks": {
     "heading": "使用方式",

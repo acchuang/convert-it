@@ -83,6 +83,12 @@ const PAIRS = [
   ['data.json', 'yaml', 'yaml', (b) => b.toString().includes('name:')],
   ['doc.md', 'html', 'document', (b) => /<(h1|strong|a)\b/i.test(b.toString())],
   ['doc.pdf', 'pdf', 'pdf-lib edit', magic('%PDF')],
+  [
+    'sub.srt',
+    'vtt',
+    'subtitles',
+    (b) => /^WEBVTT\n\n00:00:01\.000 --> 00:00:03\.500\nHello <i>there<\/i>/.test(b.toString()),
+  ],
   ['ocr.png', 'txt', 'tesseract OCR', (b) => /reads printed text/.test(b.toString())],
   ['scan.pdf', 'txt', 'scanned PDF → OCR', (b) => /Invoice 2026 total 314/.test(b.toString())],
   ['doc.md', 'docx', 'docx writer', (b) => magic('PK')(b) && b.includes('word/document.xml')],

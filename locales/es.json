@@ -121,7 +121,9 @@
     "metaWillKeep": "Todo esto se conserva en el resultado.",
     "metaWillKeepNoGps": "Se conserva, salvo la ubicación.",
     "ocrLanguage": "Idioma del texto (OCR)",
-    "ocrHint": "Lee el texto de la imagen. Los datos del idioma se descargan una vez (1–3 MB) y luego funcionan sin conexión."
+    "ocrHint": "Lee el texto de la imagen. Los datos del idioma se descargan una vez (1–3 MB) y luego funcionan sin conexión.",
+    "subtitleOffset": "Desplazar tiempos",
+    "subtitleOffsetHint": "Segundos sumados a cada línea: 1.5 las muestra más tarde, -1.5 antes."
   },
   "howItWorks": {
     "heading": "CÓMO FUNCIONA",

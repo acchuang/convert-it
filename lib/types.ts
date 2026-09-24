@@ -41,6 +41,7 @@ export interface ConversionSettings {
   imageTargetSizeKb: number; // 0 = off; jpg/webp only — quality is searched to fit
   metadata: string; // image output: 'strip' (default) | 'keep' | 'keep-no-gps'
   ocrLanguage: string; // image → text, and scanned pages in PDF → text: a tesseract code ('eng')
+  subtitleOffset: number; // seconds added to every subtitle cue (negative = earlier)
 }
 
 export const DEFAULT_SETTINGS: ConversionSettings = {
@@ -72,6 +73,7 @@ export const DEFAULT_SETTINGS: ConversionSettings = {
   imageTargetSizeKb: 0,
   metadata: 'strip',
   ocrLanguage: 'eng',
+  subtitleOffset: 0,
 };
 
 export interface HistoryEntry {

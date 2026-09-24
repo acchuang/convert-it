@@ -62,6 +62,11 @@ Independent Next.js project deployed via Cloudflare Pages.
 - Compression re-renders pages through PDFium as JPEG (medium 150 dpi/q75, strong 100 dpi/q60). Page sizes come from pdf-lib's page box, not the rounded bitmap. The result is kept only if it's smaller. Text stops being selectable, so it's opt-in.
 - `lib/pdf-options.ts` holds the light parts (`parsePageRange`, `isPageRangeSyntax`, `canMerge`) so the UI never imports pdf-lib. A range beyond the document is `ConversionError('invalid-settings')` (its own localized message: fix the setting, not the file). A password-protected PDF is `unsupported`. A merge failure names the file.
 
+## Subtitles
+
+- `lib/subtitles.ts`: SRT and VTT are read leniently by one parser (BOM, CRLF/CR, missing cue numbers, `.` or `,` before milliseconds, missing hours, NOTE/STYLE/REGION blocks, cue ids and settings) and written strictly. Only `<b>`, `<i>` and `<u>` survive; `<v Speaker>` becomes "Speaker: ", and `<font>`, class spans, karaoke timestamps and `{\an8}` overrides are dropped. VTT output can't hold `-->` or a blank line inside a cue.
+- Routes: SRT ⇄ VTT, each to itself for re-timing (`subtitleOffset` in seconds; cues moved before 0 are clipped or dropped), and → TXT as a transcript. Burn-in isn't offered: it needs the video and the subtitles as two inputs.
+
 ## OCR
 
 - tesseract.js 7 (Apache-2.0), **self-hosted** under `public/ocr` (copied by `npm run copy-wasm`): `worker.min.js`, the two LSTM cores (`tesseract-core{-simd,}-lstm.{js,wasm}`, picked with `wasm-feature-detect`), and `lang/<code>.traineddata.gz` (tessdata 4.0.0 best_int for eng, spa, fra, deu, chi_sim, chi_tra, jpn, kor; from the `@tesseract.js-data/*` devDependencies). Its defaults would fetch all of that from third-party CDNs, which the CSP blocks. Nothing loads before the first OCR job; `/ocr` is cached on first use and kept out of the offline pack (about 20 MB).

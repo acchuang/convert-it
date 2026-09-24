@@ -36,6 +36,14 @@ writeFileSync(join(DIR, 'img.png'), canvas.toBuffer('image/png'));
   writeFileSync(join(DIR, 'scan.pdf'), await doc.save());
 }
 
+// Subtitles as they circulate: BOM, CRLF, a missing cue number, "." before
+// the milliseconds, a <font> tag.
+writeFileSync(
+  join(DIR, 'sub.srt'),
+  '\uFEFF1\r\n00:00:01,000 --> 00:00:03,500\r\n<font color="#ff0">Hello</font> <i>there</i>\r\n\r\n' +
+    '00:00:04.200 --> 00:00:06,000\r\nSecond line\r\n',
+);
+
 // A Word document from another producer (python-docx on Word's default
 // template), shared with the unit tests.
 copyFileSync(

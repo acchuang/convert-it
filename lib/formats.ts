@@ -40,6 +40,8 @@ export const FORMATS: FormatInfo[] = [
   { ext: 'html', label: 'HTML', mimeType: 'text/html', category: 'document' },
   { ext: 'pdf', label: 'PDF', mimeType: 'application/pdf', category: 'document' },
   { ext: 'epub', label: 'ePub', mimeType: 'application/epub+zip', category: 'document' },
+  { ext: 'srt', label: 'SRT', mimeType: 'application/x-subrip', category: 'document' },
+  { ext: 'vtt', label: 'WebVTT', mimeType: 'text/vtt', category: 'document' },
   {
     ext: 'docx',
     label: 'Word',

@@ -43,6 +43,7 @@ import {
   pdfToHtml,
 } from './pdf-converters';
 import { txtToEpub, mdToEpub, htmlToEpub } from './epub-converter';
+import { subtitlesTo } from './subtitles';
 // Word: mammoth (~600 KB) and the writer load on first use.
 const docx =
   (name: keyof typeof import('./docx-converters')): ConverterFn =>
@@ -83,6 +84,7 @@ export type SettingKey =
   | 'mute' // mute
   | 'metadata' // metadata
   | 'ocr' // ocrLanguage
+  | 'subtitleOffset' // subtitleOffset
   | 'pdfPages' // pdfAllPages
   | 'pdfScale' // pdfScale
   | 'pdfEdit' // pdfPageRange, pdfRotate, pdfSplit
@@ -111,6 +113,7 @@ export const SETTING_FIELDS: Record<SettingKey, (keyof ConversionSettings)[]> = 
   mute: ['mute'],
   metadata: ['metadata'],
   ocr: ['ocrLanguage'],
+  subtitleOffset: ['subtitleOffset'],
   pdfPages: ['pdfAllPages'],
   pdfScale: ['pdfScale'],
   pdfEdit: ['pdfPageRange', 'pdfRotate', 'pdfSplit'],
@@ -304,6 +307,16 @@ add('docx', 'html', docx('docxToHtml'));
 add('docx', 'md', docx('docxToMd'), [], 'main');
 add('docx', 'txt', docx('docxToTxt'));
 add('docx', 'epub', docx('docxToEpub'), [], 'main');
+
+// --- Subtitles ------------------------------------------------------------------
+// SRT ⇄ VTT, and to themselves for re-timing; → txt is the transcript.
+
+for (const [from, targets] of [
+  ['srt', ['vtt', 'srt', 'txt']],
+  ['vtt', ['srt', 'vtt', 'txt']],
+] as const) {
+  for (const to of targets) add(from, to, subtitlesTo, to === 'txt' ? [] : ['subtitleOffset']);
+}
 
 // --- PDF input ---------------------------------------------------------------------
 

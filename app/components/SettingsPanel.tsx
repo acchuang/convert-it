@@ -115,6 +115,7 @@ export function SettingsPanel({
   const mediaKind = getFormatInfo(sourceExt)?.category === 'video' ? 'video' : 'audio';
   const showMetadata = shown.has('metadata');
   const showOcr = shown.has('ocr');
+  const showSubtitleOffset = shown.has('subtitleOffset');
   const showPdfEdit = shown.has('pdfEdit');
   const showPdfCompress = shown.has('pdfCompress');
   const showPdfPageSize = shown.has('pdfPageSize');
@@ -430,6 +431,25 @@ export function SettingsPanel({
               </div>
             </div>
           </>
+        )}
+
+        {showSubtitleOffset && (
+          <div className={CARD}>
+            <span className={LABEL}>{t('job.subtitleOffset')}</span>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                step={0.1}
+                value={settings.subtitleOffset || ''}
+                onChange={(e) => onChange({ subtitleOffset: Number(e.target.value) || 0 })}
+                placeholder="0"
+                aria-label={t('job.subtitleOffset')}
+                className="flex-1 bg-[var(--bg-secondary)] border border-[var(--border-secondary)] text-primary text-xs rounded px-2.5 py-1.5 focus:outline-none focus:border-[var(--accent)]"
+              />
+              <span className="text-[var(--text-muted)] text-xs">s</span>
+            </div>
+            <span className="text-xs text-[var(--text-muted)]">{t('job.subtitleOffsetHint')}</span>
+          </div>
         )}
 
         {showOcr && (

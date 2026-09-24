@@ -121,7 +121,9 @@
     "metaWillKeep": "All of this is kept in the output.",
     "metaWillKeepNoGps": "Kept in the output, except the location.",
     "ocrLanguage": "Text language (OCR)",
-    "ocrHint": "Reads the text in the image. The language data downloads once (1–3 MB), then works offline."
+    "ocrHint": "Reads the text in the image. The language data downloads once (1–3 MB), then works offline.",
+    "subtitleOffset": "Shift timing",
+    "subtitleOffsetHint": "Seconds added to every line: 1.5 shows them later, -1.5 earlier."
   },
   "howItWorks": {
     "heading": "HOW IT WORKS",

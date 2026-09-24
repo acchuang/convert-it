@@ -62,6 +62,8 @@ const SAMPLES: Record<string, () => File> = {
   md: () => new File(['# T\n\ntext'], 's.md'),
   html: () => new File(['<p>t</p>'], 's.html'),
   txt: () => new File(['t'], 's.txt'),
+  srt: () => new File(['1\n00:00:01,000 --> 00:00:02,000\nHi\n'], 's.srt'),
+  vtt: () => new File(['WEBVTT\n\n00:01.000 --> 00:02.000\nHi\n'], 's.vtt'),
   xlsx: () => new File([readFileSync(join(__dirname, 'fixtures', 'sheetjs-types.xlsx'))], 's.xlsx'),
 };
 
