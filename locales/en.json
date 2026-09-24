@@ -207,5 +207,11 @@
       "hint": "Something unexpected went wrong. Press Retry; if it keeps failing, the technical details below will help us fix it."
     },
     "details": "Technical details"
+  },
+  "offline": {
+    "save": "Save for offline use ({size} MB)",
+    "saving": "Saving for offline use… {pct}%",
+    "saved": "Available offline",
+    "failed": "Couldn’t save for offline use. Try again when online."
   }
 }

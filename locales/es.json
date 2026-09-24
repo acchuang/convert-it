@@ -207,5 +207,11 @@
       "hint": "Algo inesperado salió mal. Pulsa Reintentar; si sigue fallando, los detalles técnicos de abajo nos ayudarán a corregirlo."
     },
     "details": "Detalles técnicos"
+  },
+  "offline": {
+    "save": "Guardar para usar sin conexión ({size} MB)",
+    "saving": "Guardando para usar sin conexión… {pct}%",
+    "saved": "Disponible sin conexión",
+    "failed": "No se pudo guardar para usar sin conexión. Inténtalo de nuevo con conexión."
   }
 }

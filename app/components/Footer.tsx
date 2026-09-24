@@ -2,6 +2,7 @@
 
 import { type ReactNode } from 'react';
 import { useLocale } from './LocaleProvider';
+import OfflineSupport from './OfflineSupport';
 
 interface FooterProps {
   maxWidth?: string;
@@ -23,6 +24,7 @@ export default function Footer({ maxWidth = 'max-w-5xl', navLabel, children }: F
         >
           {t('footer.copyright')}
         </span>
+        <OfflineSupport />
         {children && (
           <nav
             className="flex gap-6 text-xs text-[var(--text-muted)]"

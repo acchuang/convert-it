@@ -25,7 +25,7 @@ Independent Next.js project deployed via Cloudflare Pages.
 - Test: `npx vitest run` (set `EPUBCHECK_JAR` to an epubcheck 5 jar to also validate EPUB output, as CI does)
 - Type-check: `npx tsc --noEmit`
 - Serve the export as Pages would (applies `out/_headers`): `npm run serve`
-- Browser smoke suite (real codecs, CSP violations fail it): `npm run fixtures`, `npm run serve`, then `npm run smoke`. Set `SMOKE_CHROMIUM_PATH` if Google Chrome isn't installed.
+- Browser smoke suite (real codecs, CSP violations fail it): `npm run fixtures`, `npm run serve`, then `npm run smoke`; offline behaviour: `node scripts/offline-smoke.mjs`. Set `SMOKE_CHROMIUM_PATH` if Google Chrome isn't installed.
 - Sync wasm assets: `npm run copy-wasm` (run after install or upgrading `@jsquash/*`, `@resvg/resvg-wasm`, or `@hyzyla/pdfium`; copies all codec/library `.wasm` files from `node_modules` into `public/wasm/`). Files are committed, not gitignored.
 
 ## Image Encode (WASM)
@@ -71,6 +71,13 @@ Independent Next.js project deployed via Cloudflare Pages.
 - `npm run build` runs `postbuild` → `scripts/security-headers.mjs`, which writes `out/_headers` (site-wide CSP, framing, nosniff, referrer, caching) and injects a per-page `<meta>` CSP listing the SHA-256 of that page's inline scripts. Both are enforced; inline script runs only if hashed. Never hand-edit `out/`.
 - `connect-src` is `'self'` plus the `NEXT_PUBLIC_FFMPEG_BASE_URL` (and a non-relative `NEXT_PUBLIC_ASSET_BASE`) origin. A new runtime fetch to any other origin needs a change there, and the smoke suite fails on any CSP violation.
 - The FFmpeg core is fetched, checked against `FFMPEG_CORE_SHA256` in `lib/audio-video-converters.ts`, and loaded from a `blob:` URL (hence `blob:` in the header `script-src`, which only workers get alone). Upgrading `@ffmpeg/core` means uploading the new files to R2 and updating both hashes.
+
+## Offline (service worker)
+
+- `postbuild` also runs `scripts/build-sw.mjs`, which fills `scripts/sw-template.js` into `out/sw.js` (versioned by a hash of everything it can serve) and writes `out/offline-pack.json`. Both are served `Cache-Control: no-cache`.
+- Install precaches only the shell (home + About HTML and what they reference). `/_next/static` is cache-first; `/wasm`, `/fonts`, `/icons` are cached on first use; the FFmpeg core (versioned CDN URL) is cache-first and still hash-checked by the app. Offline navigations to never-visited pages redirect to `/`. "Save for offline use" in the footer (`app/components/OfflineSupport.tsx`) caches the whole pack. New workers wait for old tabs to close (no `skipWaiting`).
+- `node scripts/offline-smoke.mjs` proves it in Chromium by stopping the server. Don't test offline with Playwright's `setOffline()`: it doesn't apply to a service worker's own fetches.
+- Icons: `npm run icons` renders `public/icons/*.png` (192, 512, maskable 512, apple-touch 180) from `favicon.svg` with resvg.
 
 ## Spreadsheets
 

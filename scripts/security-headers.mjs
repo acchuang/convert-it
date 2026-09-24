@@ -133,6 +133,13 @@ function headersFile() {
   Cross-Origin-Opener-Policy: same-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
 
+# The service worker and its manifest must always be revalidated, or browsers
+# keep running an old worker long after a deploy.
+/sw.js
+  Cache-Control: no-cache
+/offline-pack.json
+  Cache-Control: no-cache
+
 # Content-hashed by Next.js: safe to cache forever.
 /_next/static/*
   Cache-Control: public, max-age=31536000, immutable
