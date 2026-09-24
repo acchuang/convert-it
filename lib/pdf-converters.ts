@@ -1,5 +1,5 @@
 import type { ConversionSettings } from './types';
-import { ASSET_BASE, encodeImageData } from './image-encode';
+import { ASSET_BASE, finishImage } from './image-encode';
 import { htmlToPlainText } from './html-text';
 import { escapeHtml } from './markup';
 
@@ -52,7 +52,6 @@ export async function pdfToImage(
   settings?: ConversionSettings,
   onProgress?: (pct: number) => void,
 ): Promise<Blob> {
-  const quality = settings?.quality ?? 0.92;
   const scale = settings?.pdfScale ?? 1;
   const allPages = settings?.pdfAllPages ?? false;
   const doc = await loadPdfDocument(file);
@@ -60,20 +59,23 @@ export async function pdfToImage(
     const pageCount = doc.getPageCount();
     if (pageCount < 1) throw new Error('PDF has no pages');
 
+    // Pages go through finishImage like any decoded image, so the toolbox
+    // (crop, resize, compress-to-size) applies to PDF pages too.
     if (!allPages) {
-      const rendered = await doc.getPage(0).render({ scale });
-      const imageData = bgraToRgba(rendered);
+      const imageData = bgraToRgba(await doc.getPage(0).render({ scale }));
+      const blob = await finishImage(imageData, targetExt, settings, onProgress);
       onProgress?.(100);
-      return encodeImageData(imageData, targetExt, quality);
+      return blob;
     }
 
     const base = file.name.replace(/\.[^.]+$/, '');
     const JSZip = (await import('jszip')).default;
     const zip = new JSZip();
     for (let i = 0; i < pageCount; i++) {
-      const rendered = await doc.getPage(i).render({ scale });
-      const imageData = bgraToRgba(rendered);
-      const imageBlob = await encodeImageData(imageData, targetExt, quality);
+      const imageData = bgraToRgba(await doc.getPage(i).render({ scale }));
+      // No per-page progress from the target-size search: it would make the
+      // bar jump back on every page. Pages done is the honest measure.
+      const imageBlob = await finishImage(imageData, targetExt, settings);
       zip.file(`${base}-page-${i + 1}.${targetExt}`, imageBlob);
       onProgress?.(Math.round(((i + 1) / pageCount) * 100));
     }
@@ -83,20 +85,31 @@ export async function pdfToImage(
   }
 }
 
+type PdfDocument = Awaited<ReturnType<typeof loadPdfDocument>>;
+
+// Text of every page, reporting progress per page: a 500-page PDF otherwise
+// sits at 10% until it's suddenly done.
+function pageTexts(doc: PdfDocument, onProgress?: (pct: number) => void): string[] {
+  const count = doc.getPageCount();
+  const parts: string[] = [];
+  for (let i = 0; i < count; i++) {
+    parts.push(doc.getPage(i).getText());
+    onProgress?.(Math.round(((i + 1) / count) * 100));
+  }
+  return parts;
+}
+
 // Extract text from every page into a single plain-text Blob.
 export async function pdfToText(
   file: File,
   _sourceExt: string,
   _targetExt: string,
   _settings?: ConversionSettings,
-  _onProgress?: (pct: number) => void,
+  onProgress?: (pct: number) => void,
 ): Promise<Blob> {
   const doc = await loadPdfDocument(file);
   try {
-    const parts: string[] = [];
-    for (const page of doc.pages()) {
-      parts.push(page.getText());
-    }
+    const parts = pageTexts(doc, onProgress);
     return new Blob([parts.join('\n\n')], { type: 'text/plain;charset=utf-8' });
   } finally {
     doc.destroy();
@@ -109,14 +122,11 @@ export async function pdfToHtml(
   _sourceExt: string,
   _targetExt: string,
   _settings?: ConversionSettings,
-  _onProgress?: (pct: number) => void,
+  onProgress?: (pct: number) => void,
 ): Promise<Blob> {
   const doc = await loadPdfDocument(file);
   try {
-    const parts: string[] = [];
-    for (const page of doc.pages()) {
-      parts.push(`<pre>${escapeHtml(page.getText())}</pre>`);
-    }
+    const parts = pageTexts(doc, onProgress).map((text) => `<pre>${escapeHtml(text)}</pre>`);
     const html =
       '<!DOCTYPE html>\n<html><head><meta charset="utf-8"><title>Converted PDF</title></head>\n' +
       `<body>\n${parts.join('\n')}\n</body></html>`;

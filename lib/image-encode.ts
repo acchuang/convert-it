@@ -264,9 +264,13 @@ export function planImageTransform(
   return { crop, width: outW, height: outH };
 }
 
-// ponytail: one drawImage does crop and resize in a single step. Browsers use a
-// bilinear filter, which is soft below roughly a 1/3 downscale — step-halve here
-// if that ever shows up in output people complain about.
+// One drawImage does crop and resize in a single step, at 'high' smoothing.
+// Step-halving was tried and measured against it in Chromium, shrinking 1px
+// stripes to 16×16 (max deviation from the true grey, 0 = perfect, 127 = pure
+// aliasing): single 'high' draw 1 (Skia mipmaps the downscale); step-halving 1
+// on 256 → 16 but 60 on 257 → 16, because each rounded halving shifts the
+// sampling grid. So one draw stays. Re-measure before adding steps for another
+// engine.
 export function transformImageData(imageData: ImageData, transform: ImageTransform): ImageData {
   const crop = transform.crop ?? { x: 0, y: 0, width: imageData.width, height: imageData.height };
   const source = new OffscreenCanvas(imageData.width, imageData.height);

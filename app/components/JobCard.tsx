@@ -82,10 +82,11 @@ function SettingsPanel({
   const showAudioBitrate = AUDIO_BITRATE_FORMATS.includes(targetExt);
   const showVideoSettings = VIDEO_SETTINGS_FORMATS.includes(targetExt);
   const showPdfImage = sourceExt === 'pdf' && IMAGE_QUALITY_FORMATS.includes(targetExt);
-  // The toolbox runs on decoded pixels, which only the image pipeline produces —
-  // pdf→png goes through the PDF renderer instead, so it is excluded here.
+  // The toolbox runs on decoded pixels: every image source, and PDF pages,
+  // which pdfToImage renders and then finishes through the same pipeline.
   const showImageTools =
-    getFormatInfo(sourceExt)?.category === 'image' && IMAGE_TRANSFORM_FORMATS.includes(targetExt);
+    (getFormatInfo(sourceExt)?.category === 'image' || sourceExt === 'pdf') &&
+    IMAGE_TRANSFORM_FORMATS.includes(targetExt);
   const showTargetSize = showImageTools && TARGET_SIZE_FORMATS.includes(targetExt);
 
   const qualityPct = Math.round(settings.quality * 100);

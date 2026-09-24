@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { pdfToImage, pdfToText, pdfToHtml } from '@/lib/pdf-converters';
+import { DEFAULT_SETTINGS } from '@/lib/types';
 
 // jsdom can't fetch the jSquash/PDFium wasm at runtime; stub the encode + pdfium
 // surfaces so the tests exercise the PDF input-converter orchestration only.
@@ -133,5 +134,48 @@ describe('pdfToHtml (all pages)', () => {
     expect(html).toContain('<!DOCTYPE html>');
     expect(html).toContain('<pre>alpha</pre>');
     expect(html).toContain('&lt;b&gt;bold&lt;/b&gt;');
+  });
+});
+
+describe('pdfToImage applies the image toolbox', () => {
+  it('resizes the rendered page before encoding', async () => {
+    const { default: encodePng } = await import('@jsquash/png/encode');
+    vi.mocked(encodePng).mockClear();
+    currentPages = [fakePage('big', 8, 4)];
+    const file = new File([new Uint8Array([1])], 'doc.pdf', { type: 'application/pdf' });
+    await pdfToImage(file, 'pdf', 'png', { ...DEFAULT_SETTINGS, imageResizePercent: 50 });
+    const encoded = vi.mocked(encodePng).mock.calls[0][0] as ImageData;
+    expect([encoded.width, encoded.height]).toEqual([4, 2]);
+  });
+
+  it('applies to every page of an all-pages zip', async () => {
+    const { default: encodePng } = await import('@jsquash/png/encode');
+    vi.mocked(encodePng).mockClear();
+    currentPages = [fakePage('a', 8, 8), fakePage('b', 8, 8)];
+    const file = new File([new Uint8Array([1])], 'doc.pdf', { type: 'application/pdf' });
+    await pdfToImage(file, 'pdf', 'png', {
+      ...DEFAULT_SETTINGS,
+      pdfAllPages: true,
+      imageCropAspect: '16:9',
+    });
+    const sizes = vi
+      .mocked(encodePng)
+      .mock.calls.map(([d]) => [(d as ImageData).width, (d as ImageData).height]);
+    expect(sizes).toEqual([
+      [8, 5],
+      [8, 5],
+    ]);
+  });
+});
+
+describe('PDF text extraction progress', () => {
+  it('reports progress per page for text and HTML output', async () => {
+    currentPages = [fakePage('a'), fakePage('b'), fakePage('c'), fakePage('d')];
+    const file = new File([new Uint8Array([1])], 'doc.pdf', { type: 'application/pdf' });
+    for (const convert of [pdfToText, pdfToHtml]) {
+      const progress: number[] = [];
+      await convert(file, 'pdf', 'txt', undefined, (pct) => progress.push(pct));
+      expect(progress).toEqual([25, 50, 75, 100]);
+    }
   });
 });
