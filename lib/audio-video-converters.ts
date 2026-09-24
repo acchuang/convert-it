@@ -23,7 +23,10 @@ export const FFMPEG_CORE_SHA256 = {
 } as const;
 
 export async function sha256Hex(data: ArrayBuffer): Promise<string> {
-  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', data));
+  // Digest a view, not the bare buffer: every WebCrypto accepts a Uint8Array,
+  // while Node 20's rejects an ArrayBuffer from another realm (fetch under
+  // jsdom), which is where the tests run.
+  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', new Uint8Array(data)));
   return Array.from(digest, (b) => b.toString(16).padStart(2, '0')).join('');
 }
 

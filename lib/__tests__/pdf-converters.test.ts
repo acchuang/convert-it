@@ -43,10 +43,23 @@ describe('jsonToPdf', () => {
   });
 });
 
+// WinAnsi (CP1252) differs from Latin-1 only in 0x80–0x9F. Decoded by table
+// rather than TextDecoder('windows-1252'), which Node 20 maps to Latin-1
+// (0x95 → U+0095 instead of •), so the result would depend on the runtime.
+const CP1252_HIGH = '€\u0081‚ƒ„…†‡ˆ‰Š‹Œ\u008DŽ\u008F\u0090‘’“”•–—˜™š›œ\u009DžŸ';
+
+function decodeWinAnsi(buffer: ArrayBuffer): string {
+  let out = '';
+  for (const byte of new Uint8Array(buffer)) {
+    out += byte >= 0x80 && byte <= 0x9f ? CP1252_HIGH[byte - 0x80] : String.fromCharCode(byte);
+  }
+  return out;
+}
+
 // jsPDF writes uncompressed content streams, one `(text) Tj` per drawn line,
 // with the standard fonts' WinAnsi bytes (so `•` is 0x95, not UTF-8).
 async function pdfLines(blob: Blob): Promise<string[]> {
-  const raw = new TextDecoder('windows-1252').decode(await blob.arrayBuffer());
+  const raw = decodeWinAnsi(await blob.arrayBuffer());
   return [...raw.matchAll(/\(((?:\\.|[^\\)])*)\) Tj/g)].map((m) => m[1].replace(/\\(.)/g, '$1'));
 }
 
