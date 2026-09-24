@@ -29,6 +29,13 @@ const PAIRS = [
   ['img.png', 'jpg', 'mozjpeg', (b) => b[0] === 0xff && b[1] === 0xd8],
   ['img.svg', 'png', 'resvg + oxipng', magic('\x89PNG')],
   ['img.png', 'avif', 'libavif', magic('ftypavif', 4)],
+  // Privacy default: a geotagged photo comes out with no EXIF at all.
+  [
+    'geo.jpg',
+    'jpg',
+    'metadata stripped',
+    (b) => b[0] === 0xff && b[1] === 0xd8 && !b.includes('Exif') && !b.includes('Smoke Test'),
+  ],
   ['img.png', 'jxl', 'libjxl encode', (b) => b[0] === 0xff && b[1] === 0x0a],
   ['img.jxl', 'png', 'libjxl decode', magic('\x89PNG')],
   ['doc.pdf', 'png', 'pdfium', magic('\x89PNG')],

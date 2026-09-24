@@ -104,7 +104,22 @@
     "keepAudio": "残す",
     "muteAudio": "ミュート",
     "setStart": "開始に設定",
-    "setEnd": "終了に設定"
+    "setEnd": "終了に設定",
+    "metadata": "メタデータ",
+    "metaStrip": "すべて削除",
+    "metaKeep": "保持",
+    "metaKeepNoGps": "位置情報以外を保持",
+    "metaNone": "このファイルにメタデータはありません。",
+    "metaLocation": "位置情報",
+    "metaCamera": "カメラ",
+    "metaLens": "レンズ",
+    "metaTaken": "撮影日時",
+    "metaExposure": "露出",
+    "metaSoftware": "ソフトウェア",
+    "metaAuthor": "作成者",
+    "metaWillStrip": "これらは出力に含まれません。",
+    "metaWillKeep": "これらはすべて出力に保持されます。",
+    "metaWillKeepNoGps": "位置情報以外は出力に保持されます。"
   },
   "howItWorks": {
     "heading": "使い方",

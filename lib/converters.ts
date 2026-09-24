@@ -28,6 +28,7 @@ import {
   jsonToMd,
 } from './markdown-converters';
 import { convertImage } from './image-converters';
+import { METADATA_SOURCES, METADATA_TARGETS } from './image-metadata';
 import convertHeic from './heic-converter';
 import convertAvif from './avif-converter';
 import { xlsxToCsv, xlsxToJson, csvToXlsx, jsonToXlsx } from './xlsx-converters';
@@ -74,6 +75,7 @@ export type SettingKey =
   | 'trim' // trimStart, trimEnd
   | 'videoSize' // videoMaxWidth
   | 'mute' // mute
+  | 'metadata' // metadata
   | 'pdfPages' // pdfAllPages
   | 'pdfScale' // pdfScale
   | 'pdfEdit' // pdfPageRange, pdfRotate, pdfSplit
@@ -100,6 +102,7 @@ export const SETTING_FIELDS: Record<SettingKey, (keyof ConversionSettings)[]> = 
   trim: ['trimStart', 'trimEnd'],
   videoSize: ['videoMaxWidth'],
   mute: ['mute'],
+  metadata: ['metadata'],
   pdfPages: ['pdfAllPages'],
   pdfScale: ['pdfScale'],
   pdfEdit: ['pdfPageRange', 'pdfRotate', 'pdfSplit'],
@@ -137,10 +140,14 @@ function add(
 
 // Lossy targets have a quality knob and can be compressed to a size budget;
 // lossless ones only take crop/resize.
-function imageSettings(to: string): SettingKey[] {
-  return ['jpg', 'jpeg', 'webp', 'avif', 'jxl'].includes(to)
+// Metadata can be kept only from a source exifr reads to a target we can
+// write EXIF into; everywhere else it's always stripped.
+function imageSettings(to: string, from?: string): SettingKey[] {
+  const keys: SettingKey[] = ['jpg', 'jpeg', 'webp', 'avif', 'jxl'].includes(to)
     ? ['quality', 'imageTransform', 'targetSize']
     : ['imageTransform'];
+  if (from && METADATA_SOURCES.has(from) && METADATA_TARGETS.has(to)) keys.push('metadata');
+  return keys;
 }
 
 const heic: ConverterFn = (file, _s, to, settings, onProgress) =>
@@ -163,7 +170,7 @@ const IMAGE_TARGETS: Record<string, string[]> = {
 };
 for (const [from, targets] of Object.entries(IMAGE_TARGETS)) {
   const run = from === 'heic' ? heic : from === 'avif' ? avif : convertImage;
-  for (const to of targets) add(from, to, run, imageSettings(to));
+  for (const to of targets) add(from, to, run, imageSettings(to, from));
 }
 
 // --- Video and audio (ffmpeg.wasm runs in its own worker, so 'main') ------------

@@ -104,7 +104,22 @@
     "keepAudio": "Mantener",
     "muteAudio": "Silenciar",
     "setStart": "Fijar inicio",
-    "setEnd": "Fijar fin"
+    "setEnd": "Fijar fin",
+    "metadata": "Metadatos",
+    "metaStrip": "Quitar todo",
+    "metaKeep": "Mantener",
+    "metaKeepNoGps": "Mantener, sin ubicación",
+    "metaNone": "Este archivo no tiene metadatos.",
+    "metaLocation": "Ubicación",
+    "metaCamera": "Cámara",
+    "metaLens": "Objetivo",
+    "metaTaken": "Tomada",
+    "metaExposure": "Exposición",
+    "metaSoftware": "Software",
+    "metaAuthor": "Autor",
+    "metaWillStrip": "Nada de esto pasa al resultado.",
+    "metaWillKeep": "Todo esto se conserva en el resultado.",
+    "metaWillKeepNoGps": "Se conserva, salvo la ubicación."
   },
   "howItWorks": {
     "heading": "CÓMO FUNCIONA",

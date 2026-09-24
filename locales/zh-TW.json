@@ -104,7 +104,22 @@
     "keepAudio": "保留",
     "muteAudio": "靜音",
     "setStart": "設為開始",
-    "setEnd": "設為結束"
+    "setEnd": "設為結束",
+    "metadata": "中繼資料",
+    "metaStrip": "全部移除",
+    "metaKeep": "保留",
+    "metaKeepNoGps": "保留，但移除位置",
+    "metaNone": "此檔案中沒有中繼資料。",
+    "metaLocation": "位置",
+    "metaCamera": "相機",
+    "metaLens": "鏡頭",
+    "metaTaken": "拍攝時間",
+    "metaExposure": "曝光",
+    "metaSoftware": "軟體",
+    "metaAuthor": "作者",
+    "metaWillStrip": "以上內容都不會寫入輸出檔案。",
+    "metaWillKeep": "以上內容都會保留在輸出檔案中。",
+    "metaWillKeepNoGps": "除位置外都會保留在輸出檔案中。"
   },
   "howItWorks": {
     "heading": "使用方式",

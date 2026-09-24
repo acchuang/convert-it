@@ -1,4 +1,5 @@
 import type { ConversionSettings } from './types';
+import { METADATA_SOURCES, METADATA_TARGETS, applyMetadata } from './image-metadata';
 import { ASSET_BASE, decodeJxl, decodeToImageData, finishImage } from './image-encode';
 
 // resvg's JS glue is small but the wasm is ~2.4 MB, so both load lazily: the
@@ -82,5 +83,18 @@ export async function convertImage(
         ? await decodeJxl(file)
         : await decodeToImageData(file);
 
-  return finishImage(imageData, targetExt, settings, onProgress);
+  const blob = await finishImage(imageData, targetExt, settings, onProgress);
+  return withMetadata(file, sourceExt, blob, targetExt, settings);
+}
+
+/** Writes the source's metadata back when the route offers it and the setting asks. */
+export async function withMetadata(
+  file: File,
+  sourceExt: string,
+  blob: Blob,
+  targetExt: string,
+  settings?: ConversionSettings,
+): Promise<Blob> {
+  if (!METADATA_SOURCES.has(sourceExt) || !METADATA_TARGETS.has(targetExt)) return blob;
+  return applyMetadata(file, blob, targetExt, settings);
 }

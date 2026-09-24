@@ -39,6 +39,7 @@ export interface ConversionSettings {
   imageResizeWidth: number; // 0 = derive from height, or from the percent
   imageResizeHeight: number; // 0 = derive from width, or from the percent
   imageTargetSizeKb: number; // 0 = off; jpg/webp only — quality is searched to fit
+  metadata: string; // image output: 'strip' (default) | 'keep' | 'keep-no-gps'
 }
 
 export const DEFAULT_SETTINGS: ConversionSettings = {
@@ -68,6 +69,7 @@ export const DEFAULT_SETTINGS: ConversionSettings = {
   imageResizeWidth: 0,
   imageResizeHeight: 0,
   imageTargetSizeKb: 0,
+  metadata: 'strip',
 };
 
 export interface HistoryEntry {

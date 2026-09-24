@@ -198,6 +198,23 @@ describe('imageToPdf', () => {
   });
 });
 
+describe('imageToPdf and metadata', () => {
+  it("a photo's EXIF (location included) does not ride along into the PDF", async () => {
+    const { buildExif, insertExif } = await import('@/lib/image-metadata');
+    const canvas = createCanvas(32, 32);
+    canvas.getContext('2d').fillRect(0, 0, 32, 32);
+    const tiff = buildExif(
+      { make: 'Apple', model: 'iPhone', gps: { latitude: 48.85, longitude: 2.29 } },
+      { keepGps: true },
+    );
+    const photo = insertExif(new Uint8Array(canvas.toBuffer('image/jpeg')), 'jpg', tiff);
+    const out = await imageToPdf(new File([photo], 'geo.jpg'), 'jpg', 'pdf', DEFAULT_SETTINGS);
+    const bytes = Buffer.from(await out.arrayBuffer());
+    expect(bytes.includes(Buffer.from('Exif'))).toBe(false);
+    expect(bytes.includes(Buffer.from('iPhone'))).toBe(false);
+  });
+});
+
 describe('imageToPdf errors', () => {
   it('an unreadable image is corrupt input', async () => {
     await expect(

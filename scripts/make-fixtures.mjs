@@ -17,6 +17,23 @@ ctx.fillStyle = '#FF4D00';
 ctx.fillRect(8, 8, 24, 24);
 writeFileSync(join(DIR, 'img.png'), canvas.toBuffer('image/png'));
 
+// A geotagged JPEG: the same pixels with an EXIF block (camera, date, and a
+// location at the Eiffel Tower) in APP1. The TIFF bytes were made by
+// buildExif in lib/image-metadata.ts, which is tested against exifr.
+{
+  const tiff = Buffer.from(
+    'TU0AKgAAAAgABQEPAAIAAAALAAAASgEQAAIAAAASAAAAVgESAAMAAAABAAEAAIdpAAQAAAABAAAAaIglAAQAAAABAAAAjgAAAABDb252ZXJ0LWl0AABTbW9rZSBUZXN0IENhbWVyYQAAAZADAAIAAAAUAAAAegAAAAAyMDI0OjA1OjAxIDE0OjAzOjIyAAAFAAAAAQAAAAQCAgAAAAEAAgAAAAJOAAAAAAIABQAAAAMAAADQAAMAAgAAAAJFAAAAAAQABQAAAAMAAADoAAAAAAAAADAAAAABAAAAMwAAAAEABJ1AAAAnEAAAAAIAAAABAAAAEQAAAAEABiJQAAAnEA==',
+    'base64',
+  );
+  const payload = Buffer.concat([Buffer.from('Exif\0\0', 'latin1'), tiff]);
+  const app1 = Buffer.concat([
+    Buffer.from([0xff, 0xe1, (payload.length + 2) >> 8, (payload.length + 2) & 0xff]),
+    payload,
+  ]);
+  const jpeg = canvas.toBuffer('image/jpeg');
+  writeFileSync(join(DIR, 'geo.jpg'), Buffer.concat([jpeg.subarray(0, 2), app1, jpeg.subarray(2)]));
+}
+
 // The same pixels as JPEG XL, for the jxl → png pair. No browser in CI decodes
 // JXL, so the fixture comes from the codec the app ships (its glue fetches the
 // wasm even under Node, hence the fetch shim).

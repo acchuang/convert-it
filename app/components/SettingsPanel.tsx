@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { getFormatInfo, settingsFor } from '@/lib/converters';
 import { TrimScrubber } from './TrimScrubber';
+import { MetadataReport } from './MetadataReport';
 import { formatTimecode, parseTimecode } from '@/lib/timecode';
 import { isPageRangeSyntax } from '@/lib/pdf-options';
 import type { ConversionSettings } from '@/lib/types';
@@ -101,6 +102,7 @@ export function SettingsPanel({
   const showVideoSize = shown.has('videoSize');
   const showMute = shown.has('mute');
   const mediaKind = getFormatInfo(sourceExt)?.category === 'video' ? 'video' : 'audio';
+  const showMetadata = shown.has('metadata');
   const showPdfEdit = shown.has('pdfEdit');
   const showPdfCompress = shown.has('pdfCompress');
   const showPdfPageSize = shown.has('pdfPageSize');
@@ -416,6 +418,29 @@ export function SettingsPanel({
               </div>
             </div>
           </>
+        )}
+
+        {showMetadata && (
+          <div className={CARD}>
+            <span className={LABEL}>{t('job.metadata')}</span>
+            <div className="flex gap-1">
+              {(['strip', 'keep-no-gps', 'keep'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => onChange({ metadata: mode })}
+                  aria-pressed={settings.metadata === mode}
+                  className={choice(settings.metadata === mode)}
+                >
+                  {mode === 'strip'
+                    ? t('job.metaStrip')
+                    : mode === 'keep'
+                      ? t('job.metaKeep')
+                      : t('job.metaKeepNoGps')}
+                </button>
+              ))}
+            </div>
+            {file && <MetadataReport file={file} mode={settings.metadata} t={t} />}
+          </div>
         )}
 
         {showPdfEdit && (

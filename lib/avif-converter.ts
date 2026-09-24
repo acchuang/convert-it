@@ -1,4 +1,5 @@
 import type { ConversionSettings } from './types';
+import { withMetadata } from './image-converters';
 import { bitmapToImageData, finishImage } from './image-encode';
 
 export default async function convertAvif(
@@ -16,7 +17,8 @@ export default async function convertAvif(
 
   try {
     const imageData = bitmapToImageData(bitmap);
-    return await finishImage(imageData, targetExt, settings, onProgress);
+    const blob = await finishImage(imageData, targetExt, settings, onProgress);
+    return await withMetadata(file, 'avif', blob, targetExt, settings);
   } finally {
     bitmap.close();
   }

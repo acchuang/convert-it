@@ -1,4 +1,5 @@
 import type { ConversionSettings } from './types';
+import { withMetadata } from './image-converters';
 import { finishImage } from './image-encode';
 
 /** Decodes the first image of a HEIC file. */
@@ -29,5 +30,11 @@ export default async function convertHeic(
   settings?: ConversionSettings,
   onProgress?: (pct: number) => void,
 ): Promise<Blob> {
-  return finishImage(await decodeHeicToImageData(file), targetExt, settings, onProgress);
+  const blob = await finishImage(
+    await decodeHeicToImageData(file),
+    targetExt,
+    settings,
+    onProgress,
+  );
+  return withMetadata(file, 'heic', blob, targetExt, settings);
 }

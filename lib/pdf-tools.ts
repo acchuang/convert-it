@@ -8,6 +8,7 @@ import { ConversionError } from './errors';
 import { getFileExtension } from './formats';
 import { decodeJxl, decodeToImageData, encodeImageData } from './image-encode';
 import { safeFileStem } from './filenames';
+import { stripJpegMetadata } from './image-metadata';
 import { canMerge, parsePageRange } from './pdf-options';
 
 async function loadPdf(file: Blob): Promise<PDFDocument> {
@@ -46,8 +47,10 @@ const PX_TO_PT = 72 / 96; // images are taken as 96 dpi
 /** Bytes pdf-lib can embed as they are (JPEG, PNG), or re-encoded to one of them. */
 async function embeddable(file: File): Promise<{ bytes: Uint8Array; kind: 'jpg' | 'png' }> {
   const ext = getFileExtension(file.name);
+  // JPEGs go in as they are, minus EXIF/XMP/IPTC: a photo's location
+  // shouldn't ride along into the PDF.
   if (ext === 'jpg' || ext === 'jpeg')
-    return { bytes: new Uint8Array(await file.arrayBuffer()), kind: 'jpg' };
+    return { bytes: stripJpegMetadata(new Uint8Array(await file.arrayBuffer())), kind: 'jpg' };
   if (ext === 'png') return { bytes: new Uint8Array(await file.arrayBuffer()), kind: 'png' };
   const image = await decodeAnyImage(file, ext);
   // Opaque images as JPEG (a photo as PNG is several times larger); anything

@@ -34,6 +34,7 @@ const groups = (source: string, target: string) => {
     pageSize: has('job.pdfPageSize'),
     videoSize: has('job.videoSize'),
     mute: has('job.audioTrack'),
+    metadata: has('job.metadata'),
   };
 };
 
@@ -90,6 +91,13 @@ describe('SettingsPanel shows what the route reads', () => {
     });
     expect(groups('heic', 'pdf')).toMatchObject({ pageSize: true, pdfEdit: false, quality: false });
     expect(groups('pdf', 'png').pdfEdit).toBe(false);
+  });
+
+  it('metadata controls where EXIF can be read and written back', () => {
+    expect(groups('jpg', 'png').metadata).toBe(true);
+    expect(groups('heic', 'jpg').metadata).toBe(true);
+    expect(groups('jpg', 'avif').metadata).toBe(false); // no EXIF writer for AVIF
+    expect(groups('gif', 'png').metadata).toBe(false); // GIF carries none
   });
 
   it('lossless audio targets have no bitrate', () => {
