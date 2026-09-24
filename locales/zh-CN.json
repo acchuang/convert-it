@@ -150,7 +150,7 @@
     "improvement28": "PDF 作为输入 —— 将 PDF 页面转为 PNG/JPG/WebP，文本提取为 TXT/HTML（pdfium-wasm）",
     "improvement29": "多页 PDF 转图片 zip，支持 1×/2×/3× 渲染缩放（jszip）",
     "improvement30": "XML 和 HTML 导出会转义特殊字符，并将“First Name”等表头转换为合法标签；TXT、Markdown 和 JSON → PDF 保留换行",
-    "improvement31": "视频 → WebM 恢复可用（VP8 + Opus），FFmpeg 失败时给出原因，进度按片段实际时长计算",
+    "improvement31": "视频 → WebM 恢复可用（VP8 + Vorbis），FFmpeg 失败时给出原因，进度按片段实际时长计算",
     "improvement32": "ZIP 下载不再覆盖同名文件，HTML 输入的解析不会执行其中的脚本",
     "ossHeading": "开源",
     "oss1": "Convert-it 采用 MIT 许可并开源。完整代码可在 GitHub 上获取。欢迎贡献、报告问题和提出功能请求。",

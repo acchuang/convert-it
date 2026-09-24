@@ -20,7 +20,11 @@ const magic =
     b.subarray(off, off + sig.length).toString('latin1') === sig;
 
 const PAIRS = [
-  ['img.png', 'webp', 'canvas image', (b) => magic('RIFF')(b) && magic('WEBP', 8)(b)],
+  ['img.png', 'webp', 'libwebp', (b) => magic('RIFF')(b) && magic('WEBP', 8)(b)],
+  ['img.png', 'jpg', 'mozjpeg', (b) => b[0] === 0xff && b[1] === 0xd8],
+  ['img.svg', 'png', 'resvg + oxipng', magic('\x89PNG')],
+  ['doc.pdf', 'png', 'pdfium', magic('\x89PNG')],
+  ['clip.mkv', 'webm', 'ffmpeg vp8+vorbis', (b) => b.readUInt32BE(0) === 0x1a45dfa3],
   ['clip.webm', 'mp4', 'ffmpeg video', magic('ftyp', 4)],
   [
     'audio.wav',
@@ -35,15 +39,18 @@ const PAIRS = [
     (b) => magic('ID3')(b) || (b[0] === 0xff && (b[1] & 0xe0) === 0xe0),
   ],
   ['data.csv', 'json', 'data', (b) => JSON.parse(b.toString()).length === 2],
-  ['data.csv', 'xlsx', 'sheetjs', magic('PK')],
+  ['data.csv', 'xlsx', 'xlsx writer', magic('PK')],
   ['data.json', 'yaml', 'yaml', (b) => b.toString().includes('name:')],
   ['doc.md', 'html', 'document', (b) => /<(h1|strong|a)\b/i.test(b.toString())],
   ['doc.txt', 'pdf', 'jspdf', magic('%PDF')],
 ];
 
-const browser = await (engine === 'webkit'
-  ? webkit.launch()
-  : chromium.launch({ channel: 'chrome' }));
+// Google Chrome by default (what CI runners have); SMOKE_CHROMIUM_PATH points
+// at any other Chromium build, e.g. Playwright's own when Chrome isn't installed.
+const chromeLaunch = process.env.SMOKE_CHROMIUM_PATH
+  ? { executablePath: process.env.SMOKE_CHROMIUM_PATH }
+  : { channel: 'chrome' };
+const browser = await (engine === 'webkit' ? webkit.launch() : chromium.launch(chromeLaunch));
 
 const results = [];
 
@@ -52,6 +59,22 @@ for (const [fixture, target, label, check] of PAIRS) {
   const consoleErrors = [];
   page.on('console', (m) => m.type() === 'error' && consoleErrors.push(m.text()));
   page.on('pageerror', (e) => consoleErrors.push(`pageerror: ${e.message}`));
+  // Any CSP violation fails the pair, even if the conversion still succeeded:
+  // it means the policy and the app have drifted apart.
+  const cspViolations = [];
+  await page.exposeFunction('__reportCsp', (v) => cspViolations.push(v));
+  await page.addInitScript(() => {
+    document.addEventListener('securitypolicyviolation', (e) =>
+      window.__reportCsp(`${e.effectiveDirective} blocked ${e.blockedURI || 'inline'}`),
+    );
+  });
+  const watchCsp = (m) => {
+    if (/Content Security Policy/i.test(m.text())) cspViolations.push(m.text().slice(0, 200));
+  };
+  page.on('console', watchCsp);
+  // Workers take their CSP from response headers and report violations in their
+  // own console, which the page's listener never sees.
+  page.on('worker', (worker) => worker.on('console', watchCsp));
 
   const row = { pair: `${fixture.split('.').pop()} → ${target}`, label, ok: false, note: '' };
 
@@ -101,7 +124,8 @@ for (const [fixture, target, label, check] of PAIRS) {
     ]);
     const bytes = readFileSync(await download.path());
 
-    if (bytes.length === 0) row.note = 'empty output';
+    if (cspViolations.length) row.note = `CSP: ${cspViolations[0]}`;
+    else if (bytes.length === 0) row.note = 'empty output';
     else if (!check(bytes))
       row.note = `bad signature (${bytes.length}B, starts ${bytes.subarray(0, 8).toString('hex')})`;
     else {

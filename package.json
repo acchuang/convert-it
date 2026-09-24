@@ -13,6 +13,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "node scripts/security-headers.mjs",
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write .",
@@ -21,7 +22,8 @@
     "test:watch": "vitest",
     "fixtures": "node scripts/make-fixtures.mjs && node scripts/make-webm.mjs",
     "smoke": "node scripts/smoke.mjs",
-    "copy-wasm": "node scripts/copy-wasm.mjs"
+    "copy-wasm": "node scripts/copy-wasm.mjs",
+    "serve": "node scripts/serve-out.mjs"
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",
@@ -39,13 +41,12 @@
     "jspdf": "^4.2.1",
     "jszip": "^3.10.1",
     "libheif-js": "^1.19.8",
-    "marked": "^18.0.0",
-    "next": "15.1.0",
+    "marked": "^18.0.14",
+    "next": "^15.5.26",
     "papaparse": "^5.5.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "turndown": "^7.2.4",
-    "xlsx": "^0.18.5",
     "yaml": "^2.8.3"
   },
   "devDependencies": {
@@ -71,5 +72,10 @@
     "tailwindcss": "^3.4.0",
     "typescript": "^5",
     "vitest": "^4.1.7"
+  },
+  "overrides": {
+    "next": {
+      "postcss": "^8.5.28"
+    }
   }
 }

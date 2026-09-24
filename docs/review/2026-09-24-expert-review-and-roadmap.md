@@ -7,7 +7,7 @@ _Reviewed at `7a92641` (2026-09-24). Scope: every file in `lib/`, the app shell,
 ## Status
 
 - **Phase 0: done.** C1, C3, C4, C5, C8–C12, S2, C17, plus C7 (duration-based progress; the log parser was being rewritten anyway). Each fix has tests that check the output is valid. Every media target was run against the real `@ffmpeg/core` 0.12.10 in both Chromium and Node.
-- **New finding while doing C3:** `libvpx-vp9` crashes that core on every input ("memory access out of bounds"), so WebM output never worked, AAC or not. WebM now uses VP8 + Opus. Before going back to VP9 after a core upgrade, re-test it in a browser.
+- **New findings while doing C3:** in `@ffmpeg/core` 0.12.10, `libvpx-vp9` crashes on every input ("memory access out of bounds"), so WebM output never worked, AAC or not. `libopus` also crashes on any stereo source; this was caught by the Phase 1 browser smoke test (MKV → WebM). WebM is now **VP8 + Vorbis**. Re-test both codecs in a browser before switching back after a core upgrade.
 
 ## 1. Executive summary
 

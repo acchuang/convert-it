@@ -1,10 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { getTargetFormats } from '@/lib/converters';
 import {
   buildFfmpegArgs,
   convertAudioVideo,
   createLogWatcher,
   extractAudio,
+  FFMPEG_CORE_SHA256,
+  sha256Hex,
 } from '@/lib/audio-video-converters';
 import { DEFAULT_SETTINGS } from '@/lib/types';
 
@@ -39,11 +41,11 @@ describe('buildFfmpegArgs', () => {
     buildFfmpegArgs(from, to, `input.${from}`, `output.${to}`, settings);
   const valueOf = (list: string[], flag: string) => list[list.indexOf(flag) + 1];
 
-  it('WebM gets VP8 + Opus and libvpx speed flags, never AAC or -preset', () => {
+  it('WebM gets VP8 + Vorbis and libvpx speed flags, never AAC or -preset', () => {
     const a = args('mp4', 'webm');
-    // Not libvpx-vp9: it crashes the bundled ffmpeg core (see VIDEO_CONTAINERS).
+    // Not libvpx-vp9 or libopus: both crash the bundled ffmpeg core (see VIDEO_CONTAINERS).
     expect(valueOf(a, '-c:v')).toBe('libvpx');
-    expect(valueOf(a, '-c:a')).toBe('libopus');
+    expect(valueOf(a, '-c:a')).toBe('libvorbis');
     expect(a).not.toContain('aac');
     expect(a).not.toContain('-preset');
     expect(valueOf(a, '-crf')).toBe('28');
@@ -116,5 +118,39 @@ describe('createLogWatcher', () => {
     const { handler, tail } = createLogWatcher();
     for (const message of ['a', 'b', 'c', 'Unknown encoder', '', 'Conversion failed!']) handler({ message });
     expect(tail()).toBe('c · Unknown encoder · Conversion failed!');
+  });
+});
+
+describe('FFmpeg core integrity', () => {
+  it('pins a SHA-256 for both core files', () => {
+    for (const hash of Object.values(FFMPEG_CORE_SHA256)) expect(hash).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it('sha256Hex matches the known digest of "abc"', async () => {
+    const data = new TextEncoder().encode('abc');
+    expect(await sha256Hex(data.buffer as ArrayBuffer)).toBe(
+      'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad',
+    );
+  });
+});
+
+describe('tampered FFmpeg core', () => {
+  it('refuses to run a core whose bytes do not match the pinned hash', async () => {
+    vi.resetModules();
+    vi.stubEnv('NEXT_PUBLIC_FFMPEG_BASE_URL', 'https://cdn.example/core');
+    const fetchMock = vi.fn(async () => new Response('self.evil = true'));
+    vi.stubGlobal('fetch', fetchMock);
+    try {
+      const mod = await import('@/lib/audio-video-converters');
+      const file = new File(['x'], 'a.mp4');
+      await expect(mod.convertAudioVideo(file, 'mp4', 'webm')).rejects.toThrow(
+        /failed its integrity check/,
+      );
+      expect(fetchMock).toHaveBeenCalledWith('https://cdn.example/core/ffmpeg-core.js');
+    } finally {
+      vi.unstubAllGlobals();
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
   });
 });

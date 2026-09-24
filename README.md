@@ -139,7 +139,7 @@ there and reapplied, or the core fetch fails in the browser while still working 
 - **jSquash WASM** codecs (mozjpeg/libpng/libwebp) for image encoding, **oxipng** for lossless PNG optimization, **resvg-wasm** for SVG rasterization
 - **pdfium-wasm** for PDF input (page render and text extraction)
 - **libheif-js** for HEIC decode, native `createImageBitmap` for AVIF decode
-- **SheetJS** for Excel read/write
+- **In-house XLSX reader/writer** (`lib/xlsx.ts`, on jszip + fast-xml-parser) for Excel read/write
 - **JSZip** for batch downloads, ePub generation, and multi-page PDF image zips
 - **Cloudflare Pages** for static hosting, **R2** for the self-hosted FFmpeg core — no analytics or tracking scripts
 

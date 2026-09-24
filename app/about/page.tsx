@@ -33,7 +33,7 @@ const techStack = [
   { labelKey: 'about.techPng', val: 'oxipng' },
   { labelKey: 'about.techPdf', val: 'PDFium WASM' },
   { labelKey: 'about.techHeif', val: 'libheif-js' },
-  { labelKey: 'about.techSheets', val: 'SheetJS' },
+  { labelKey: 'about.techSheets', val: 'jszip + fast-xml-parser' },
   { labelKey: 'about.techHosting', val: 'Cloudflare Pages + R2' },
 ];
 

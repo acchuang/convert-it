@@ -93,3 +93,17 @@ describe('xlsxToJson (round trip via jsonToXlsx)', () => {
     expect(JSON.parse(text)).toEqual(original);
   });
 });
+
+describe('csvToXlsx type inference', () => {
+  it('keeps leading-zero IDs as text and converts plain numbers and booleans', async () => {
+    const { readWorkbook } = await import('@/lib/xlsx');
+    const file = new File(['id,n,flag\n007,42,TRUE\n1e5,3.50,no'], 'a.csv');
+    const blob = await csvToXlsx(file, 'csv', 'xlsx', DEFAULT_SETTINGS);
+    const [sheet] = await readWorkbook(await blob.arrayBuffer());
+    expect(sheet.rows).toEqual([
+      ['id', 'n', 'flag'],
+      ['007', 42, true],
+      ['1e5', '3.50', 'no'],
+    ]);
+  });
+});

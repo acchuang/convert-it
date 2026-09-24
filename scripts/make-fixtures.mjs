@@ -41,9 +41,47 @@ writeFileSync(join(DIR, 'audio.wav'), wav);
 writeFileSync(join(DIR, 'data.csv'), 'name,qty,price\nwidget,3,9.99\ngadget,12,4.50\n');
 writeFileSync(
   join(DIR, 'data.json'),
-  JSON.stringify([{ name: 'widget', qty: 3 }, { name: 'gadget', qty: 12 }], null, 2)
+  JSON.stringify(
+    [
+      { name: 'widget', qty: 3 },
+      { name: 'gadget', qty: 12 },
+    ],
+    null,
+    2,
+  ),
 );
-writeFileSync(join(DIR, 'doc.md'), '# Title\n\nSome **bold** text and a [link](https://example.com).\n');
+writeFileSync(
+  join(DIR, 'doc.md'),
+  '# Title\n\nSome **bold** text and a [link](https://example.com).\n',
+);
 writeFileSync(join(DIR, 'doc.txt'), 'Plain text line one.\nPlain text line two.\n');
+
+writeFileSync(
+  join(DIR, 'img.svg'),
+  '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="40"><rect width="120" height="40" fill="#C8FF00"/><text x="8" y="26" font-size="16">Hello</text></svg>',
+);
+
+// Smallest valid one-page PDF, written by hand so pdfium has something to render.
+// The xref offsets are computed, not hard-coded, so editing an object stays safe.
+{
+  const objects = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 100] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>',
+    '<< /Length 44 >>\nstream\nBT /F1 18 Tf 20 50 Td (Hello PDF) Tj ET\nendstream',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+  ];
+  let pdf = '%PDF-1.4\n';
+  const offsets = [];
+  objects.forEach((body, i) => {
+    offsets.push(pdf.length);
+    pdf += `${i + 1} 0 obj\n${body}\nendobj\n`;
+  });
+  const xref = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (const offset of offsets) pdf += `${String(offset).padStart(10, '0')} 00000 n \n`;
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+  writeFileSync(join(DIR, 'doc.pdf'), pdf, 'latin1');
+}
 
 console.log('fixtures written to', DIR);

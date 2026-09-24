@@ -12,6 +12,37 @@ let ffmpegLoading: Promise<FFmpeg> | null = null;
 // Inlined at build time by the static export, so a rebuild is needed to change it.
 const FFMPEG_BASE_URL = process.env.NEXT_PUBLIC_FFMPEG_BASE_URL;
 
+// SHA-256 of @ffmpeg/core@0.12.10 dist/umd, the build uploaded to R2. The core
+// is 31 MB of code fetched cross-origin at runtime, so it is checked before it
+// runs: a tampered or swapped file on the CDN fails loudly instead of executing
+// with access to the user's files. After a core upgrade, regenerate with
+// `sha256sum node_modules/@ffmpeg/core/dist/umd/ffmpeg-core.{js,wasm}`.
+export const FFMPEG_CORE_SHA256 = {
+  'ffmpeg-core.js': 'b266ab5b952555881dd6310663986994a182acb2b7ff25cf10a25f7a37ac2b21',
+  'ffmpeg-core.wasm': '9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7',
+} as const;
+
+export async function sha256Hex(data: ArrayBuffer): Promise<string> {
+  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', data));
+  return Array.from(digest, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Fetches one core file, checks it against the pinned hash, and returns a blob:
+ * URL of the verified bytes. The worker loads that blob, not the network URL,
+ * so what runs is exactly what was checked; there is no second fetch that
+ * could return something else.
+ */
+async function verifiedBlobUrl(name: keyof typeof FFMPEG_CORE_SHA256, type: string): Promise<string> {
+  const res = await fetch(`${FFMPEG_BASE_URL}/${name}`);
+  if (!res.ok) throw new Error(`${name}: HTTP ${res.status}`);
+  const data = await res.arrayBuffer();
+  if ((await sha256Hex(data)) !== FFMPEG_CORE_SHA256[name]) {
+    throw new Error(`${name} failed its integrity check — refusing to run it`);
+  }
+  return URL.createObjectURL(new Blob([data], { type }));
+}
+
 // A failed load is not remembered: the next conversion tries again. Caching the
 // error meant one flaky fetch of the 31 MB core disabled audio and video until
 // the page was reloaded.
@@ -20,20 +51,26 @@ async function getFFmpeg(): Promise<FFmpeg> {
   if (ffmpegLoading) return ffmpegLoading;
 
   ffmpegLoading = (async () => {
+    const urls: string[] = [];
     try {
       if (!FFMPEG_BASE_URL) {
         throw new Error('NEXT_PUBLIC_FFMPEG_BASE_URL is not set');
       }
+      const [coreURL, wasmURL] = await Promise.all([
+        verifiedBlobUrl('ffmpeg-core.js', 'text/javascript'),
+        verifiedBlobUrl('ffmpeg-core.wasm', 'application/wasm'),
+      ]);
+      urls.push(coreURL, wasmURL);
       const ff = new FFmpeg();
-      await ff.load({
-        coreURL: `${FFMPEG_BASE_URL}/ffmpeg-core.js`,
-        wasmURL: `${FFMPEG_BASE_URL}/ffmpeg-core.wasm`,
-      });
+      await ff.load({ coreURL, wasmURL });
       ffmpeg = ff;
       return ff;
     } catch (err) {
       ffmpegLoading = null;
       throw new Error(`Failed to load FFmpeg: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      // The worker has its own copy once load() settles; don't pin 31 MB of blob.
+      for (const url of urls) URL.revokeObjectURL(url);
     }
   })();
 
@@ -132,9 +169,11 @@ const VIDEO_CONTAINERS: Record<string, VideoContainer> = {
   mp4: { video: x264, audio: aac, extra: ['-movflags', '+faststart'] },
   mov: { video: x264, audio: aac, extra: ['-movflags', '+faststart'] },
   mkv: { video: x264, audio: aac },
-  // VP8, not VP9: libvpx-vp9 in @ffmpeg/core 0.12.10 dies with "memory access
-  // out of bounds" on every input and every setting (reproduced in Chromium and
-  // Node against the same wasm). VP8 encodes cleanly and every browser plays it.
+  // VP8 + Vorbis, not VP9 + Opus. In @ffmpeg/core 0.12.10 libvpx-vp9 dies with
+  // "memory access out of bounds" on every input, and libopus does the same on
+  // any stereo source at its default complexity (a MediaRecorder clip is
+  // enough). Both reproduced in Chromium and Node against the same wasm. VP8 and
+  // Vorbis encode cleanly, both are valid WebM, and every browser plays them.
   // In constrained-quality mode -b:v is only a ceiling; CRF decides the quality.
   webm: {
     video: (crf, preset) => [
@@ -142,7 +181,7 @@ const VIDEO_CONTAINERS: Record<string, VideoContainer> = {
       '-deadline', 'good', '-cpu-used', VP8_CPU_USED[preset] ?? '2',
       '-pix_fmt', 'yuv420p',
     ],
-    audio: (kbps) => ['-c:a', 'libopus', '-b:a', `${kbps}k`],
+    audio: (kbps) => ['-c:a', 'libvorbis', '-b:a', `${kbps}k`],
   },
   avi: { video: (crf) => ['-c:v', 'mpeg4', '-q:v', crfToQscale(crf)], audio: mp3 },
   flv: { video: (crf) => ['-c:v', 'flv', '-q:v', crfToQscale(crf)], audio: mp3 },
