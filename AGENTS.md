@@ -58,6 +58,8 @@ Independent Next.js project deployed via Cloudflare Pages.
 
 - XML → CSV/TSV/YAML (`xmlToRecords` in `lib/xml-converters.ts`) finds the records: the largest run of same-named sibling elements (ties to the shallowest); otherwise the whole document, unwrapped, is one record. Columns: attributes first (`@id`), nested elements as dotted paths, repeated children joined with `; `. fast-xml-parser, no DOM, so XML runs in the worker pool.
 
+- CSV/TSV → JSON and CSV ⇄ TSV stream (`lib/csv-stream.ts`): the File is read in `Papa.LocalChunkSize` slices through a streaming `TextDecoder` and fed to Papa Parse as a stream, so rows are serialised as they arrive (`JsonArrayWriter` output is byte-identical to `JSON.stringify(rows, null, indent)`). Never hand Papa the `File` directly: its own file streamer decodes each slice separately and corrupts multi-byte characters on slice boundaries.
+
 ## Media (FFmpeg)
 
 - Command lines come from the pure `buildFfmpegArgs` in `lib/audio-video-converters.ts` — one entry per container in `VIDEO_CONTAINERS` pairing a video codec with an audio codec that muxer accepts. Unit-test args there; don't build them inline.
