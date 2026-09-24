@@ -38,6 +38,7 @@ exports[`converter registry > targets per source, in order (the first is the def
     "jpg",
     "png",
     "webp",
+    "jxl",
     "bmp",
     "ico",
   ],
@@ -45,6 +46,8 @@ exports[`converter registry > targets per source, in order (the first is the def
     "jpg",
     "png",
     "webp",
+    "avif",
+    "jxl",
   ],
   "csv": [
     "json",
@@ -79,11 +82,14 @@ exports[`converter registry > targets per source, in order (the first is the def
     "png",
     "jpg",
     "webp",
+    "avif",
   ],
   "heic": [
     "jpg",
     "png",
     "webp",
+    "avif",
+    "jxl",
     "bmp",
     "ico",
   ],
@@ -102,6 +108,8 @@ exports[`converter registry > targets per source, in order (the first is the def
   "jpeg": [
     "png",
     "webp",
+    "avif",
+    "jxl",
     "bmp",
     "ico",
     "jpg",
@@ -109,6 +117,8 @@ exports[`converter registry > targets per source, in order (the first is the def
   "jpg": [
     "png",
     "webp",
+    "avif",
+    "jxl",
     "bmp",
     "ico",
     "jpg",
@@ -123,6 +133,12 @@ exports[`converter registry > targets per source, in order (the first is the def
     "html",
     "md",
     "pdf",
+  ],
+  "jxl": [
+    "png",
+    "jpg",
+    "webp",
+    "avif",
   ],
   "m4a": [
     "mp3",
@@ -220,6 +236,8 @@ exports[`converter registry > targets per source, in order (the first is the def
   "png": [
     "jpg",
     "webp",
+    "avif",
+    "jxl",
     "bmp",
     "ico",
     "png",
@@ -228,6 +246,7 @@ exports[`converter registry > targets per source, in order (the first is the def
     "png",
     "jpg",
     "webp",
+    "avif",
   ],
   "tsv": [
     "csv",
@@ -264,6 +283,8 @@ exports[`converter registry > targets per source, in order (the first is the def
   "webp": [
     "jpg",
     "png",
+    "avif",
+    "jxl",
     "bmp",
     "webp",
   ],

@@ -1,5 +1,5 @@
 import type { ConversionSettings } from './types';
-import { ASSET_BASE, decodeToImageData, finishImage } from './image-encode';
+import { ASSET_BASE, decodeJxl, decodeToImageData, finishImage } from './image-encode';
 
 // resvg's JS glue is small but the wasm is ~2.4 MB, so both load lazily: the
 // module is dynamically imported only when an SVG is actually converted (non-SVG
@@ -74,10 +74,13 @@ export async function convertImage(
   settings?: ConversionSettings,
   onProgress?: (pct: number) => void,
 ): Promise<Blob> {
+  // No browser decodes JPEG XL natively except Safari, so it goes through jSquash.
   const imageData =
     sourceExt === 'svg'
       ? await renderSvgToImageData(await file.text())
-      : await decodeToImageData(file);
+      : sourceExt === 'jxl'
+        ? await decodeJxl(file)
+        : await decodeToImageData(file);
 
   return finishImage(imageData, targetExt, settings, onProgress);
 }

@@ -109,44 +109,48 @@ function getCanvasContext(el: HTMLCanvasElement) {
   return c;
 }
 
-const _origGetContext = HTMLCanvasElement.prototype.getContext;
-HTMLCanvasElement.prototype.getContext = function (contextType: string, options?: any) {
-  if (contextType === '2d') {
-    return getCanvasContext(this).getContext('2d') as any;
-  }
-  return _origGetContext.call(this, contextType, options);
-};
+// Canvas patches only apply under jsdom; a `@vitest-environment node` test
+// (the real-codec ones) has no HTMLCanvasElement.
+if (typeof HTMLCanvasElement !== 'undefined') {
+  const _origGetContext = HTMLCanvasElement.prototype.getContext;
+  HTMLCanvasElement.prototype.getContext = function (contextType: string, options?: any) {
+    if (contextType === '2d') {
+      return getCanvasContext(this).getContext('2d') as any;
+    }
+    return _origGetContext.call(this, contextType, options);
+  };
 
-const _origToBlob = HTMLCanvasElement.prototype.toBlob;
-HTMLCanvasElement.prototype.toBlob = function (
-  callback: BlobCallback,
-  mimeType?: string,
-  quality?: any,
-) {
-  const c = canvasContextMap.get(this as unknown as HTMLCanvasElement);
-  if (!c) return _origToBlob.call(this, callback, mimeType, quality);
+  const _origToBlob = HTMLCanvasElement.prototype.toBlob;
+  HTMLCanvasElement.prototype.toBlob = function (
+    callback: BlobCallback,
+    mimeType?: string,
+    quality?: any,
+  ) {
+    const c = canvasContextMap.get(this as unknown as HTMLCanvasElement);
+    if (!c) return _origToBlob.call(this, callback, mimeType, quality);
 
-  const mime = mimeType || 'image/png';
-  let buf: Buffer;
-  try {
-    buf = c.toBuffer(mime, quality != null ? { quality } : undefined);
-  } catch {
-    buf = c.toBuffer('image/png');
-  }
-  callback(new Blob([buf], { type: mime }));
-};
+    const mime = mimeType || 'image/png';
+    let buf: Buffer;
+    try {
+      buf = c.toBuffer(mime, quality != null ? { quality } : undefined);
+    } catch {
+      buf = c.toBuffer('image/png');
+    }
+    callback(new Blob([buf], { type: mime }));
+  };
 
-const _origToDataURL = HTMLCanvasElement.prototype.toDataURL;
-HTMLCanvasElement.prototype.toDataURL = function (mimeType?: string, quality?: any) {
-  const c = canvasContextMap.get(this as unknown as HTMLCanvasElement);
-  if (!c) return _origToDataURL.call(this, mimeType, quality);
+  const _origToDataURL = HTMLCanvasElement.prototype.toDataURL;
+  HTMLCanvasElement.prototype.toDataURL = function (mimeType?: string, quality?: any) {
+    const c = canvasContextMap.get(this as unknown as HTMLCanvasElement);
+    if (!c) return _origToDataURL.call(this, mimeType, quality);
 
-  const mime = mimeType || 'image/png';
-  let buf: Buffer;
-  try {
-    buf = c.toBuffer(mime, quality != null ? { quality } : undefined);
-  } catch {
-    buf = c.toBuffer('image/png');
-  }
-  return `data:${mime};base64,${buf.toString('base64')}`;
-};
+    const mime = mimeType || 'image/png';
+    let buf: Buffer;
+    try {
+      buf = c.toBuffer(mime, quality != null ? { quality } : undefined);
+    } catch {
+      buf = c.toBuffer('image/png');
+    }
+    return `data:${mime};base64,${buf.toString('base64')}`;
+  };
+}

@@ -15,6 +15,7 @@ export const FORMATS: FormatInfo[] = [
   { ext: 'svg', label: 'SVG', mimeType: 'image/svg+xml', category: 'image' },
   { ext: 'heic', label: 'HEIC', mimeType: 'image/heic', category: 'image' },
   { ext: 'avif', label: 'AVIF', mimeType: 'image/avif', category: 'image' },
+  { ext: 'jxl', label: 'JPEG XL', mimeType: 'image/jxl', category: 'image' },
   // Video
   { ext: 'mp4', label: 'MP4', mimeType: 'video/mp4', category: 'video' },
   { ext: 'webm', label: 'WebM', mimeType: 'video/webm', category: 'video' },

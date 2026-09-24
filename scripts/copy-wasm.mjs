@@ -16,9 +16,14 @@ const sources = [
   ['@jsquash/png/codec/pkg/squoosh_png_bg.wasm', 'squoosh_png_bg.wasm'],
   ['@jsquash/webp/codec/enc/webp_enc.wasm', 'webp_enc.wasm'],
   ['@jsquash/webp/codec/enc/webp_enc_simd.wasm', 'webp_enc_simd.wasm'],
-  // Single-thread oxipng only: the multi-thread (pkg-parallel) variant needs
-  // SharedArrayBuffer + COOP/COEP, which this static export does not set.
+  // Single-threaded builds only. The site is cross-origin isolated, so these
+  // codecs' entry points would pick their multi-threaded builds, which need
+  // pthread worker scripts we don't ship; lib/image-encode.ts imports each
+  // single-threaded glue directly instead.
   ['@jsquash/oxipng/codec/pkg/squoosh_oxipng_bg.wasm', 'squoosh_oxipng_bg.wasm'],
+  ['@jsquash/avif/codec/enc/avif_enc.wasm', 'avif_enc.wasm'],
+  ['@jsquash/jxl/codec/enc/jxl_enc.wasm', 'jxl_enc.wasm'],
+  ['@jsquash/jxl/codec/dec/jxl_dec.wasm', 'jxl_dec.wasm'],
   // resvg ships a generically-named index_bg.wasm; rename to avoid clashes.
   ['@resvg/resvg-wasm/index_bg.wasm', 'resvg_bg.wasm'],
   // PDFium (via @hyzyla/pdfium) for PDF-as-input rendering/text extraction.

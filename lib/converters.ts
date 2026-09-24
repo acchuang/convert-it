@@ -124,7 +124,7 @@ function add(
 // Lossy targets have a quality knob and can be compressed to a size budget;
 // lossless ones only take crop/resize.
 function imageSettings(to: string): SettingKey[] {
-  return to === 'jpg' || to === 'jpeg' || to === 'webp'
+  return ['jpg', 'jpeg', 'webp', 'avif', 'jxl'].includes(to)
     ? ['quality', 'imageTransform', 'targetSize']
     : ['imageTransform'];
 }
@@ -135,16 +135,17 @@ const avif: ConverterFn = (file, _s, to, settings, onProgress) =>
   convertAvif(file, to, settings, onProgress);
 
 const IMAGE_TARGETS: Record<string, string[]> = {
-  jpg: ['png', 'webp', 'bmp', 'ico', 'jpg'],
-  jpeg: ['png', 'webp', 'bmp', 'ico', 'jpg'],
-  png: ['jpg', 'webp', 'bmp', 'ico', 'png'],
-  webp: ['jpg', 'png', 'bmp', 'webp'],
-  gif: ['png', 'jpg', 'webp'],
-  bmp: ['jpg', 'png', 'webp'],
+  jpg: ['png', 'webp', 'avif', 'jxl', 'bmp', 'ico', 'jpg'],
+  jpeg: ['png', 'webp', 'avif', 'jxl', 'bmp', 'ico', 'jpg'],
+  png: ['jpg', 'webp', 'avif', 'jxl', 'bmp', 'ico', 'png'],
+  webp: ['jpg', 'png', 'avif', 'jxl', 'bmp', 'webp'],
+  gif: ['png', 'jpg', 'webp', 'avif'],
+  bmp: ['jpg', 'png', 'webp', 'avif', 'jxl'],
   ico: ['png', 'jpg', 'webp', 'bmp'],
-  svg: ['png', 'jpg', 'webp'],
-  heic: ['jpg', 'png', 'webp', 'bmp', 'ico'],
-  avif: ['jpg', 'png', 'webp', 'bmp', 'ico'],
+  svg: ['png', 'jpg', 'webp', 'avif'],
+  heic: ['jpg', 'png', 'webp', 'avif', 'jxl', 'bmp', 'ico'],
+  avif: ['jpg', 'png', 'webp', 'jxl', 'bmp', 'ico'],
+  jxl: ['png', 'jpg', 'webp', 'avif'],
 };
 for (const [from, targets] of Object.entries(IMAGE_TARGETS)) {
   const run = from === 'heic' ? heic : from === 'avif' ? avif : convertImage;

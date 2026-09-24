@@ -2,7 +2,7 @@
 // it for the image converters), so the PNG comes from that rather than a hand-rolled
 // encoder. The WebM has to come from a real browser — MediaRecorder is the only encoder
 // available without adding a dependency — so playwright writes it in a separate pass.
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createCanvas } from 'canvas';
 
@@ -16,6 +16,22 @@ ctx.fillRect(0, 0, 64, 48);
 ctx.fillStyle = '#FF4D00';
 ctx.fillRect(8, 8, 24, 24);
 writeFileSync(join(DIR, 'img.png'), canvas.toBuffer('image/png'));
+
+// The same pixels as JPEG XL, for the jxl → png pair. No browser in CI decodes
+// JXL, so the fixture comes from the codec the app ships (its glue fetches the
+// wasm even under Node, hence the fetch shim).
+{
+  const wasm = join(process.cwd(), 'public', 'wasm');
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (path) =>
+    new Response(readFileSync(String(path)), { headers: { 'content-type': 'application/wasm' } });
+  const { default: factory } = await import('@jsquash/jxl/codec/enc/jxl_enc.js');
+  const { defaultOptions } = await import('@jsquash/jxl/meta.js');
+  const jxl = await factory({ noInitialRun: true, locateFile: (f) => join(wasm, f) });
+  const { data } = ctx.getImageData(0, 0, 64, 48);
+  writeFileSync(join(DIR, 'img.jxl'), jxl.encode(data, 64, 48, { ...defaultOptions, quality: 90 }));
+  globalThis.fetch = realFetch;
+}
 
 // 0.5s 440Hz mono 16-bit PCM.
 const rate = 8000;
