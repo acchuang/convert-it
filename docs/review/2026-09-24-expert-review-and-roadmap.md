@@ -8,6 +8,13 @@ _Reviewed at `7a92641` (2026-09-24). Scope: every file in `lib/`, the app shell,
 
 - **Phase 0: done.** C1, C3, C4, C5, C8–C12, S2, C17, plus C7 (duration-based progress; the log parser was being rewritten anyway). Each fix has tests that check the output is valid. Every media target was run against the real `@ffmpeg/core` 0.12.10 in both Chromium and Node.
 - **New findings while doing C3:** in `@ffmpeg/core` 0.12.10, `libvpx-vp9` crashes on every input ("memory access out of bounds"), so WebM output never worked, AAC or not. `libopus` also crashes on any stereo source; this was caught by the Phase 1 browser smoke test (MKV → WebM). WebM is now **VP8 + Vorbis**. Re-test both codecs in a browser before switching back after a core upgrade.
+- **Phase 1: done.**
+  - **S1:** CSP. There is a site-wide header policy plus a per-page meta policy that hashes each page's inline scripts; injected inline script and foreign-origin `fetch` were verified blocked.
+  - **S3:** SheetJS was replaced by an in-house reader/writer (`lib/xlsx.ts`). exceljs was rejected: it adds its own advisories and about 1 MB.
+  - **S4:** dependency bumps. `npm audit --omit=dev` reports 0, and CI now fails on high-severity advisories.
+  - **S5:** the FFmpeg core is checked against a pinned SHA-256 and loaded from a `blob:` URL.
+  - **Hygiene:** caching headers, Prettier check in CI, and the browser smoke suite in CI against the built site with `_headers` applied (it fails on any CSP violation). Also Dependabot and an updated `lib/AGENTS.md`.
+  - **Open:** dev-only audit advisories remain because `npm audit fix` crashes on the `overrides` field; they are left for Dependabot.
 
 ## 1. Executive summary
 
