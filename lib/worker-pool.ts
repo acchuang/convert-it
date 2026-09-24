@@ -11,8 +11,9 @@ export class CancelledError extends Error {
 /**
  * Converters that still have to run on the UI thread.
  *
- * HTML input (DOMParser, and turndown for html → md) and Markdown/HTML → PDF
- * (marked's HTML flattened through DOMParser) need a DOM, which a worker lacks.
+ * HTML input (DOMParser, and turndown for html → md), Markdown → PDF (marked's
+ * HTML flattened through DOMParser) and Markdown → EPUB (sanitised and
+ * serialised as XHTML through the DOM) need a DOM, which a worker lacks.
  * XML parses with fast-xml-parser and TXT/JSON → PDF lay text out directly, so
  * both run in the pool. Audio and video stay here on purpose: ffmpeg.wasm
  * already runs in its own worker, so moving it would nest workers and
@@ -21,7 +22,7 @@ export class CancelledError extends Error {
 export function runsOnMainThread(sourceExt: string, targetExt: string, category?: string): boolean {
   if (category === 'video' || category === 'audio') return true;
   if (sourceExt === 'html') return true;
-  return targetExt === 'pdf' && sourceExt === 'md';
+  return sourceExt === 'md' && (targetExt === 'pdf' || targetExt === 'epub');
 }
 
 interface Task extends ConvertRequest {

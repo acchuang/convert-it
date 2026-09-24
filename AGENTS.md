@@ -22,7 +22,7 @@ Independent Next.js project deployed via Cloudflare Pages.
 - Build: `npm run build`
 - Lint: `npx eslint .`
 - Format: `npx prettier --check .`
-- Test: `npx vitest run`
+- Test: `npx vitest run` (set `EPUBCHECK_JAR` to an epubcheck 5 jar to also validate EPUB output, as CI does)
 - Type-check: `npx tsc --noEmit`
 - Serve the export as Pages would (applies `out/_headers`): `npm run serve`
 - Browser smoke suite (real codecs, CSP violations fail it): `npm run fixtures`, `npm run serve`, then `npm run smoke`. Set `SMOKE_CHROMIUM_PATH` if Google Chrome isn't installed.
@@ -42,6 +42,12 @@ Independent Next.js project deployed via Cloudflare Pages.
 - PDF output (txt/md/html/json → PDF) uses `jspdf` (pure JS) in `lib/pdf-converters.ts`.
 - PDF input (PDF → PNG/JPG/WebP, PDF → TXT/HTML) uses `@hyzyla/pdfium` (MIT wrapper over BSD-3 PDFium; not AGPL mupdf). Page render → RGBA → existing `encodeImageData` pipeline. Text extraction is layout-naive (reading order, no OCR).
 - PDF → image defaults to page 1 as a single image. With `ConversionSettings.pdfAllPages` it renders every page at `pdfScale` (1×/2×/3×) and returns a `application/zip` Blob (one `<base>-page-<n>.<ext>` per page via jszip); `downloadJob` names zip outputs `.zip` and `JobCard.canPreview` skips zip blobs. Default (`pdfAllPages=false`) keeps the single-page behaviour.
+
+## EPUB
+
+- `lib/epub-converter.ts` writes EPUB 3 that passes W3C epubcheck with zero errors and warnings (CI runs it on hostile samples). Package: `mimetype` first and stored, `nav.xhtml` (required) plus `toc.ncx`, `dcterms:modified` as `CCYY-MM-DDThh:mm:ssZ`, one `chapter-N.xhtml` per h1/h2 section (a title-only heading merges into the next).
+- MD/HTML → XHTML goes DOMParser → `sanitise` (element/attribute whitelist, obsolete tags mapped, forms/scripts/media dropped, unique ids) → XMLSerializer, so md/html → EPUB runs on the main thread. `data:` images are packaged under `images/`; images that can't be packaged become their alt text; `#fragment` links are rewritten to the chapter that holds the id.
+- `dc:language`: `<html lang>`, else the dominant script, else `und`.
 
 ## Text & Markup Output
 

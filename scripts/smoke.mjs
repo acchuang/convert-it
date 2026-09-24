@@ -4,7 +4,7 @@
 //
 //   node scripts/smoke.mjs            # Chrome
 //   node scripts/smoke.mjs webkit     # Safari engine
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium, webkit } from 'playwright';
 
@@ -45,6 +45,12 @@ const PAIRS = [
   ['doc.txt', 'pdf', 'jspdf (worker)', magic('%PDF')],
   ['data.json', 'pdf', 'jspdf json (worker)', magic('%PDF')],
   ['doc.md', 'pdf', 'jspdf md (main)', magic('%PDF')],
+  [
+    'doc.md',
+    'epub',
+    'epub (main)',
+    (b) => magic('PK')(b) && magic('mimetypeapplication/epub+zip', 30)(b),
+  ],
   ['data.xml', 'csv', 'xml (worker)', (b) => b.toString() === '@id,title\r\n1,Dune\r\n2,Ubik'],
 ];
 
@@ -126,6 +132,11 @@ for (const [fixture, target, label, check] of PAIRS) {
       done.click(),
     ]);
     const bytes = readFileSync(await download.path());
+    // SMOKE_SAVE_DIR keeps each output, e.g. to run epubcheck on what a real
+    // browser produced.
+    if (process.env.SMOKE_SAVE_DIR) {
+      writeFileSync(join(process.env.SMOKE_SAVE_DIR, download.suggestedFilename()), bytes);
+    }
 
     if (cspViolations.length) row.note = `CSP: ${cspViolations[0]}`;
     else if (bytes.length === 0) row.note = 'empty output';

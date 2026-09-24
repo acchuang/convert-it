@@ -6,6 +6,8 @@ describe('runsOnMainThread', () => {
     expect(runsOnMainThread('html', 'md')).toBe(true);
     expect(runsOnMainThread('html', 'pdf')).toBe(true);
     expect(runsOnMainThread('md', 'pdf')).toBe(true);
+    expect(runsOnMainThread('md', 'epub')).toBe(true);
+    expect(runsOnMainThread('html', 'epub')).toBe(true);
     expect(runsOnMainThread('mp4', 'webm', 'video')).toBe(true);
     expect(runsOnMainThread('wav', 'mp3', 'audio')).toBe(true);
   });
@@ -16,6 +18,7 @@ describe('runsOnMainThread', () => {
     }
     expect(runsOnMainThread('txt', 'pdf', 'document')).toBe(false);
     expect(runsOnMainThread('json', 'pdf', 'data')).toBe(false);
+    expect(runsOnMainThread('txt', 'epub', 'document')).toBe(false);
     expect(runsOnMainThread('png', 'jpg', 'image')).toBe(false);
   });
 });

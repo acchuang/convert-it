@@ -52,7 +52,7 @@ writeFileSync(
 );
 writeFileSync(
   join(DIR, 'doc.md'),
-  '# Title\n\nSome **bold** text and a [link](https://example.com).\n',
+  '# Title\n\nSome **bold** text and a [link](https://example.com).\n\n## Part two\n\nLine<br>break & a [jump](#title).\n',
 );
 writeFileSync(
   join(DIR, 'data.xml'),
