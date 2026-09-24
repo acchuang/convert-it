@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import type { ConversionFailure } from '@/lib/errors';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getTargetFormats, getFormatInfo, formatFileSize } from '@/lib/converters';
+import { getTargetFormats, getFormatInfo, formatFileSize, settingsFor } from '@/lib/converters';
 import type { ConversionSettings } from '@/lib/types';
 import { PreviewPanel } from './PreviewPanel';
+import { SettingsPanel } from './SettingsPanel';
 
 export interface FileJob {
   id: string;
@@ -13,7 +15,7 @@ export interface FileJob {
   targetExt: string | null;
   status: 'idle' | 'converting' | 'done' | 'error';
   resultBlob?: Blob;
-  error?: string;
+  error?: ConversionFailure;
   progress: number;
   stage?: string;
   settings: ConversionSettings;
@@ -29,437 +31,29 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 const TEXT_FORMATS = new Set(['json', 'csv', 'xml', 'yaml', 'tsv', 'md', 'html', 'txt']);
 
-const IMAGE_QUALITY_FORMATS = ['jpg', 'jpeg', 'webp', 'png'];
-const CSV_DELIMITER_FORMATS = ['csv', 'xlsx'];
-const JSON_INDENT_FORMATS = ['json', 'xlsx'];
-const AUDIO_BITRATE_FORMATS = ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a'];
-const VIDEO_SETTINGS_FORMATS = ['mp4', 'webm', 'avi', 'mov', 'mkv', 'flv'];
+const ERROR_KEYS: Record<ConversionFailure['code'], string> = {
+  'too-large': 'tooLarge',
+  'out-of-memory': 'outOfMemory',
+  'corrupt-input': 'corruptInput',
+  unsupported: 'unsupported',
+  'engine-load': 'engineLoad',
+  unknown: 'unknown',
+};
 
-// Resize and crop apply to every image target, including the two with no
-// quality knob of their own.
-const IMAGE_TRANSFORM_FORMATS = [...IMAGE_QUALITY_FORMATS, 'bmp', 'ico'];
-const TARGET_SIZE_FORMATS = ['jpg', 'jpeg', 'webp'];
-const RESIZE_PRESETS = [25, 50, 75, 100];
-const CROP_ASPECTS = ['none', '1:1', '4:3', '16:9', '3:2'];
-
-const CONFIGURABLE_FORMATS = new Set([
-  ...IMAGE_QUALITY_FORMATS,
-  ...CSV_DELIMITER_FORMATS,
-  ...JSON_INDENT_FORMATS,
-  'xml',
-  ...AUDIO_BITRATE_FORMATS,
-  ...VIDEO_SETTINGS_FORMATS,
-]);
-
-function hasSettings(targetExt: string | null, sourceExt: string): boolean {
-  if (!targetExt) return false;
-  if (
-    getFormatInfo(sourceExt)?.category === 'image' &&
-    IMAGE_TRANSFORM_FORMATS.includes(targetExt)
-  ) {
-    return true;
-  }
-  return CONFIGURABLE_FORMATS.has(targetExt);
-}
-
-function SettingsPanel({
-  targetExt,
-  sourceExt,
-  settings,
-  onChange,
-  t,
-}: {
-  targetExt: string;
-  sourceExt: string;
-  settings: ConversionSettings;
-  onChange: (patch: Partial<ConversionSettings>) => void;
-  t: (key: string) => string;
-}) {
-  const showQuality = IMAGE_QUALITY_FORMATS.includes(targetExt);
-  const showDelimiter = CSV_DELIMITER_FORMATS.includes(targetExt);
-  const showIndent = JSON_INDENT_FORMATS.includes(targetExt);
-  const showRootEl = targetExt === 'xml';
-  const showAudioBitrate = AUDIO_BITRATE_FORMATS.includes(targetExt);
-  const showVideoSettings = VIDEO_SETTINGS_FORMATS.includes(targetExt);
-  const showPdfImage = sourceExt === 'pdf' && IMAGE_QUALITY_FORMATS.includes(targetExt);
-  const showXlsxSheets = sourceExt === 'xlsx' && (targetExt === 'csv' || targetExt === 'json');
-  // The toolbox runs on decoded pixels: every image source, and PDF pages,
-  // which pdfToImage renders and then finishes through the same pipeline.
-  const showImageTools =
-    (getFormatInfo(sourceExt)?.category === 'image' || sourceExt === 'pdf') &&
-    IMAGE_TRANSFORM_FORMATS.includes(targetExt);
-  const showTargetSize = showImageTools && TARGET_SIZE_FORMATS.includes(targetExt);
-
-  const qualityPct = Math.round(settings.quality * 100);
-  const usingExactSize = settings.imageResizeWidth > 0 || settings.imageResizeHeight > 0;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, height: 0 }}
-      animate={{ opacity: 1, height: 'auto' }}
-      exit={{ opacity: 0, height: 0 }}
-      transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-      className="overflow-hidden"
-    >
-      <div
-        className="mt-4 pt-3 border-t border-[var(--border-primary)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs"
-        style={{ fontFamily: 'var(--font-mono)' }}
-      >
-        {showQuality && (
-          <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
-                {t('job.quality')}
-              </span>
-              <span className="text-primary text-xs font-semibold">{qualityPct}%</span>
-            </div>
-            <input
-              type="range"
-              min={10}
-              max={100}
-              value={qualityPct}
-              onChange={(e) => onChange({ quality: Number(e.target.value) / 100 })}
-              className="w-full accent-[var(--accent)]"
-            />
-            <div className="flex justify-between text-xs text-[var(--text-muted)]">
-              <span>Low (Compact)</span>
-              <span>High (Sharp)</span>
-            </div>
-          </div>
-        )}
-
-        {showDelimiter && (
-          <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
-            <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
-              {t('job.delimiter')}
-            </span>
-            <div className="flex gap-1">
-              {([',', ';', '|', '\t'] as const).map((d) => (
-                <button
-                  key={d}
-                  onClick={() => onChange({ csvDelimiter: d })}
-                  className={`flex-1 py-1 text-xs rounded transition-colors ${
-                    settings.csvDelimiter === d
-                      ? 'bg-[var(--accent)] text-[var(--accent-text)] font-semibold'
-                      : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
-                  }`}
-                >
-                  {d === '\t'
-                    ? t('job.tab')
-                    : d === ','
-                      ? t('job.comma')
-                      : d === ';'
-                        ? t('job.semi')
-                        : t('job.pipe')}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {showIndent && (
-          <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
-            <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
-              {t('job.indent')}
-            </span>
-            <div className="flex gap-1">
-              {([2, 4, 0] as const).map((n) => (
-                <button
-                  key={n}
-                  onClick={() => onChange({ jsonIndent: n })}
-                  className={`flex-1 py-1 text-xs rounded transition-colors ${
-                    settings.jsonIndent === n
-                      ? 'bg-[var(--accent)] text-[var(--accent-text)] font-semibold'
-                      : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
-                  }`}
-                >
-                  {n === 0 ? t('job.min') : `${n}${t('job.sp2').slice(1)}`}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {showRootEl && (
-          <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
-            <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
-              {t('job.root')}
-            </span>
-            <input
-              type="text"
-              value={settings.xmlRootElement}
-              onChange={(e) => onChange({ xmlRootElement: e.target.value || 'root' })}
-              className="bg-[var(--bg-secondary)] border border-[var(--border-secondary)] text-primary text-xs rounded px-2.5 py-1.5 w-full focus:outline-none focus:border-[var(--accent)] transition-colors"
-              placeholder="root"
-            />
-          </div>
-        )}
-
-        {showAudioBitrate && (
-          <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
-            <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
-              {t('job.bitrate')}
-            </span>
-            <div className="flex gap-1">
-              {([64, 128, 192, 256, 320] as const).map((n) => (
-                <button
-                  key={n}
-                  onClick={() => onChange({ audioBitrate: n })}
-                  className={`flex-1 py-1 text-xs rounded transition-colors ${
-                    settings.audioBitrate === n
-                      ? 'bg-[var(--accent)] text-[var(--accent-text)] font-semibold'
-                      : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
-                  }`}
-                >
-                  {n}k
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {showXlsxSheets && (
-          <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
-            <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
-              {t('job.xlsxSheets')}
-            </span>
-            <div className="flex gap-1">
-              {([false, true] as const).map((all) => (
-                <button
-                  key={String(all)}
-                  onClick={() => onChange({ xlsxAllSheets: all })}
-                  aria-pressed={settings.xlsxAllSheets === all}
-                  className={`flex-1 py-1 text-xs rounded transition-colors ${
-                    settings.xlsxAllSheets === all
-                      ? 'bg-[var(--accent)] text-[var(--accent-text)] font-semibold'
-                      : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
-                  }`}
-                >
-                  {all ? t('job.xlsxAllSheets') : t('job.xlsxFirstSheet')}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {showPdfImage && (
-          <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
-            <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
-              {t('job.pdfPages')}
-            </span>
-            <div className="flex gap-1">
-              {([false, true] as const).map((all) => (
-                <button
-                  key={String(all)}
-                  onClick={() => onChange({ pdfAllPages: all })}
-                  className={`flex-1 py-1 text-xs rounded transition-colors ${
-                    settings.pdfAllPages === all
-                      ? 'bg-[var(--accent)] text-[var(--accent-text)] font-semibold'
-                      : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
-                  }`}
-                >
-                  {all ? t('job.pdfAllPages') : t('job.pdfFirstPage')}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {showPdfImage && (
-          <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
-            <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
-              {t('job.pdfScale')}
-            </span>
-            <div className="flex gap-1">
-              {([1, 2, 3] as const).map((n) => (
-                <button
-                  key={n}
-                  onClick={() => onChange({ pdfScale: n })}
-                  className={`flex-1 py-1 text-xs rounded transition-colors ${
-                    settings.pdfScale === n
-                      ? 'bg-[var(--accent)] text-[var(--accent-text)] font-semibold'
-                      : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
-                  }`}
-                >
-                  {n}x
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {showVideoSettings && (
-          <>
-            <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
-                  {t('job.quality')}
-                </span>
-                <span className="text-primary text-xs font-semibold">
-                  CRF {settings.videoQuality} ·{' '}
-                  {settings.videoQuality <= 20
-                    ? 'High'
-                    : settings.videoQuality <= 28
-                      ? 'Balanced'
-                      : 'Compact'}
-                </span>
-              </div>
-              <input
-                type="range"
-                min={18}
-                max={51}
-                value={settings.videoQuality}
-                onChange={(e) => onChange({ videoQuality: Number(e.target.value) })}
-                className="w-full"
-                style={{ accentColor: 'var(--video-color)' }}
-              />
-              <span className="text-xs text-[var(--text-muted)]">
-                Lower CRF = higher quality & larger file
-              </span>
-            </div>
-
-            <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
-              <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
-                {t('job.preset')}
-              </span>
-              <div className="relative inline-flex items-center">
-                <select
-                  value={settings.videoPreset}
-                  onChange={(e) => onChange({ videoPreset: e.target.value })}
-                  className="w-full bg-[var(--bg-secondary)] border border-[var(--border-secondary)] text-primary text-xs rounded-lg pl-2.5 pr-7 py-1.5 appearance-none cursor-pointer hover:border-[var(--border-hover)] focus:outline-none focus:border-[var(--accent)] transition-colors"
-                >
-                  {(
-                    [
-                      'ultrafast',
-                      'superfast',
-                      'veryfast',
-                      'faster',
-                      'fast',
-                      'medium',
-                      'slow',
-                      'slower',
-                      'veryslow',
-                    ] as const
-                  ).map((p) => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
-                  ))}
-                </select>
-                <svg
-                  className="absolute right-2 pointer-events-none text-[var(--text-muted)]"
-                  width="10"
-                  height="10"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  aria-hidden="true"
-                >
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
-              </div>
-            </div>
-          </>
-        )}
-
-        {showImageTools && (
-          <>
-            <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
-              <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
-                {t('job.resize')}
-              </span>
-              <div className="flex gap-1">
-                {RESIZE_PRESETS.map((n) => (
-                  <button
-                    key={n}
-                    onClick={() =>
-                      onChange({ imageResizePercent: n, imageResizeWidth: 0, imageResizeHeight: 0 })
-                    }
-                    className={`flex-1 py-1 text-xs rounded transition-colors ${
-                      !usingExactSize && settings.imageResizePercent === n
-                        ? 'bg-[var(--accent)] text-[var(--accent-text)] font-semibold'
-                        : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
-                    }`}
-                  >
-                    {n}%
-                  </button>
-                ))}
-              </div>
-              <div className="flex items-center gap-1.5 mt-1">
-                <input
-                  type="number"
-                  min={0}
-                  value={settings.imageResizeWidth || ''}
-                  onChange={(e) =>
-                    onChange({ imageResizeWidth: Math.max(0, Number(e.target.value)) })
-                  }
-                  className="w-full bg-[var(--bg-secondary)] border border-[var(--border-secondary)] text-primary text-xs rounded px-2 py-1 focus:outline-none focus:border-[var(--accent)] transition-colors"
-                  placeholder={t('job.width')}
-                  aria-label={t('job.width')}
-                />
-                <span className="text-[var(--text-muted)] text-xs">×</span>
-                <input
-                  type="number"
-                  min={0}
-                  value={settings.imageResizeHeight || ''}
-                  onChange={(e) =>
-                    onChange({ imageResizeHeight: Math.max(0, Number(e.target.value)) })
-                  }
-                  className="w-full bg-[var(--bg-secondary)] border border-[var(--border-secondary)] text-primary text-xs rounded px-2 py-1 focus:outline-none focus:border-[var(--accent)] transition-colors"
-                  placeholder={t('job.height')}
-                  aria-label={t('job.height')}
-                />
-              </div>
-            </div>
-
-            <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
-              <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
-                {t('job.crop')}
-              </span>
-              <div className="flex gap-1">
-                {CROP_ASPECTS.map((aspect) => (
-                  <button
-                    key={aspect}
-                    onClick={() => onChange({ imageCropAspect: aspect })}
-                    className={`flex-1 py-1 text-xs rounded transition-colors ${
-                      settings.imageCropAspect === aspect
-                        ? 'bg-[var(--accent)] text-[var(--accent-text)] font-semibold'
-                        : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
-                    }`}
-                  >
-                    {aspect === 'none' ? t('job.cropOff') : aspect}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {showTargetSize && (
-              <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
-                <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
-                  {t('job.maxSize')}
-                </span>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min={0}
-                    value={settings.imageTargetSizeKb || ''}
-                    onChange={(e) =>
-                      onChange({ imageTargetSizeKb: Math.max(0, Number(e.target.value)) })
-                    }
-                    className="flex-1 bg-[var(--bg-secondary)] border border-[var(--border-secondary)] text-primary text-xs rounded px-2.5 py-1.5 focus:outline-none focus:border-[var(--accent)] transition-colors"
-                    placeholder={t('job.maxSizeOff')}
-                    aria-label={t('job.maxSize')}
-                  />
-                  <span className="text-[var(--text-muted)] text-xs">KB</span>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </motion.div>
-  );
+/** Localized title and hint for a failure, with {placeholders} filled in. */
+export function describeError(
+  failure: ConversionFailure,
+  sourceExt: string,
+  t: (key: string) => string,
+): { title: string; hint: string } {
+  const fill = (text: string) =>
+    text.replace(/\{(\w+)\}/g, (whole, name: string) => {
+      if (name === 'ext') return sourceExt;
+      const value = failure.params?.[name];
+      return value === undefined ? whole : String(value);
+    });
+  const key = `errors.${ERROR_KEYS[failure.code] ?? 'unknown'}`;
+  return { title: fill(t(`${key}.title`)), hint: fill(t(`${key}.hint`)) };
 }
 
 interface JobCardProps {
@@ -492,7 +86,7 @@ export function JobCard({
   const category = info?.category ?? 'document';
   const categoryColor = CATEGORY_COLORS[category] ?? '#666';
   const targets = getTargetFormats(job.sourceExt);
-  const canConfigure = hasSettings(job.targetExt, job.sourceExt);
+  const canConfigure = settingsFor(job.sourceExt, job.targetExt).length > 0;
   const canPreview =
     job.status === 'done' &&
     !!job.resultBlob &&
@@ -712,7 +306,10 @@ export function JobCard({
             </span>
           )}
           {job.status === 'error' && (
-            <span className="text-[var(--error)] flex items-center gap-1.5" title={job.error}>
+            <span
+              className="text-[var(--error)] flex items-center gap-1.5"
+              title={job.error?.detail}
+            >
               <svg
                 width="12"
                 height="12"
@@ -725,7 +322,11 @@ export function JobCard({
                 <line x1="12" y1="8" x2="12" y2="12" />
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
-              <span className="truncate max-w-xs">{job.error || 'Conversion failed'}</span>
+              <span className="truncate max-w-xs">
+                {job.error
+                  ? describeError(job.error, job.sourceExt, t).title
+                  : t('errors.unknown.title')}
+              </span>
             </span>
           )}
         </div>
@@ -882,7 +483,7 @@ export function JobCard({
               onClick={onConvert}
               className="px-4 py-1.5 text-[var(--error)] text-xs rounded-lg border border-[var(--error)]/30 bg-[var(--error)]/10 hover:bg-[var(--error)]/20 transition-colors font-medium flex items-center gap-1"
               style={{ fontFamily: 'var(--font-mono)' }}
-              title={job.error}
+              title={job.error?.detail}
               aria-label={t('job.retry')}
             >
               {t('job.retry')}
@@ -928,9 +529,23 @@ export function JobCard({
       </AnimatePresence>
 
       {job.status === 'error' && job.error && (
-        <p className="mt-2 text-xs text-[var(--error)]" style={{ fontFamily: 'var(--font-mono)' }}>
-          {job.error}
-        </p>
+        <div role="alert" className="mt-2 text-xs">
+          <p className="text-[var(--error)] font-semibold">
+            {describeError(job.error, job.sourceExt, t).title}
+          </p>
+          <p className="mt-0.5 text-[var(--text-secondary)]">
+            {describeError(job.error, job.sourceExt, t).hint}
+          </p>
+          <details className="mt-1 text-[var(--text-muted)]">
+            <summary className="cursor-pointer select-none">{t('errors.details')}</summary>
+            <code
+              className="block mt-1 break-all whitespace-pre-wrap"
+              style={{ fontFamily: 'var(--font-mono)' }}
+            >
+              {job.error.detail}
+            </code>
+          </details>
+        </div>
       )}
     </motion.div>
   );

@@ -99,3 +99,44 @@ describe('JobCard', () => {
     expect(screen.getByText('job.download')).toBeDefined();
   });
 });
+
+describe('JobCard errors', () => {
+  const en: Record<string, string> = {
+    'errors.corruptInput.title': 'Couldn’t read this file',
+    'errors.corruptInput.hint': 'Not really a .{ext} file?',
+    'errors.tooLarge.title': 'File too large ({size} MB; the limit is {limit} MB)',
+    'errors.tooLarge.hint': 'Split it.',
+    'errors.details': 'Technical details',
+  };
+  const tr = (key: string) => en[key] ?? key;
+  const render_ = (error: FileJob['error']) =>
+    render(
+      <JobCard
+        job={{ ...idleJob, status: 'error', error }}
+        onTargetChange={vi.fn()}
+        onConvert={vi.fn()}
+        onDownload={vi.fn()}
+        onRemove={vi.fn()}
+        onSettingsChange={vi.fn()}
+        t={tr}
+      />,
+    );
+
+  it('shows the localized title and hint, with the engine detail behind a disclosure', () => {
+    render_({ code: 'corrupt-input', detail: 'Invalid XML (line 3): Unclosed tag' });
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent('Couldn’t read this file');
+    expect(alert).toHaveTextContent('Not really a .csv file?');
+    expect(alert).toHaveTextContent('Technical details');
+    expect(alert.querySelector('details code')).toHaveTextContent(
+      'Invalid XML (line 3): Unclosed tag',
+    );
+  });
+
+  it('fills parameters into the message', () => {
+    render_({ code: 'too-large', detail: 'x', params: { size: 612, limit: 500 } });
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'File too large (612 MB; the limit is 500 MB)',
+    );
+  });
+});

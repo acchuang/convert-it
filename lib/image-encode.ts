@@ -1,9 +1,17 @@
 import encodeJpeg, { init as initJpeg } from '@jsquash/jpeg/encode';
 import encodePng, { init as initPng } from '@jsquash/png/encode';
 import encodeWebp, { init as initWebp } from '@jsquash/webp/encode';
-import optimiseOxipng, { init as initOxipng } from '@jsquash/oxipng/optimise';
+// oxipng's own entry point switches to its multi-threaded build whenever the
+// page is cross-origin isolated (we are, for FFmpeg), and that build needs its
+// own wasm plus wasm-bindgen-rayon worker helpers. Import the single-threaded
+// glue directly so the wasm in public/wasm/ is always the one it expects.
+import initOxipng, {
+  optimise as oxipngOptimise,
+} from '@jsquash/oxipng/codec/pkg/squoosh_oxipng.js';
+import { defaultOptions as OXIPNG_DEFAULTS } from '@jsquash/oxipng/meta';
 import { encodeIcoBlob } from 'ico-codec';
 import type { ConversionSettings } from './types';
+import { mimeFor } from './formats';
 
 // jSquash ships its .wasm beside its JS in node_modules. We copy those files
 // into public/wasm/ (see scripts/copy-wasm.mjs) and point each codec at them via
@@ -12,14 +20,6 @@ import type { ConversionSettings } from './types';
 // hosting the assets elsewhere (e.g. a CDN); default '/wasm' serves them from
 // the static export's public/ directory.
 export const ASSET_BASE = process.env.NEXT_PUBLIC_ASSET_BASE ?? '/wasm';
-
-export const IMAGE_MIME_MAP: Record<string, string> = {
-  jpg: 'image/jpeg',
-  jpeg: 'image/jpeg',
-  png: 'image/png',
-  webp: 'image/webp',
-  bmp: 'image/bmp',
-};
 
 const FLATTEN_EXTS = new Set(['jpg', 'jpeg', 'bmp']);
 
@@ -124,7 +124,9 @@ function ensureOxipng(): Promise<unknown> {
 // smaller without any quality loss.
 async function optimisePngBytes(buffer: ArrayBuffer): Promise<ArrayBuffer> {
   await ensureOxipng();
-  return optimiseOxipng(buffer);
+  const { level, interlace, optimiseAlpha } = OXIPNG_DEFAULTS;
+  const out = oxipngOptimise(new Uint8Array(buffer), level, interlace, optimiseAlpha);
+  return out.buffer as ArrayBuffer;
 }
 
 // JPEG and BMP have no alpha channel. canvas.toBlob composites transparent
@@ -153,7 +155,7 @@ export async function encodeImageData(
   quality: number,
 ): Promise<Blob> {
   const ext = targetExt.toLowerCase();
-  const mime = IMAGE_MIME_MAP[ext] ?? 'image/png';
+  const mime = mimeFor(ext);
   const input = FLATTEN_EXTS.has(ext) ? flattenOverWhite(imageData) : imageData;
 
   if (ext === 'jpg' || ext === 'jpeg') {

@@ -66,6 +66,9 @@ jobs:
           node scripts/serve-out.mjs 3000 &
           for i in $(seq 1 30); do curl -sf -o /dev/null http://localhost:3000/ && break; sleep 1; done
           node scripts/smoke.mjs
+          # Service worker offline behaviour; runs its own server on port 3100,
+          # which it stops to go offline for real.
+          node scripts/offline-smoke.mjs
 
       # The Pages project is direct-upload (no Git integration), so main is
       # deployed from the artifact this job just built and verified.

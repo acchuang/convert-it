@@ -13,7 +13,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postbuild": "node scripts/security-headers.mjs",
+    "postbuild": "node scripts/security-headers.mjs && node scripts/build-sw.mjs",
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write .",
@@ -23,7 +23,8 @@
     "fixtures": "node scripts/make-fixtures.mjs && node scripts/make-webm.mjs",
     "smoke": "node scripts/smoke.mjs",
     "copy-wasm": "node scripts/copy-wasm.mjs",
-    "serve": "node scripts/serve-out.mjs"
+    "serve": "node scripts/serve-out.mjs",
+    "icons": "node scripts/build-icons.mjs"
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",
@@ -42,6 +43,7 @@
     "jszip": "^3.10.1",
     "libheif-js": "^1.19.8",
     "marked": "^18.0.14",
+    "mediabunny": "1.59.1",
     "next": "^15.5.26",
     "papaparse": "^5.5.3",
     "react": "^19.0.0",

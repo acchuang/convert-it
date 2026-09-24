@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('../image-converters', () => ({
   convertImage: vi.fn(async () => new Blob(['image-result'])),
-  IMAGE_MIME_MAP: { jpg: 'image/jpeg', png: 'image/png' },
 }));
 
 vi.mock('../heic-converter', () => ({
@@ -13,17 +12,13 @@ vi.mock('../avif-converter', () => ({
   default: vi.fn(async () => new Blob(['avif-result'])),
 }));
 
-vi.mock('../audio-video-converters', () => ({
+vi.mock('../audio-video-converters', async () => ({
   convertAudioVideo: vi.fn(async () => new Blob(['av-result'])),
   extractAudio: vi.fn(async () => new Blob(['audio-extract-result'])),
-  AUDIO_CODECS: {
-    mp3: { codec: 'libmp3lame', ext: 'mp3' },
-    wav: { codec: 'pcm_s16le', ext: 'wav' },
-    aac: { codec: 'aac', ext: 'aac' },
-    ogg: { codec: 'libvorbis', ext: 'ogg' },
-    flac: { codec: 'flac', ext: 'flac' },
-    m4a: { codec: 'aac', ext: 'm4a' },
-  },
+  // The real table: the registry reads it to decide which targets take a bitrate.
+  AUDIO_CODECS: (
+    await vi.importActual<typeof import('../audio-video-converters')>('../audio-video-converters')
+  ).AUDIO_CODECS,
 }));
 
 import {

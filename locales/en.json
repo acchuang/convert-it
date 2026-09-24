@@ -163,6 +163,10 @@
     "improvement34": "Fixed PDF → image colours (red and blue were swapped), and PDF pages can now be cropped, resized and compressed like any image",
     "improvement35": "ePub output passes the W3C validator and is split into chapters, with a table of contents, embedded images and the right language",
     "improvement36": "Real-world XML converts to CSV/TSV/YAML, Excel files convert every sheet, and large CSV files stream with live progress",
+    "improvement37": "Video converts several times faster with your browser's built-in codecs, and FFmpeg takes over for anything they can't handle",
+    "improvement38": "Works offline: install it as an app, converters you have used keep working without a connection, and “Save for offline use” caches the rest",
+    "improvement39": "Clearer errors: a failed conversion says what went wrong (too large, out of memory, damaged file, engine not loaded) and what to try next",
+    "improvement40": "Settings show only the options that affect your conversion (video output now has an audio bitrate), and “Add files” works after the first file",
     "ossHeading": "OPEN SOURCE",
     "oss1": "Convert-it is MIT-licensed and open source. The full codebase is available on GitHub. Contributions, bug reports, and feature requests are welcome.",
     "ossGithub": "GITHUB",
@@ -180,5 +184,38 @@
     "techSheets": "Spreadsheets",
     "techHeif": "HEIC/AVIF",
     "techHosting": "Hosting"
+  },
+  "errors": {
+    "tooLarge": {
+      "title": "File too large ({size} MB; the limit is {limit} MB)",
+      "hint": "Browsers can’t safely hold a file this big in memory. Try a shorter clip or a smaller image, or split the file."
+    },
+    "outOfMemory": {
+      "title": "Ran out of memory",
+      "hint": "Your browser ran out of memory, or the converter crashed on this file. Close other tabs and press Retry, or try a smaller file or a lighter output format."
+    },
+    "corruptInput": {
+      "title": "Couldn’t read this file",
+      "hint": "It may be damaged, incomplete, or not really a .{ext} file. Try exporting it again from the app that made it."
+    },
+    "unsupported": {
+      "title": "Not supported",
+      "hint": "This file uses something the converter can’t handle yet. Try a different output format."
+    },
+    "engineLoad": {
+      "title": "Couldn’t load the converter",
+      "hint": "Part of the conversion engine didn’t download. Check your connection and press Retry."
+    },
+    "unknown": {
+      "title": "Conversion failed",
+      "hint": "Something unexpected went wrong. Press Retry; if it keeps failing, the technical details below will help us fix it."
+    },
+    "details": "Technical details"
+  },
+  "offline": {
+    "save": "Save for offline use ({size} MB)",
+    "saving": "Saving for offline use… {pct}%",
+    "saved": "Available offline",
+    "failed": "Couldn’t save for offline use. Try again when online."
   }
 }

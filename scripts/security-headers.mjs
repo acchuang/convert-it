@@ -19,8 +19,14 @@
 //     policy lists hashes, only these exact scripts get through, and any
 //     injected inline script is still blocked.
 //
-// The FFmpeg core origin (connect-src) comes from NEXT_PUBLIC_FFMPEG_BASE_URL,
-// the same variable the bundle is built with, so the policy can't drift from it.
+// The FFmpeg core origins (connect-src) come from NEXT_PUBLIC_FFMPEG_BASE_URL
+// and NEXT_PUBLIC_FFMPEG_MT_BASE_URL, the same variables the bundle is built
+// with, so the policy can't drift from them.
+//
+// COOP same-origin + COEP require-corp make every page cross-origin isolated,
+// which is what exposes SharedArrayBuffer to the multi-threaded FFmpeg core.
+// Every subresource is same-origin except the core, which is fetched with CORS
+// (the bucket already allows it), so nothing needs a CORP header.
 
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, writeFileSync, statSync } from 'node:fs';
@@ -28,13 +34,13 @@ import { join, relative } from 'node:path';
 
 const OUT = join(process.cwd(), 'out');
 
-function ffmpegOrigin() {
-  const base = process.env.NEXT_PUBLIC_FFMPEG_BASE_URL;
+function originOf(name) {
+  const base = process.env[name];
   if (!base) return null;
   try {
     return new URL(base).origin;
   } catch {
-    throw new Error(`NEXT_PUBLIC_FFMPEG_BASE_URL is not a URL: ${base}`);
+    throw new Error(`${name} is not a URL: ${base}`);
   }
 }
 
@@ -46,9 +52,10 @@ function assetOrigin() {
 }
 
 function directives(extraScript = []) {
-  const ffmpeg = ffmpegOrigin();
+  const ffmpeg = originOf('NEXT_PUBLIC_FFMPEG_BASE_URL');
+  const ffmpegMt = originOf('NEXT_PUBLIC_FFMPEG_MT_BASE_URL');
   const assets = assetOrigin();
-  const remote = [ffmpeg, assets].filter(Boolean);
+  const remote = [...new Set([ffmpeg, ffmpegMt, assets].filter(Boolean))];
   return {
     'default-src': ["'self'"],
     // wasm-unsafe-eval: WebAssembly.instantiate for every codec, without
@@ -105,9 +112,15 @@ function injectMetaCsp(file) {
     throw new Error(`${relative(OUT, file)} already has a CSP meta tag — build output reused?`);
   }
   const hashes = hashInlineScripts(html);
-  // Only script-src here: the header policy carries everything else, and
-  // frame-ancestors is ignored in a meta policy anyway.
-  const policy = `script-src ${directives(hashes)['script-src'].join(' ')}`;
+  // script-src here, plus worker-src so it doesn't fall back to script-src:
+  // mediabunny (the WebCodecs path) starts small blob: workers from the page.
+  // A blob: worker can only be made by a script already allowed to run, and
+  // has no DOM, so page scripts still can't be loaded from blob:. The header
+  // policy carries everything else; frame-ancestors is ignored in a meta.
+  const policy = [
+    `script-src ${directives(hashes)['script-src'].join(' ')}`,
+    `worker-src ${directives()['worker-src'].join(' ')}`,
+  ].join('; ');
   const meta = `<meta http-equiv="Content-Security-Policy" content="${policy}"/>`;
   // The meta must come before the first script it governs, so it goes first in <head>.
   const at = html.indexOf('<head>');
@@ -131,7 +144,15 @@ function headersFile() {
   X-Frame-Options: DENY
   Referrer-Policy: no-referrer
   Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+
+# The service worker and its manifest must always be revalidated, or browsers
+# keep running an old worker long after a deploy.
+/sw.js
+  Cache-Control: no-cache
+/offline-pack.json
+  Cache-Control: no-cache
 
 # Content-hashed by Next.js: safe to cache forever.
 /_next/static/*
@@ -146,7 +167,7 @@ function headersFile() {
 `;
 }
 
-if (!ffmpegOrigin()) {
+if (!originOf('NEXT_PUBLIC_FFMPEG_BASE_URL')) {
   console.warn(
     '[security-headers] NEXT_PUBLIC_FFMPEG_BASE_URL is unset: the CSP will not allow the FFmpeg core.',
   );

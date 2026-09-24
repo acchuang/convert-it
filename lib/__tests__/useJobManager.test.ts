@@ -83,7 +83,10 @@ describe('useJobManager: addFiles', () => {
 
     expect(result.current.jobs).toHaveLength(1);
     expect(result.current.jobs[0].status).toBe('error');
-    expect(result.current.jobs[0].error).toMatch(/too large/i);
+    expect(result.current.jobs[0].error).toMatchObject({
+      code: 'too-large',
+      params: { size: 51, limit: 50 },
+    });
     expect(result.current.jobs[0].targetExt).toBeNull();
   });
 
@@ -130,7 +133,7 @@ describe('useJobManager: convertJob', () => {
     expect(result.current.jobs[0].progress).toBe(100);
   });
 
-  it('sets status to error with a message when convertFile rejects', async () => {
+  it('sets status to error with a classified failure when convertFile rejects', async () => {
     mockConvertFile.mockRejectedValueOnce(new Error('boom'));
 
     const { result } = renderHook(() => useJobManager());
@@ -142,7 +145,7 @@ describe('useJobManager: convertJob', () => {
     });
 
     expect(result.current.jobs[0].status).toBe('error');
-    expect(result.current.jobs[0].error).toBe('boom');
+    expect(result.current.jobs[0].error).toEqual({ code: 'unknown', detail: 'boom' });
   });
 
   it('does not invoke convertFile twice when convertJob is called concurrently on the same job', async () => {

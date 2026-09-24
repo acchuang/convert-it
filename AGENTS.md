@@ -25,8 +25,15 @@ Independent Next.js project deployed via Cloudflare Pages.
 - Test: `npx vitest run` (set `EPUBCHECK_JAR` to an epubcheck 5 jar to also validate EPUB output, as CI does)
 - Type-check: `npx tsc --noEmit`
 - Serve the export as Pages would (applies `out/_headers`): `npm run serve`
-- Browser smoke suite (real codecs, CSP violations fail it): `npm run fixtures`, `npm run serve`, then `npm run smoke`. Set `SMOKE_CHROMIUM_PATH` if Google Chrome isn't installed.
+- Browser smoke suite (real codecs, CSP violations fail it): `npm run fixtures`, `npm run serve`, then `npm run smoke`; offline behaviour: `node scripts/offline-smoke.mjs`. Set `SMOKE_CHROMIUM_PATH` if Google Chrome isn't installed.
 - Sync wasm assets: `npm run copy-wasm` (run after install or upgrading `@jsquash/*`, `@resvg/resvg-wasm`, or `@hyzyla/pdfium`; copies all codec/library `.wasm` files from `node_modules` into `public/wasm/`). Files are committed, not gitignored.
+
+## Converter Registry
+
+- `lib/converters.ts` is the one registry: each supported pair is a `Route` `{ from, to, run, thread, settings }` added with `add(...)`. `CONVERSION_MAP`, `findRoute`, `getTargetFormats`, `convertFile`, the worker pool's `runsOnMainThread` and the settings panel all read it. Adding a conversion is one `add` line; never special-case a pair elsewhere.
+- `thread: 'main'` for anything that drives ffmpeg.wasm (it has its own worker) or needs the DOM (HTML input, MD → EPUB); everything else runs in the worker pool.
+- `settings` lists the `SettingKey` groups the converter actually reads, in panel order; `SETTING_FIELDS` maps each to its `ConversionSettings` fields. `app/components/SettingsPanel.tsx` shows exactly `settingsFor(source, target)`, and the gear icon hides when it is empty. `lib/__tests__/registry.test.ts` records which fields each data/document converter reads and checks media args, so a declared-but-unused (or used-but-undeclared) setting fails; the `CONVERSION_MAP` snapshot pins the route list.
+- Format metadata (`FORMATS`, `getFormatInfo`, `getFileExtension`, `formatFileSize`) and the single extension → MIME table `mimeFor` live in `lib/formats.ts`, which imports no converter. Don't add per-module MIME maps.
 
 ## Image Encode (WASM)
 
@@ -65,12 +72,23 @@ Independent Next.js project deployed via Cloudflare Pages.
 - Command lines come from the pure `buildFfmpegArgs` in `lib/audio-video-converters.ts` — one entry per container in `VIDEO_CONTAINERS` pairing a video codec with an audio codec that muxer accepts. Unit-test args there; don't build them inline.
 - WebM is VP8 + Vorbis. In `@ffmpeg/core` 0.12.10 `libvpx-vp9` crashes ("memory access out of bounds") on every input and `libopus` on any stereo source; re-test both in a browser (the smoke suite's mkv → webm pair) before switching after a core upgrade.
 - Every exec checks its exit code and deletes its MEMFS files in `finally`. A failed core load is not cached; the next job retries.
+- WebCodecs fast path first (`lib/webcodecs-converter.ts`, mediabunny for demux/mux, lazy-imported): mp4/mov/m4v/webm/mkv → mp4/mov/mkv (H.264 + AAC), webm (VP9 + Opus) and wav, without fetching the FFmpeg core. It returns `null` (→ ffmpeg) whenever it can't make the same file ffmpeg would: no WebCodecs, a primary track it would drop (no decoder/encoder), or a mid-way failure. Audio it can't encode is copied only if already in the target codec (AAC on Linux Chrome). Video always re-encodes, at a mediabunny quality tier mapped from the CRF (`crfToQualityTier`); the x264/libvpx preset doesn't apply. It runs inside the media queue, and `terminateFFmpeg` cancels it too (a cancel rethrows, never falls back). The smoke suite pins engines: `ffmpeg …` pairs hide `VideoEncoder`/`AudioEncoder` and must fetch the core, `webcodecs …` pairs must not. Playwright's Chromium has no H.264/AAC, so only VP8/VP9/Opus sources take the fast path there.
+- Multi-threaded core (`@ffmpeg/core-mt`, pinned in `FFMPEG_CORE_MT_SHA256`) is opt-in via `NEXT_PUBLIC_FFMPEG_MT_BASE_URL` and used only when `multiThreadEligible` (cross-origin isolated, 4+ cores, 4+ GB when reported). If it fails to load, or an exec throws (a crash, not a clean non-zero exit), the job reruns on the single-threaded core and MT stays off for the session. MT keeps its core JS and thread-script blob URLs alive (threads spawned after load import them); `dropInstance` revokes them. `SMOKE_EXPECT_MT=1` makes the smoke suite fail on any fallback.
 
 ## Security Headers (CSP)
 
 - `npm run build` runs `postbuild` → `scripts/security-headers.mjs`, which writes `out/_headers` (site-wide CSP, framing, nosniff, referrer, caching) and injects a per-page `<meta>` CSP listing the SHA-256 of that page's inline scripts. Both are enforced; inline script runs only if hashed. Never hand-edit `out/`.
-- `connect-src` is `'self'` plus the `NEXT_PUBLIC_FFMPEG_BASE_URL` (and a non-relative `NEXT_PUBLIC_ASSET_BASE`) origin. A new runtime fetch to any other origin needs a change there, and the smoke suite fails on any CSP violation.
+- Every page is cross-origin isolated: `Cross-Origin-Opener-Policy: same-origin` + `Cross-Origin-Embedder-Policy: require-corp` (for SharedArrayBuffer, which the MT FFmpeg core needs). Any cross-origin subresource must be fetched with CORS or carry CORP, or it is blocked; the smoke suite fails a page that is not `crossOriginIsolated`. Isolation also flips libraries that auto-detect threads: `@jsquash/oxipng` is imported from its single-threaded glue (`codec/pkg/squoosh_oxipng.js`) because its entry point would switch to the parallel build, whose wasm we don't ship.
+- The per-page meta policy is `script-src` (hashes) plus `worker-src 'self' blob:`, since mediabunny starts small `blob:` workers from the page; without `worker-src` the meta's `script-src` (no `blob:`) would block them.
+- `connect-src` is `'self'` plus the `NEXT_PUBLIC_FFMPEG_BASE_URL`, `NEXT_PUBLIC_FFMPEG_MT_BASE_URL` (and a non-relative `NEXT_PUBLIC_ASSET_BASE`) origins. A new runtime fetch to any other origin needs a change there, and the smoke suite fails on any CSP violation.
 - The FFmpeg core is fetched, checked against `FFMPEG_CORE_SHA256` in `lib/audio-video-converters.ts`, and loaded from a `blob:` URL (hence `blob:` in the header `script-src`, which only workers get alone). Upgrading `@ffmpeg/core` means uploading the new files to R2 and updating both hashes.
+
+## Offline (service worker)
+
+- `postbuild` also runs `scripts/build-sw.mjs`, which fills `scripts/sw-template.js` into `out/sw.js` (versioned by a hash of everything it can serve) and writes `out/offline-pack.json`. Both are served `Cache-Control: no-cache`.
+- Install precaches only the shell (home + About HTML and what they reference). `/_next/static` is cache-first; `/wasm`, `/fonts`, `/icons` are cached on first use; the FFmpeg core (versioned CDN URL) is cache-first and still hash-checked by the app. Offline navigations to never-visited pages redirect to `/`. "Save for offline use" in the footer (`app/components/OfflineSupport.tsx`) caches the whole pack. New workers wait for old tabs to close (no `skipWaiting`).
+- `node scripts/offline-smoke.mjs` proves it in Chromium by stopping the server. Don't test offline with Playwright's `setOffline()`: it doesn't apply to a service worker's own fetches.
+- Icons: `npm run icons` renders `public/icons/*.png` (192, 512, maskable 512, apple-touch 180) from `favicon.svg` with resvg.
 
 ## Spreadsheets
 

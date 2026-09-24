@@ -14,6 +14,7 @@ import { CancelledError, cancelInWorker, runInWorker, runsOnMainThread } from '@
 import { terminateFFmpeg } from '@/lib/audio-video-converters';
 import type { FileJob } from '@/app/components/JobCard';
 import { uniqueName } from './filenames';
+import { classifyError } from './errors';
 import { addHistoryEntry, getHistory, type HistoryEntry } from '@/lib/history';
 
 /**
@@ -104,7 +105,14 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
             targetExt: null,
             status: 'error',
             progress: 0,
-            error: `File too large (${(file.size / (1024 * 1024)).toFixed(0)}MB exceeds ${limit / (1024 * 1024)}MB limit)`,
+            error: {
+              code: 'too-large',
+              detail: `File too large (${(file.size / (1024 * 1024)).toFixed(0)}MB exceeds ${limit / (1024 * 1024)}MB limit)`,
+              params: {
+                size: Math.round(file.size / (1024 * 1024)),
+                limit: limit / (1024 * 1024),
+              },
+            },
             settings: { ...DEFAULT_SETTINGS },
           });
           continue;
@@ -212,7 +220,7 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
             ? {
                 ...j,
                 status: 'error',
-                error: err instanceof Error ? err.message : 'Conversion failed',
+                error: classifyError(err),
                 progress: 0,
               }
             : j,

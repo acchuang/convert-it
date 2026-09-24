@@ -31,7 +31,7 @@ const techStack = [
   { labelKey: 'about.techLanguage', val: 'TypeScript' },
   { labelKey: 'about.techCSS', val: 'Tailwind CSS' },
   { labelKey: 'about.techMotion', val: 'Framer Motion' },
-  { labelKey: 'about.techVideo', val: 'FFmpeg WASM' },
+  { labelKey: 'about.techVideo', val: 'WebCodecs + mediabunny, FFmpeg WASM' },
   { labelKey: 'about.techImages', val: 'jSquash WASM' },
   { labelKey: 'about.techSvg', val: 'resvg WASM' },
   { labelKey: 'about.techPng', val: 'oxipng' },
@@ -264,7 +264,7 @@ export default function AboutPage() {
             {t('about.improvementsHeading')}
           </h2>
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6 space-y-3">
-            {Array.from({ length: 36 }, (_, i) => i + 1).map((n) => (
+            {Array.from({ length: 40 }, (_, i) => i + 1).map((n) => (
               <div key={n} className="flex items-start gap-3">
                 <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] flex-shrink-0 mt-2" />
                 <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
