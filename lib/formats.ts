@@ -40,6 +40,12 @@ export const FORMATS: FormatInfo[] = [
   { ext: 'html', label: 'HTML', mimeType: 'text/html', category: 'document' },
   { ext: 'pdf', label: 'PDF', mimeType: 'application/pdf', category: 'document' },
   { ext: 'epub', label: 'ePub', mimeType: 'application/epub+zip', category: 'document' },
+  {
+    ext: 'docx',
+    label: 'Word',
+    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    category: 'document',
+  },
   // Data
   { ext: 'csv', label: 'CSV', mimeType: 'text/csv', category: 'data' },
   { ext: 'json', label: 'JSON', mimeType: 'application/json', category: 'data' },

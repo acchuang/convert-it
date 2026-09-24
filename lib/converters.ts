@@ -43,6 +43,12 @@ import {
   pdfToHtml,
 } from './pdf-converters';
 import { txtToEpub, mdToEpub, htmlToEpub } from './epub-converter';
+// Word: mammoth (~600 KB) and the writer load on first use.
+const docx =
+  (name: keyof typeof import('./docx-converters')): ConverterFn =>
+  async (file) =>
+    (await import('./docx-converters'))[name](file);
+
 // pdf-lib is ~700 KB: loaded when a PDF tool first runs, not with the page.
 const editPdf: ConverterFn = async (...args) => (await import('./pdf-tools')).editPdf(...args);
 const imageToPdf: ConverterFn = async (...args) =>
@@ -278,6 +284,17 @@ add('txt', 'html', txtToHtml);
 add('txt', 'md', txtToMd);
 add('txt', 'pdf', txtToPdf);
 add('txt', 'epub', txtToEpub);
+
+// Word. Reading is mammoth (no DOM); anything that goes on through Turndown
+// (HTML → Markdown) needs the DOM, like the other HTML routes.
+add('md', 'docx', docx('mdToDocx'));
+add('txt', 'docx', docx('txtToDocx'));
+add('html', 'docx', docx('htmlToDocx'), [], 'main');
+add('docx', 'pdf', docx('docxToPdf'), [], 'main');
+add('docx', 'html', docx('docxToHtml'));
+add('docx', 'md', docx('docxToMd'), [], 'main');
+add('docx', 'txt', docx('docxToTxt'));
+add('docx', 'epub', docx('docxToEpub'), [], 'main');
 
 // --- PDF input ---------------------------------------------------------------------
 

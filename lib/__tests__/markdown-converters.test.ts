@@ -125,3 +125,13 @@ describe('htmlToTxt structure', () => {
     expect(txt).toBe('one\n\ntwo');
   });
 });
+
+describe('htmlToMd tables', () => {
+  it('become GFM pipe tables, cells inline, pipes escaped', async () => {
+    const { htmlStringToMarkdown } = await import('@/lib/markdown-converters');
+    const md = htmlStringToMarkdown(
+      '<table><tr><th>Name</th><th>Note</th></tr><tr><td><b>a|b</b></td><td>line<br>two</td></tr><tr><td>solo</td></tr></table>',
+    );
+    expect(md).toBe('| Name | Note |\n| --- | --- |\n| **a\\|b** | line<br>two |\n| solo |   |');
+  });
+});

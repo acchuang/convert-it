@@ -29,7 +29,10 @@ describe('converter registry', () => {
     const category = (ext: string) => FORMATS.find((f) => f.ext === ext)?.category;
     for (const r of allRoutes()) {
       const media = category(r.from) === 'video' || category(r.from) === 'audio';
-      const dom = r.from === 'html' || (r.from === 'md' && r.to === 'epub');
+      const dom =
+        r.from === 'html' ||
+        (r.from === 'md' && r.to === 'epub') ||
+        (r.from === 'docx' && ['md', 'pdf', 'epub'].includes(r.to));
       expect(r.thread, `${r.from}→${r.to}`).toBe(media || dom ? 'main' : 'worker');
     }
   });
@@ -99,7 +102,9 @@ describe('declared settings match what the PDF tools read', async () => {
 describe('declared settings match the ffmpeg command line', () => {
   // Same rule as above, applied to the command line: every field the ffmpeg
   // args read is declared, and every declared field is read.
-  const media = allRoutes().filter((r) => r.thread === 'main' && !['html', 'md'].includes(r.from));
+  const media = allRoutes().filter((r) =>
+    ['video', 'audio'].includes(FORMATS.find((f) => f.ext === r.from)?.category ?? ''),
+  );
   it.each(media.map((r) => [`${r.from} → ${r.to}`, r] as const))('%s', (_name, route) => {
     const { settings, read } = recording();
     buildFfmpegArgs(route.from, route.to, 'in', 'out', settings);

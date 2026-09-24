@@ -62,6 +62,12 @@ Independent Next.js project deployed via Cloudflare Pages.
 - Compression re-renders pages through PDFium as JPEG (medium 150 dpi/q75, strong 100 dpi/q60). Page sizes come from pdf-lib's page box, not the rounded bitmap. The result is kept only if it's smaller. Text stops being selectable, so it's opt-in.
 - `lib/pdf-options.ts` holds the light parts (`parsePageRange`, `isPageRangeSyntax`, `canMerge`) so the UI never imports pdf-lib. A range beyond the document is `ConversionError('invalid-settings')` (its own localized message: fix the setting, not the file). A password-protected PDF is `unsupported`. A merge failure names the file.
 
+## Word (DOCX)
+
+- Input: mammoth (BSD-2, lazy) → semantic HTML with images inlined as `data:` URIs. DOCX → HTML/TXT run in the worker. DOCX → MD/PDF/EPUB go on through Turndown (DOM), so they're main-thread; PDF is typeset from the Markdown blocks, so headings, lists and tables survive. A non-DOCX (or a legacy binary `.doc`) is `corrupt-input` with a "re-save as .docx" hint. mammoth's browser build takes `{ arrayBuffer }` and its Node build `{ buffer }`, so both are passed.
+- Output: `lib/docx-writer.ts` writes DOCX by hand on jszip from the PDF typesetter's `Block`s. It's used for MD/TXT → DOCX in the worker and HTML → DOCX via Turndown on the main thread. Each source list is its own Word list with per-level formats (bullet or numbered, from its first item), so nesting keeps its type and numbered lists keep their start. XML-illegal control characters are dropped. **Word enforces schema child order**: build `w:rPr`/`w:pPr` in schema order (`rPr()` helper); `docx.test.ts` checks the order in every part. Validated with mammoth and python-docx (a third-party fixture: `lib/__tests__/fixtures/python-docx-sample.docx`).
+- Turndown has no table rule; `htmlStringToMarkdown` adds one that writes GFM pipe tables. Before it, HTML → MD flattened every table cell into its own paragraph.
+
 ## EPUB
 
 - `lib/epub-converter.ts` writes EPUB 3 that passes W3C epubcheck with zero errors and warnings (CI runs it on hostile samples). Package: `mimetype` first and stored, `nav.xhtml` (required) plus `toc.ncx`, `dcterms:modified` as `CCYY-MM-DDThh:mm:ssZ`, one `chapter-N.xhtml` per h1/h2 section (a title-only heading merges into the next).

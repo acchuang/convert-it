@@ -2,7 +2,7 @@
 // it for the image converters), so the PNG comes from that rather than a hand-rolled
 // encoder. The WebM has to come from a real browser — MediaRecorder is the only encoder
 // available without adding a dependency — so playwright writes it in a separate pass.
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createCanvas } from 'canvas';
 
@@ -16,6 +16,13 @@ ctx.fillRect(0, 0, 64, 48);
 ctx.fillStyle = '#FF4D00';
 ctx.fillRect(8, 8, 24, 24);
 writeFileSync(join(DIR, 'img.png'), canvas.toBuffer('image/png'));
+
+// A Word document from another producer (python-docx on Word's default
+// template), shared with the unit tests.
+copyFileSync(
+  join(process.cwd(), 'lib', '__tests__', 'fixtures', 'python-docx-sample.docx'),
+  join(DIR, 'notes.docx'),
+);
 
 // A geotagged JPEG: the same pixels with an EXIF block (camera, date, and a
 // location at the Eiffel Tower) in APP1. The TIFF bytes were made by

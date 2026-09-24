@@ -18,17 +18,38 @@ export function mdToHtml(
   });
 }
 
+/** HTML to Markdown with Turndown. Needs the DOM, so main thread only. */
+export function htmlStringToMarkdown(html: string): string {
+  const turndown = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
+  // Turndown has no table rule: every cell became its own paragraph. Tables
+  // become GFM pipe tables instead (the first row is the header), cells
+  // converted inline, with pipes escaped and line breaks as <br>.
+  turndown.addRule('table', {
+    filter: 'table',
+    replacement: (_content, node) => {
+      const rows = Array.from((node as HTMLTableElement).rows);
+      if (!rows.length) return '';
+      const cell = (el: Element) =>
+        turndown.turndown(el.innerHTML).replace(/ *\n+ */g, '<br>').replace(/\|/g, '\\|').trim() || ' ';
+      const width = Math.max(...rows.map((r) => r.cells.length));
+      const line = (cells: string[]) =>
+        `| ${Array.from({ length: width }, (_, i) => cells[i] ?? ' ').join(' | ')} |`;
+      const [head, ...body] = rows.map((r) => Array.from(r.cells).map(cell));
+      return `\n\n${[line(head), line(Array(width).fill('---')), ...body.map(line)].join('\n')}\n\n`;
+    },
+  });
+  return turndown.turndown(html);
+}
+
 export function htmlToMd(
   file: File,
   _s: string,
   _t: string,
   _settings?: ConversionSettings,
 ): Promise<Blob> {
-  return file.text().then((text) => {
-    const turndown = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
-    const md = turndown.turndown(text);
-    return new Blob([md], { type: 'text/markdown' });
-  });
+  return file
+    .text()
+    .then((text) => new Blob([htmlStringToMarkdown(text)], { type: 'text/markdown' }));
 }
 
 export function htmlToTxt(

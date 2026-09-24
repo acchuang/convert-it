@@ -60,6 +60,13 @@ exports[`converter registry > targets per source, in order (the first is the def
     "yaml",
     "txt",
   ],
+  "docx": [
+    "pdf",
+    "html",
+    "md",
+    "txt",
+    "epub",
+  ],
   "flac": [
     "mp3",
     "wav",
@@ -102,6 +109,7 @@ exports[`converter registry > targets per source, in order (the first is the def
     "txt",
     "pdf",
     "epub",
+    "docx",
   ],
   "ico": [
     "png",
@@ -172,6 +180,7 @@ exports[`converter registry > targets per source, in order (the first is the def
     "html",
     "pdf",
     "epub",
+    "docx",
   ],
   "mkv": [
     "mp4",
@@ -269,6 +278,7 @@ exports[`converter registry > targets per source, in order (the first is the def
     "md",
     "pdf",
     "epub",
+    "docx",
   ],
   "wav": [
     "mp3",
