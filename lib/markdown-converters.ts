@@ -30,7 +30,11 @@ export function htmlStringToMarkdown(html: string): string {
       const rows = Array.from((node as HTMLTableElement).rows);
       if (!rows.length) return '';
       const cell = (el: Element) =>
-        turndown.turndown(el.innerHTML).replace(/ *\n+ */g, '<br>').replace(/\|/g, '\\|').trim() || ' ';
+        turndown
+          .turndown(el.innerHTML)
+          .replace(/ *\n+ */g, '<br>')
+          .replace(/\|/g, '\\|')
+          .trim() || ' ';
       const width = Math.max(...rows.map((r) => r.cells.length));
       const line = (cells: string[]) =>
         `| ${Array.from({ length: width }, (_, i) => cells[i] ?? ' ').join(' | ')} |`;
