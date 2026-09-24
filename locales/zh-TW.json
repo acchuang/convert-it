@@ -236,7 +236,19 @@
     "techPdf": "PDF",
     "techSheets": "試算表",
     "techHeif": "HEIC/AVIF",
-    "techHosting": "託管"
+    "techHosting": "託管",
+    "techPdfTools": "PDF 工具",
+    "techWord": "Word",
+    "techOcr": "OCR",
+    "techMetadata": "照片中繼資料",
+    "improvement41": "影片 → GIF（使用合適的調色盤）與動態 WebP，可設影格率、尺寸與修剪；可在時間軸上修剪任何音訊或影片，並能縮放影片或靜音",
+    "improvement42": "支援輸出 AVIF 與 JPEG XL，並可開啟 JPEG XL 檔案",
+    "improvement43": "PDF 工具：擷取、重排、旋轉或分割頁面，壓縮掃描版 PDF，將圖片轉成 PDF，並把多個檔案合併為一個",
+    "improvement44": "查看照片中隱藏的中繼資料（位置、相機、日期），並選擇全部移除、保留，或保留但移除位置",
+    "improvement45": "Word 文件：DOCX 轉 HTML、Markdown、文字、PDF 或 ePub，Markdown、HTML 或文字轉 DOCX；HTML 轉 Markdown 時表格不再遺失",
+    "improvement46": "辨識圖片與掃描版 PDF 中的文字（OCR），支援八種語言，全程在本機完成",
+    "improvement47": "字幕：SRT ⇄ WebVTT 互轉、調整時間軸，或匯出逐字稿",
+    "improvement48": "可拖入整個資料夾（壓縮檔中保留目錄結構），用 {name}-{w}x{h} 這類範本命名輸出檔案，拖入的檔案也不會再被重複加入"
   },
   "errors": {
     "tooLarge": {

@@ -236,7 +236,19 @@
     "techPdf": "PDF",
     "techSheets": "Spreadsheets",
     "techHeif": "HEIC/AVIF",
-    "techHosting": "Hosting"
+    "techHosting": "Hosting",
+    "techPdfTools": "PDF tools",
+    "techWord": "Word",
+    "techOcr": "OCR",
+    "techMetadata": "Photo metadata",
+    "improvement41": "Video → GIF with a proper colour palette, and animated WebP, with frame rate, size and trim; trim any audio or video on a scrubber, and resize or mute video",
+    "improvement42": "AVIF and JPEG XL output, and JPEG XL files can be opened",
+    "improvement43": "PDF tools: pick, reorder, rotate or split pages, shrink scanned PDFs, turn images into PDFs, and merge several files into one",
+    "improvement44": "See a photo's hidden metadata (location, camera, date) and choose to remove it, keep it, or keep it without the location",
+    "improvement45": "Word documents: DOCX to HTML, Markdown, text, PDF or ePub, and Markdown, HTML or text to DOCX; tables now survive HTML → Markdown",
+    "improvement46": "Read text from images and scanned PDFs (OCR) in eight languages, on your device",
+    "improvement47": "Subtitles: SRT ⇄ WebVTT, fix their timing, or pull out a transcript",
+    "improvement48": "Drop whole folders (their structure is kept in the zip), name outputs with templates like {name}-{w}x{h}, and dropped files are no longer added twice"
   },
   "errors": {
     "tooLarge": {

@@ -236,7 +236,19 @@
     "techPdf": "PDF",
     "techSheets": "スプレッドシート",
     "techHeif": "HEIC/AVIF",
-    "techHosting": "ホスティング"
+    "techHosting": "ホスティング",
+    "techPdfTools": "PDFツール",
+    "techWord": "Word",
+    "techOcr": "OCR",
+    "techMetadata": "写真のメタデータ",
+    "improvement41": "動画 → GIF（適切なカラーパレット）とアニメーションWebP。フレームレート・サイズ・トリミングを指定可能。音声や動画をタイムラインでトリミング、動画のリサイズやミュートも",
+    "improvement42": "AVIF と JPEG XL で出力でき、JPEG XL ファイルも開けるように",
+    "improvement43": "PDFツール：ページの抽出・並べ替え・回転・分割、スキャンPDFの圧縮、画像のPDF化、複数ファイルの結合",
+    "improvement44": "写真に隠れたメタデータ（位置情報・カメラ・日時）を表示し、削除・保持・位置情報のみ削除から選択",
+    "improvement45": "Word文書：DOCX から HTML・Markdown・テキスト・PDF・ePub へ、Markdown・HTML・テキストから DOCX へ。HTML → Markdown で表が崩れなくなりました",
+    "improvement46": "画像やスキャンPDFの文字を読み取り（OCR）、8言語対応、処理はすべて端末内で",
+    "improvement47": "字幕：SRT ⇄ WebVTT の変換、タイミング調整、書き起こしテキストの抽出",
+    "improvement48": "フォルダーごとドロップ（zip でも構成を維持）、{name}-{w}x{h} のようなテンプレートでファイル名を指定、ドロップしたファイルが二重に追加されなくなりました"
   },
   "errors": {
     "tooLarge": {
