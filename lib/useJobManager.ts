@@ -18,6 +18,7 @@ import { classifyError, type ConversionFailure } from './errors';
 import { canMerge } from './pdf-options';
 import { DEFAULT_NAME_TEMPLATE, applyNameTemplate, safeFileStem, uniqueName } from './filenames';
 import type { PickedFile } from './drop-files';
+import { extensionOf, identify, NEAREST, needsIdentifying, renamed } from './identify';
 import { addHistoryEntry, getHistory, type HistoryEntry } from '@/lib/history';
 
 /**
@@ -180,6 +181,39 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
         });
       }
       setJobs((prev) => [...prev, ...newJobs]);
+
+      // No route from the name: look at the bytes, then either read it as
+      // what it really is or say why it can't be converted.
+      for (const job of newJobs) {
+        if (job.status !== 'idle' || !needsIdentifying(job.file.name)) continue;
+        void identify(job.file).then(
+          (found) => {
+            const from = extensionOf(job.file.name);
+            const patch: Partial<FileJob> =
+              'ext' in found
+                ? {
+                    file: renamed(job.file, found.ext),
+                    sourceExt: found.ext,
+                    targetExt: pickTarget(found.ext),
+                    identified: { from, reason: found.reason },
+                  }
+                : {
+                    status: 'error',
+                    error: {
+                      code: 'unsupported',
+                      detail: `No converter reads ${from ? `.${from}` : 'files without an extension'}`,
+                      params: {
+                        kind: found.kind,
+                        label: found.label,
+                        formats: NEAREST[found.kind],
+                      },
+                    },
+                  };
+            setJobs((prev) => prev.map((j) => (j.id === job.id ? { ...j, ...patch } : j)));
+          },
+          () => {},
+        );
+      }
     },
     [preferredTarget],
   );

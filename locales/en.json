@@ -151,7 +151,9 @@
     "maxSideNote": "Longest side ≤ {n} px",
     "maxSideClear": "Remove",
     "applyToSimilar": "Apply to other .{ext} files ({n})",
-    "appliedToSimilar": "Applied to {n}"
+    "appliedToSimilar": "Applied to {n}",
+    "readAsAlias": ".{from} is another name for .{to}: read as .{to}.",
+    "readAsContent": "Read as .{to}: that is what its contents are, whatever the name says."
   },
   "howItWorks": {
     "heading": "HOW IT WORKS",
@@ -304,7 +306,21 @@
       "title": "This setting doesn’t fit the file",
       "hint": "A setting on this job doesn’t work for this file; the details say which. Change it and press Retry."
     },
-    "details": "Technical details"
+    "details": "Technical details",
+    "unsupportedFile": {
+      "title": "Can’t convert .{label} files",
+      "titleNoExt": "Can’t tell what this file is",
+      "image": "{label} isn’t an image format this app reads. Export it as {formats} from the app that made it, then add that.",
+      "raw": "Camera RAW needs a RAW developer. Export it as {formats} from your photo app first.",
+      "word": "Save it as {formats} from your word processor, then convert that.",
+      "sheet": "Save it as {formats} from your spreadsheet app, then convert that.",
+      "slides": "Export the slides as {formats} from your presentation app; a PDF converts to images or text here.",
+      "archive": "This is an archive. Unpack it first, then add the files (or the folder).",
+      "program": "This is a program or installer, not a document: there is nothing to convert.",
+      "video": "This video format isn’t read here yet. Export it as {formats} from the app that made it.",
+      "audio": "This audio format isn’t read here yet. Export it as {formats} from the app that made it.",
+      "unknown": "Its contents don’t match any format this app reads. If you know what it is, rename it with the right extension and add it again."
+    }
   },
   "offline": {
     "save": "Save for offline use ({size} MB)",

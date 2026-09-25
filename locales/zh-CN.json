@@ -151,7 +151,9 @@
     "maxSideNote": "长边 ≤ {n} px",
     "maxSideClear": "移除",
     "applyToSimilar": "应用到其他 {n} 个 .{ext} 文件",
-    "appliedToSimilar": "已应用到 {n} 个文件"
+    "appliedToSimilar": "已应用到 {n} 个文件",
+    "readAsAlias": ".{from} 是 .{to} 的另一个名称，按 .{to} 读取。",
+    "readAsContent": "按 .{to} 读取：无论文件名如何，它的内容就是 .{to}。"
   },
   "howItWorks": {
     "heading": "使用方式",
@@ -304,7 +306,21 @@
       "title": "此设置不适用于该文件",
       "hint": "此任务的某项设置不适用于该文件，详情中写明了是哪一项。修改后点击重试。"
     },
-    "details": "技术细节"
+    "details": "技术细节",
+    "unsupportedFile": {
+      "title": "无法转换 .{label} 文件",
+      "titleNoExt": "无法识别这个文件",
+      "image": "本应用不支持读取 {label} 图片格式。请在创建它的应用中导出为 {formats}，再添加导出的文件。",
+      "raw": "相机 RAW 需要 RAW 显影软件。请先在照片应用中导出为 {formats}。",
+      "word": "请在文字处理软件中另存为 {formats}，再转换。",
+      "sheet": "请在电子表格应用中另存为 {formats}，再转换。",
+      "slides": "请在演示文稿应用中将幻灯片导出为 {formats}；PDF 可在这里转换为图片或文本。",
+      "archive": "这是压缩包。请先解压，再添加其中的文件（或文件夹）。",
+      "program": "这是程序或安装包，不是文档，没有可转换的内容。",
+      "video": "暂不支持读取这种视频格式。请在创建它的应用中导出为 {formats}。",
+      "audio": "暂不支持读取这种音频格式。请在创建它的应用中导出为 {formats}。",
+      "unknown": "它的内容与本应用支持的任何格式都不匹配。如果你知道它是什么，请改成正确的扩展名后重新添加。"
+    }
   },
   "offline": {
     "save": "保存以供离线使用（{size} MB）",

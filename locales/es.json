@@ -151,7 +151,9 @@
     "maxSideNote": "Lado mayor ≤ {n} px",
     "maxSideClear": "Quitar",
     "applyToSimilar": "Aplicar a los demás archivos .{ext} ({n})",
-    "appliedToSimilar": "Aplicado a {n}"
+    "appliedToSimilar": "Aplicado a {n}",
+    "readAsAlias": ".{from} es otro nombre de .{to}: se lee como .{to}.",
+    "readAsContent": "Se lee como .{to}: es lo que contiene, diga lo que diga el nombre."
   },
   "howItWorks": {
     "heading": "CÓMO FUNCIONA",
@@ -304,7 +306,21 @@
       "title": "Este ajuste no encaja con el archivo",
       "hint": "Un ajuste de esta tarea no funciona con este archivo; los detalles indican cuál. Cámbialo y pulsa Reintentar."
     },
-    "details": "Detalles técnicos"
+    "details": "Detalles técnicos",
+    "unsupportedFile": {
+      "title": "No se pueden convertir archivos .{label}",
+      "titleNoExt": "No se sabe qué archivo es",
+      "image": "{label} no es un formato de imagen que esta app lea. Expórtalo como {formats} desde la app que lo creó y añade ese.",
+      "raw": "Los RAW de cámara necesitan un revelador RAW. Expórtalo antes como {formats} desde tu app de fotos.",
+      "word": "Guárdalo como {formats} desde tu procesador de textos y convierte ese.",
+      "sheet": "Guárdalo como {formats} desde tu hoja de cálculo y convierte ese.",
+      "slides": "Exporta las diapositivas como {formats} desde tu app de presentaciones; aquí un PDF se convierte en imágenes o texto.",
+      "archive": "Es un archivo comprimido. Descomprímelo primero y añade los archivos (o la carpeta).",
+      "program": "Es un programa o instalador, no un documento: no hay nada que convertir.",
+      "video": "Este formato de vídeo aún no se lee aquí. Expórtalo como {formats} desde la app que lo creó.",
+      "audio": "Este formato de audio aún no se lee aquí. Expórtalo como {formats} desde la app que lo creó.",
+      "unknown": "Su contenido no coincide con ningún formato que esta app lea. Si sabes qué es, renómbralo con la extensión correcta y añádelo de nuevo."
+    }
   },
   "offline": {
     "save": "Guardar para usar sin conexión ({size} MB)",

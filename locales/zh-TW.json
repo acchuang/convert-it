@@ -151,7 +151,9 @@
     "maxSideNote": "長邊 ≤ {n} px",
     "maxSideClear": "移除",
     "applyToSimilar": "套用到其他 {n} 個 .{ext} 檔案",
-    "appliedToSimilar": "已套用到 {n} 個檔案"
+    "appliedToSimilar": "已套用到 {n} 個檔案",
+    "readAsAlias": ".{from} 是 .{to} 的另一個名稱，以 .{to} 讀取。",
+    "readAsContent": "以 .{to} 讀取：不論檔名為何，它的內容就是 .{to}。"
   },
   "howItWorks": {
     "heading": "使用方式",
@@ -304,7 +306,21 @@
       "title": "此設定不適用於該檔案",
       "hint": "此工作的某項設定不適用於該檔案，詳細資訊中寫明了是哪一項。修改後按重試。"
     },
-    "details": "技術細節"
+    "details": "技術細節",
+    "unsupportedFile": {
+      "title": "無法轉換 .{label} 檔案",
+      "titleNoExt": "無法辨識這個檔案",
+      "image": "本應用程式不支援讀取 {label} 圖片格式。請在建立它的應用程式中匯出為 {formats}，再加入匯出的檔案。",
+      "raw": "相機 RAW 需要 RAW 顯像軟體。請先在相片應用程式中匯出為 {formats}。",
+      "word": "請在文書處理軟體中另存為 {formats}，再轉換。",
+      "sheet": "請在試算表應用程式中另存為 {formats}，再轉換。",
+      "slides": "請在簡報應用程式中將投影片匯出為 {formats}；PDF 可在這裡轉換為圖片或文字。",
+      "archive": "這是壓縮檔。請先解壓縮，再加入其中的檔案（或資料夾）。",
+      "program": "這是程式或安裝檔，不是文件，沒有可轉換的內容。",
+      "video": "尚不支援讀取這種影片格式。請在建立它的應用程式中匯出為 {formats}。",
+      "audio": "尚不支援讀取這種音訊格式。請在建立它的應用程式中匯出為 {formats}。",
+      "unknown": "它的內容與本應用程式支援的任何格式都不符。如果你知道它是什麼，請改成正確的副檔名後重新加入。"
+    }
   },
   "offline": {
     "save": "儲存以供離線使用（{size} MB）",

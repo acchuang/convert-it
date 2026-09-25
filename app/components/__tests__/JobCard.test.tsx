@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { JobCard } from '@/app/components/JobCard';
+import { JobCard, describeError } from '@/app/components/JobCard';
 import type { FileJob } from '@/app/components/JobCard';
 import { DEFAULT_SETTINGS } from '@/lib/types';
 
@@ -160,5 +160,55 @@ describe('JobCard errors', () => {
     fireEvent.click(screen.getByRole('button', { name: 'job.applyToSimilar' }));
     expect(onApply).toHaveBeenCalledOnce();
     expect(screen.getByRole('status')).toHaveTextContent('job.appliedToSimilar');
+  });
+
+  it('explains an unreadable file by kind', () => {
+    const tr = (key: string) =>
+      ({
+        'errors.unsupportedFile.title': 'Can’t convert .{label} files',
+        'errors.unsupportedFile.image': 'Export it as {formats}.',
+      })[key] ?? key;
+    expect(
+      describeError(
+        {
+          code: 'unsupported',
+          detail: '',
+          params: { kind: 'image', label: 'TIFF', formats: 'PNG' },
+        },
+        'tiff',
+        tr,
+      ),
+    ).toEqual({ title: 'Can’t convert .TIFF files', hint: 'Export it as PNG.' });
+  });
+
+  it('an unreadable file offers no retry; a renamed one says what it was read as', () => {
+    const props = {
+      onTargetChange: vi.fn(),
+      onConvert: vi.fn(),
+      onDownload: vi.fn(),
+      onRemove: vi.fn(),
+      onSettingsChange: vi.fn(),
+      t: (key: string) => (key === 'job.readAsAlias' ? '.{from} is .{to}; read as .{to}.' : key),
+    };
+    const { unmount } = render(
+      <JobCard
+        job={{
+          ...idleJob,
+          targetExt: null,
+          status: 'error',
+          error: { code: 'unsupported', detail: '', params: { kind: 'unknown', label: '' } },
+        }}
+        {...props}
+      />,
+    );
+    expect(screen.queryByRole('button', { name: 'job.retry' })).toBeNull();
+    unmount();
+    render(
+      <JobCard
+        job={{ ...idleJob, sourceExt: 'yaml', identified: { from: 'yml', reason: 'alias' } }}
+        {...props}
+      />,
+    );
+    expect(screen.getByTestId('identified')).toHaveTextContent('.YML is .YAML; read as .YAML.');
   });
 });

@@ -24,6 +24,8 @@ export interface FileJob {
   /** Pixel size of an image result, for {w}x{h} in the name template. */
   resultWidth?: number;
   resultHeight?: number;
+  /** Renamed because its name didn't match what it is (see lib/identify). */
+  identified?: { from: string; reason: 'alias' | 'content' };
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -58,6 +60,15 @@ export function describeError(
       const value = failure.params?.[name];
       return value === undefined ? whole : String(value);
     });
+  const kind = failure.code === 'unsupported' ? failure.params?.kind : undefined;
+  if (kind) {
+    // A file nothing reads (lib/identify): say what it is and what to do.
+    const title = failure.params?.label ? 'title' : 'titleNoExt';
+    return {
+      title: fill(t(`errors.unsupportedFile.${title}`)),
+      hint: fill(t(`errors.unsupportedFile.${kind}`)),
+    };
+  }
   const key = `errors.${ERROR_KEYS[failure.code] ?? 'unknown'}`;
   return { title: fill(t(`${key}.title`)), hint: fill(t(`${key}.hint`)) };
 }
@@ -526,7 +537,8 @@ export function JobCard({
             </div>
           )}
 
-          {job.status === 'error' && (
+          {/* No target (too large, or nothing reads it): retrying can't help. */}
+          {job.status === 'error' && job.targetExt && (
             <button
               onClick={onConvert}
               className="px-4 py-1.5 text-[var(--error)] text-xs rounded-lg border border-[var(--error)]/30 bg-[var(--error)]/10 hover:bg-[var(--error)]/20 transition-colors font-medium flex items-center gap-1"
@@ -600,6 +612,14 @@ export function JobCard({
           />
         )}
       </AnimatePresence>
+
+      {job.identified && job.status !== 'error' && (
+        <p className="mt-2 text-xs text-[var(--text-muted)]" data-testid="identified">
+          {t(job.identified.reason === 'alias' ? 'job.readAsAlias' : 'job.readAsContent')
+            .replaceAll('{to}', job.sourceExt.toUpperCase())
+            .replaceAll('{from}', job.identified.from.toUpperCase())}
+        </p>
+      )}
 
       {job.status === 'error' && job.error && (
         <div role="alert" className="mt-2 text-xs">

@@ -479,3 +479,30 @@ describe('apply settings to similar files', () => {
     expect(d2.settings.quality).toBe(DEFAULT_SETTINGS.quality);
   });
 });
+
+describe('files no route reads', () => {
+  it('reads a misnamed file as what it is, and explains one it can’t read', async () => {
+    const { result } = renderHook(() => useJobManager());
+    act(() =>
+      result.current.addFiles([
+        new File(['%PDF-1.4'], 'scan'),
+        new File(['II*\0'], 'photo.tiff'),
+        new File(['a,b'], 'ok.csv'),
+      ]),
+    );
+    await waitFor(() => expect(result.current.jobs[1].status).toBe('error'));
+    const [scan, tiff, csv] = result.current.jobs;
+    await waitFor(() => expect(result.current.jobs[0].sourceExt).toBe('pdf'));
+    expect(result.current.jobs[0]).toMatchObject({
+      targetExt: expect.any(String),
+      identified: { from: '', reason: 'content' },
+    });
+    expect(result.current.jobs[0].file.name).toBe('scan.pdf');
+    expect(scan.id).toBe(result.current.jobs[0].id);
+    expect(tiff.error).toMatchObject({
+      code: 'unsupported',
+      params: { kind: 'image', label: 'TIFF' },
+    });
+    expect(csv.identified).toBeUndefined();
+  });
+});
