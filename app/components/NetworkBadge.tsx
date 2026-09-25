@@ -66,7 +66,7 @@ export default function NetworkBadge() {
           {formatFileSize(log.sent)}
         </strong>
       </span>
-      <span>
+      <span className="hidden sm:inline">
         {t('network.received')} {formatFileSize(log.received)}
       </span>
     </span>

@@ -66,6 +66,33 @@ _Reviewed at `7a92641` (2026-09-24). Scope: every file in `lib/`, the app shell,
     - **HTML → Markdown tables:** every table cell became its own paragraph.
     - **GPS in PDFs:** image → PDF carried a photo's GPS location into the PDF.
     - **Phone header:** it overflowed the viewport, and the logo wrapped.
+- **Phase 5: done (the rest of §7, plus S6 and the P2/§6 leftovers).**
+  - **§7.1 Network badge:** the status bar above the drop zone shows what the app has sent and received over the network in this browser. It replaces a hard-coded "0 KB uploaded · zero server contact"; the second part was never true, since the app downloads its code and engines. The service worker counts it; every request from the pages and their workers passes through it, and cache hits are not counted. The offline suite checks that "sent" stays at 0 B and that a codec fetched by the conversion worker appears in "received". Offline, the badge says the app still works.
+  - **§7.2 Presets:**
+    - Video: Smallest / Balanced / Best, plus Lossless where the encoder is x264. CRF and the speed preset moved under "Advanced".
+    - Images: Full / Web / Email, which set quality and a new longest-side cap.
+    - Lossless is left to ffmpeg, since WebCodecs has no lossless mode.
+  - **§7.3 Unsupported files:** the first bytes decide.
+    - Aliases (.jfif, .htm, .yml) and misnamed or extensionless files in a format the app reads are read as that format, and the card says so.
+    - Other files get an explanation by kind (TIFF/PSD, RAW, Word, spreadsheet, slides, archive, program, video, audio) and what to export them as.
+  - **§7.4 Undo:** Clear and × can be undone for 10 s, from a toast or with Ctrl/⌘+Z. Files return to their places, and a conversion running at the time is cancelled and comes back ready to run.
+  - **§7.5 Before/after:** a split slider shows each side's bytes and pixel size. Video and audio results get a player.
+  - **§7.6 Share target and file handlers:**
+    - The manifest lists every source format, and a test keeps it equal to the registry.
+    - The service worker receives the share POST and hands the files to the page through a cache. The offline suite checks this with the server stopped.
+    - "Open with" arrives through `launchQueue`.
+  - **§7.7 Paste and copy:**
+    - Paste adds files, screenshots, a spreadsheet range (as TSV), JSON, or rich text (as HTML).
+    - Copy puts image results on the clipboard as PNG.
+  - **§7.8 Batch settings:** "Apply to other .EXT files" copies the settings both routes read. Per-file values (trim and cut points, subtitle file, page range) are not copied.
+  - **S6:** "Keep history on this device" can be turned off, which also deletes the list. The About page lists everything stored locally.
+  - **P2 HEIC:** the primary image is converted. It was the first image in the file, which is not always the primary. "All (zip)" converts every image. Tested with a real three-image HEIC and the real libheif.
+  - **§6 drift check:** `npm run copy-wasm -- --check` in CI fails when `public/wasm` or `public/ocr` differs from `node_modules`.
+  - **Bugs found and fixed along the way:**
+    - **About page:** it said only theme and language were stored. History and the name template are too.
+    - **HEIC:** an image that failed to render came out blank instead of failing.
+    - **Retry:** it was shown on errors with no target, where it could do nothing.
+    - **Preview:** video results were previewed as a broken `<img>`.
 
 ## 1. Executive summary
 

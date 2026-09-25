@@ -17,6 +17,7 @@ import { useJobManager } from '@/lib/useJobManager';
 import ErrorBoundary from './ErrorBoundary';
 import Footer from './Footer';
 import { AppHeader } from './AppHeader';
+import NetworkBadge from './NetworkBadge';
 import { DragOverlay, DropZone } from './DropZone';
 import { filesFromDrop, filesFromInput } from '@/lib/drop-files';
 import { filesFromClipboard } from '@/lib/paste';
@@ -304,12 +305,8 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                 · 100% In-Browser WebAssembly
               </span>
             </div>
-            <div className="flex items-center gap-2.5 text-xs">
-              <span className="text-[var(--success)] font-semibold">0 KB UPLOADED</span>
-              <span className="hidden md:inline text-[var(--text-muted)]">
-                · ZERO SERVER CONTACT
-              </span>
-            </div>
+            {/* Measured, not asserted: the service worker's count (NetworkBadge). */}
+            <NetworkBadge />
           </div>
 
           {/* Drop zone */}
@@ -703,33 +700,39 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
 
         <AnimatePresence>
           {removed.length > 0 && (
+            // Centred by the flex wrapper: framer-motion's transform would
+            // override a translate-x centring on the toast itself.
             <motion.div
               key="undo"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 16 }}
-              role="status"
-              className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-secondary)] shadow-lg text-xs max-w-[calc(100vw-2rem)]"
-              style={{ fontFamily: 'var(--font-mono)' }}
+              className="fixed bottom-4 inset-x-4 z-50 flex justify-center pointer-events-none"
             >
-              <span className="text-[var(--text-secondary)] truncate">
-                {removed.length === 1
-                  ? t('toolbar.removedOne').replace('{name}', removed[0].file.name)
-                  : t('toolbar.removedMany').replace('{n}', String(removed.length))}
-              </span>
-              <button
-                onClick={undoRemove}
-                className="font-semibold text-[var(--accent)] hover:underline flex-shrink-0"
+              <div
+                role="status"
+                className="pointer-events-auto flex items-center gap-3 px-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-secondary)] shadow-lg text-xs max-w-full"
+                style={{ fontFamily: 'var(--font-mono)' }}
               >
-                {t('toolbar.undo')}
-              </button>
-              <button
-                onClick={dismissUndo}
-                aria-label={t('toolbar.dismiss')}
-                className="text-[var(--text-muted)] hover:text-[var(--text-primary)] flex-shrink-0"
-              >
-                ×
-              </button>
+                <span className="text-[var(--text-secondary)] truncate">
+                  {removed.length === 1
+                    ? t('toolbar.removedOne').replace('{name}', removed[0].file.name)
+                    : t('toolbar.removedMany').replace('{n}', String(removed.length))}
+                </span>
+                <button
+                  onClick={undoRemove}
+                  className="font-semibold text-[var(--accent)] hover:underline flex-shrink-0"
+                >
+                  {t('toolbar.undo')}
+                </button>
+                <button
+                  onClick={dismissUndo}
+                  aria-label={t('toolbar.dismiss')}
+                  className="text-[var(--text-muted)] hover:text-[var(--text-primary)] flex-shrink-0"
+                >
+                  ×
+                </button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
