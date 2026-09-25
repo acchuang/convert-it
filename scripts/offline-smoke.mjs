@@ -103,6 +103,29 @@ try {
     await convert(page, 'unicode.txt', 'pdf'),
     'converted',
   );
+
+  // Share sheet (installed app): the OS POSTs to /share-target, which only
+  // the service worker answers (the server is down here, and a static host
+  // has nothing there anyway); the page then collects the file on /?shared=1.
+  const shared = await page.evaluate(async () => {
+    const form = new FormData();
+    form.append('files', new File(['a,b\n1,2\n'], 'shared-data.csv', { type: 'text/csv' }));
+    const res = await fetch('/share-target', { method: 'POST', body: form, redirect: 'manual' });
+    return res.type;
+  });
+  check('share target: the worker takes the POST', shared, 'opaqueredirect');
+  await page.goto(`${APP}/?shared=1`, { waitUntil: 'domcontentloaded' });
+  const sharedCard = page.locator('[role="listitem"][aria-label="shared-data.csv"]');
+  check(
+    'share target: the shared file is queued, the inbox emptied',
+    await sharedCard
+      .waitFor({ timeout: 15000 })
+      .then(() => page.evaluate(async () => String(await caches.has('share-inbox'))))
+      .catch(() => 'not queued'),
+    'false',
+  );
+  check('share target: ?shared is dropped from the URL', new URL(page.url()).search, '');
+
   check('no CSP violations', String(csp.length), '0');
 } finally {
   await browser.close();

@@ -1,0 +1,49 @@
+// Files that arrive from the OS rather than a drop or the picker, once the
+// app is installed: "Open with" (manifest file_handlers, delivered through
+// launchQueue) and the share sheet (manifest share_target, POSTed to the
+// service worker, which leaves them in the share inbox; see
+// scripts/sw-template.js).
+
+import { pastedTextKind } from './paste';
+
+const SHARE_INBOX = 'share-inbox';
+
+interface LaunchParams {
+  files?: { getFile(): Promise<File> }[];
+}
+interface LaunchQueue {
+  setConsumer(consumer: (params: LaunchParams) => void): void;
+}
+
+/** Empties the share inbox, returning what was in it, oldest first. */
+export async function takeSharedFiles(): Promise<File[]> {
+  if (typeof caches === 'undefined') return [];
+  const inbox = await caches.open(SHARE_INBOX);
+  const requests = [...(await inbox.keys())].sort((a, b) =>
+    a.url.localeCompare(b.url, 'en', { numeric: true }),
+  );
+  const files: File[] = [];
+  for (const request of requests) {
+    const response = await inbox.match(request);
+    await inbox.delete(request);
+    if (!response) continue;
+    const blob = await response.blob();
+    let name = decodeURIComponent(response.headers.get('x-file-name') ?? 'shared');
+    if (name === 'shared.txt') {
+      // Shared text is named for what it is, as a paste would be.
+      name = `shared.${pastedTextKind(await blob.text(), '')}`;
+    }
+    files.push(new File([blob], name, { type: blob.type }));
+  }
+  await caches.delete(SHARE_INBOX);
+  return files;
+}
+
+/** Calls back with the files of each "Open with" launch. */
+export function onLaunchFiles(receive: (files: File[]) => void): void {
+  const queue = (globalThis as { launchQueue?: LaunchQueue }).launchQueue;
+  queue?.setConsumer(async (params) => {
+    if (!params.files?.length) return;
+    receive(await Promise.all(params.files.map((handle) => handle.getFile())));
+  });
+}

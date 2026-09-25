@@ -20,6 +20,7 @@ import { AppHeader } from './AppHeader';
 import { DragOverlay, DropZone } from './DropZone';
 import { filesFromDrop, filesFromInput } from '@/lib/drop-files';
 import { filesFromClipboard } from '@/lib/paste';
+import { onLaunchFiles, takeSharedFiles } from '@/lib/launch';
 import { DEFAULT_NAME_TEMPLATE } from '@/lib/filenames';
 
 const LARGE_FILE_THRESHOLD_MB = 100;
@@ -221,6 +222,22 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
     };
     window.addEventListener('paste', onPaste);
     return () => window.removeEventListener('paste', onPaste);
+  }, [addFiles]);
+
+  // Installed app: files from "Open with" and from the share sheet.
+  const tookShared = useRef(false);
+  useEffect(() => {
+    onLaunchFiles(addFiles);
+    if (tookShared.current) return;
+    tookShared.current = true;
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has('shared')) return;
+    params.delete('shared');
+    const rest = params.toString();
+    window.history.replaceState(null, '', window.location.pathname + (rest ? `?${rest}` : ''));
+    void takeSharedFiles()
+      .then((files) => files.length && addFiles(files))
+      .catch(() => {});
   }, [addFiles]);
 
   // The Undo toast goes away on its own; the removed files are then let go.

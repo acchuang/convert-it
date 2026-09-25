@@ -15,6 +15,8 @@
  *    the home converter for pages never visited.
  *  - "offline-pack" message: caches everything, for people who want the whole
  *    app offline (Footer's "Save for offline use").
+ *  - POST /share-target (the installed app in the share sheet): the shared
+ *    files go into a cache the page reads on /?shared=1.
  *
  * A new version waits until every tab of the old one is closed instead of
  * taking over mid-conversion (no skipWaiting).
@@ -99,10 +101,45 @@ async function navigate(request) {
   }
 }
 
+// The share sheet POSTs here (manifest share_target). There's no server to
+// receive it, so the worker does: the files (or the shared text, as a file)
+// go into the share inbox cache, and the page picks them up from there
+// (app/components/ConverterApp.tsx, ?shared=1) and empties it.
+const SHARE_INBOX = 'share-inbox';
+
+async function receiveShare(request) {
+  const form = await request.formData();
+  const inbox = await caches.open(SHARE_INBOX);
+  let n = 0;
+  const keep = (blob, name) =>
+    inbox.put(
+      `/share-inbox/${Date.now()}-${n++}`,
+      new Response(blob, {
+        headers: {
+          'content-type': blob.type || 'application/octet-stream',
+          'x-file-name': encodeURIComponent(name),
+        },
+      }),
+    );
+  const files = form.getAll('files').filter((f) => typeof f !== 'string' && f.size > 0);
+  for (const file of files) await keep(file, file.name);
+  if (!files.length) {
+    const text = [form.get('title'), form.get('text'), form.get('url')]
+      .filter((part) => typeof part === 'string' && part.trim())
+      .join('\n');
+    if (text) await keep(new Blob([text], { type: 'text/plain' }), 'shared.txt');
+  }
+  return Response.redirect('/?shared=1', 303);
+}
+
 self.addEventListener('fetch', (event) => {
   const request = event.request;
-  if (request.method !== 'GET') return;
   const url = new URL(request.url);
+  if (request.method === 'POST' && url.origin === self.location.origin) {
+    if (url.pathname === '/share-target') event.respondWith(receiveShare(request));
+    return;
+  }
+  if (request.method !== 'GET') return;
 
   if (url.origin === self.location.origin) {
     if (request.mode === 'navigate') return event.respondWith(navigate(request));
