@@ -557,3 +557,19 @@ describe('undo remove / Clear', () => {
     expect(result.current.jobs).toEqual([]);
   });
 });
+
+describe('stages (review §9: the engine download is its own labelled phase)', () => {
+  it('a media job starts on "engine", a data job on "converting"; both end "complete"', async () => {
+    let finish!: (b: Blob) => void;
+    mockConvertFile.mockImplementation(() => new Promise((resolve) => (finish = resolve)));
+    const { result } = renderHook(() => useJobManager());
+    act(() => result.current.addFiles([new File(['v'], 'clip.mp4'), new File(['a,b'], 'd.csv')]));
+    act(() => void result.current.convertJob(result.current.jobs[0]));
+    await waitFor(() => expect(result.current.jobs[0].stage).toBe('engine'));
+    await act(async () => finish(new Blob(['x'])));
+    await waitFor(() => expect(result.current.jobs[0].stage).toBe('complete'));
+    act(() => void result.current.convertJob(result.current.jobs[1]));
+    await waitFor(() => expect(result.current.jobs[1].stage).toBe('converting'));
+    await act(async () => finish(new Blob(['x'])));
+  });
+});
