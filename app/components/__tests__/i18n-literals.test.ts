@@ -11,7 +11,7 @@ import ts from 'typescript';
 // app/convert/[pair] is left out: those are static English landing pages
 // (their copy is SEO text from lib/pairs.ts); the converter they embed is
 // localized like the home page.
-const DIRS = ['app/components', 'app/about', 'app'];
+const DIRS = ['app/components', 'app/components/settings', 'app/about', 'app'];
 const READ_ATTRS = new Set(['title', 'placeholder', 'alt', 'aria-label']);
 // Not words to translate: brand, units, codec and paper names, symbols.
 const ALLOWED =
