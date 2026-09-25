@@ -5,7 +5,8 @@
     "github": "View source on GitHub",
     "buyCoffee": "Buy me a coffee",
     "about": "ABOUT",
-    "home": "← HOME"
+    "home": "← HOME",
+    "language": "Select language"
   },
   "dropzone": {
     "title": "DRAG & DROP",
@@ -16,7 +17,9 @@
     "document": "DOCUMENT",
     "data": "DATA",
     "folder": "or choose a folder",
-    "paste": "or paste (Ctrl/⌘+V): files, screenshots, a range from a spreadsheet"
+    "paste": "or paste (Ctrl/⌘+V): files, screenshots, a range from a spreadsheet",
+    "anywhere": "DROP FILES ANYWHERE",
+    "local": "Processed 100% locally on your device"
   },
   "toolbar": {
     "addFiles": "ADD FILES",
@@ -38,7 +41,9 @@
     "removedOne": "Removed {name}",
     "removedMany": "Removed {n} files",
     "undo": "Undo",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "dropMore": "Drop more files here or click to browse",
+    "shortcut": "Keyboard shortcut: Ctrl/⌘+Enter"
   },
   "warning": {
     "largeFile": "Large file detected",
@@ -165,7 +170,18 @@
     "heicImages": "Images in the file",
     "heicPrimary": "Main photo",
     "heicAll": "All (zip)",
-    "heicHint": "For bursts and image sequences; a single photo is unaffected."
+    "heicHint": "For bursts and image sequences; a single photo is unaffected.",
+    "qualityLow": "Low (compact)",
+    "qualityHigh": "High (sharp)",
+    "ready": "Ready",
+    "readyDownload": "Ready to download",
+    "stage": {
+      "engine": "Loading the conversion engine…",
+      "converting": "Converting on your device…",
+      "processing": "Processing {pct}%",
+      "finalizing": "Finishing…",
+      "complete": "Done"
+    }
   },
   "howItWorks": {
     "heading": "HOW IT WORKS",
@@ -187,7 +203,9 @@
     "clear": "CLEAR",
     "empty": "No conversions yet — drop a file above to get started.",
     "keep": "Keep history on this device",
-    "off": "History is off: nothing about your files is saved on this device."
+    "off": "History is off: nothing about your files is saved on this device.",
+    "confirmClear": "CONFIRM CLEAR?",
+    "confirmClearLabel": "Confirm clearing all history"
   },
   "footer": {
     "copyright": "© 2026 Convert-it — All conversions happen in your browser",
@@ -350,6 +368,10 @@
       "video": "This video format isn’t read here yet. Export it as {formats} from the app that made it.",
       "audio": "This audio format isn’t read here yet. Export it as {formats} from the app that made it.",
       "unknown": "Its contents don’t match any format this app reads. If you know what it is, rename it with the right extension and add it again."
+    },
+    "boundary": {
+      "title": "Something went wrong",
+      "retry": "Try again"
     }
   },
   "offline": {
@@ -363,5 +385,12 @@
     "received": "· received",
     "offline": "Offline, still working ·",
     "hint": "Counted by this app’s service worker, which every request passes through: what it has sent (your files never are) and downloaded (the app and its engines) over the network in this browser. Cached files aren’t counted."
+  },
+  "app": {
+    "label": "Convert-it file converter"
+  },
+  "status": {
+    "local": "LOCAL WORKSTATION",
+    "inBrowser": "100% in-browser WebAssembly"
   }
 }

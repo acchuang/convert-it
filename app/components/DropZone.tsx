@@ -35,10 +35,10 @@ export function DragOverlay({ dragCategory }: { dragCategory: string | null }) {
           letterSpacing: '0.08em',
         }}
       >
-        {dragCategory ? t(`dropzone.${dragCategory}`) : 'DROP FILES ANYWHERE'}
+        {dragCategory ? t(`dropzone.${dragCategory}`) : t('dropzone.anywhere')}
       </div>
       <p className="text-sm text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-mono)' }}>
-        {t('dropzone.subtitle')} · Processed 100% locally on your device
+        {t('dropzone.subtitle')} · {t('dropzone.local')}
       </p>
     </motion.div>
   );

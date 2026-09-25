@@ -278,7 +278,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
       className="min-h-screen bg-app"
       style={{ fontFamily: 'var(--font-body)' }}
       role="main"
-      aria-label="Convert-it file converter"
+      aria-label={t('app.label')}
     >
       <AppHeader />
 
@@ -287,7 +287,9 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
         {dragging && <DragOverlay key="overlay" dragCategory={dragCategory} />}
       </AnimatePresence>
 
-      <ErrorBoundary>
+      <ErrorBoundary
+        labels={{ title: t('errors.boundary.title'), retry: t('errors.boundary.retry') }}
+      >
         <div className="max-w-5xl mx-auto px-4 py-8">
           {intro}
 
@@ -299,10 +301,10 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
             <div className="flex items-center gap-2">
               <span className="inline-block w-2 h-2 rounded-full bg-[var(--accent)]" />
               <span className="text-[var(--text-primary)] font-semibold tracking-wider">
-                LOCAL WORKSTATION
+                {t('status.local')}
               </span>
               <span className="hidden sm:inline text-[var(--text-muted)]">
-                · 100% In-Browser WebAssembly
+                · {t('status.inBrowser')}
               </span>
             </div>
             {/* Measured, not asserted: the service worker's count (NetworkBadge). */}
@@ -431,7 +433,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                   >
                     <path d="M12 5v14M5 12h14" />
                   </svg>
-                  <span>Drop more files here or click to browse</span>
+                  <span>{t('toolbar.dropMore')}</span>
                 </div>
 
                 {/* Toolbar */}
@@ -507,7 +509,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                         className="px-4 py-2 bg-[var(--accent)] text-[var(--accent-text)] text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1.5 shadow-sm"
                         style={{ fontFamily: 'var(--font-mono)' }}
                         aria-label={t('toolbar.convertAll')}
-                        title="Keyboard shortcut: ⌘↵"
+                        title={t('toolbar.shortcut')}
                       >
                         <span>{t('toolbar.convertAll')}</span>
                         <span className="opacity-60 text-xs hidden sm:inline font-normal">⌘↵</span>

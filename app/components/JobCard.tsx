@@ -18,7 +18,8 @@ export interface FileJob {
   resultBlob?: Blob;
   error?: ConversionFailure;
   progress: number;
-  stage?: string;
+  /** Where the conversion is, as a key under job.stage in locales/. */
+  stage?: 'engine' | 'converting' | 'processing' | 'finalizing' | 'complete';
   settings: ConversionSettings;
   /** Folder the file came from within a dropped/picked folder ('' or unset: top level). */
   folder?: string;
@@ -348,7 +349,7 @@ export function JobCard({
           {job.status === 'idle' && (
             <span className="text-[var(--text-muted)] flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)]" />
-              Ready
+              {t('job.ready')}
             </span>
           )}
           {job.status === 'converting' && (
@@ -361,7 +362,7 @@ export function JobCard({
               <span className="font-semibold">{job.progress}%</span>
               <span className="text-[var(--text-muted)] text-[10px]">·</span>
               <span className="text-[var(--text-muted)] truncate max-w-[180px] sm:max-w-xs">
-                {job.stage || 'Processing locally...'}
+                {t(`job.stage.${job.stage ?? 'converting'}`).replace('{pct}', String(job.progress))}
               </span>
             </div>
           )}
@@ -377,7 +378,7 @@ export function JobCard({
               >
                 <polyline points="20 6 9 17 4 12" />
               </svg>
-              Ready to download
+              {t('job.readyDownload')}
             </span>
           )}
           {job.status === 'error' && (

@@ -181,8 +181,8 @@ export function SettingsPanel({
               className="w-full accent-[var(--accent)]"
             />
             <div className="flex justify-between text-xs text-[var(--text-muted)]">
-              <span>Low (Compact)</span>
-              <span>High (Sharp)</span>
+              <span>{t('job.qualityLow')}</span>
+              <span>{t('job.qualityHigh')}</span>
             </div>
             {showImageTools && (
               <div className="flex gap-1">

@@ -3,6 +3,7 @@
 import { useReducer, useState, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatFileSize } from '@/lib/converters';
+import { useLocale } from './LocaleProvider';
 import {
   timeAgo,
   clearHistory,
@@ -59,6 +60,7 @@ export function HistoryPanel({
   onClear: () => void;
   t: (key: string) => string;
 }) {
+  const { locale } = useLocale();
   const [open, setOpen] = useState(true);
   const [confirmClear, setConfirmClear] = useState(false);
   // The static page renders "on"; the stored choice is read on hydration
@@ -161,9 +163,9 @@ export function HistoryPanel({
                 : 'text-[var(--text-muted)] hover:text-[var(--error)]'
             }`}
             style={{ fontFamily: 'var(--font-mono)' }}
-            aria-label={confirmClear ? 'Confirm clear all history' : t('history.clear')}
+            aria-label={confirmClear ? t('history.confirmClearLabel') : t('history.clear')}
           >
-            {confirmClear ? 'CONFIRM CLEAR?' : t('history.clear')}
+            {confirmClear ? t('history.confirmClear') : t('history.clear')}
           </button>
         </div>
       </div>
@@ -209,7 +211,7 @@ export function HistoryPanel({
                         {formatFileSize(entry.fileSize)} → {formatFileSize(entry.resultSize)}
                       </span>
                       <span className="text-[var(--text-muted)] text-xs">
-                        {timeAgo(entry.convertedAt)}
+                        {timeAgo(entry.convertedAt, locale)}
                       </span>
                     </div>
                   </div>

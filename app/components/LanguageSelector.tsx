@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLocale, type Locale } from './LocaleProvider';
 
 export function LanguageSelector() {
-  const { locale, setLocale, locales } = useLocale();
+  const { locale, setLocale, locales, t } = useLocale();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -27,7 +27,7 @@ export function LanguageSelector() {
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-all"
         style={{ fontFamily: 'var(--font-mono)' }}
-        aria-label="Select language"
+        aria-label={t('header.language')}
         aria-expanded={open}
       >
         <svg
