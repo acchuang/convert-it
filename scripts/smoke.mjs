@@ -28,6 +28,16 @@ const PAIRS = [
   ['img.png', 'webp', 'libwebp', (b) => magic('RIFF')(b) && magic('WEBP', 8)(b)],
   ['img.png', 'jpg', 'mozjpeg', (b) => b[0] === 0xff && b[1] === 0xd8],
   ['img.svg', 'png', 'resvg + oxipng', magic('\x89PNG')],
+  ['img.png', 'avif', 'libavif', magic('ftypavif', 4)],
+  // Privacy default: a geotagged photo comes out with no EXIF at all.
+  [
+    'geo.jpg',
+    'jpg',
+    'metadata stripped',
+    (b) => b[0] === 0xff && b[1] === 0xd8 && !b.includes('Exif') && !b.includes('Smoke Test'),
+  ],
+  ['img.png', 'jxl', 'libjxl encode', (b) => b[0] === 0xff && b[1] === 0x0a],
+  ['img.jxl', 'png', 'libjxl decode', magic('\x89PNG')],
   ['doc.pdf', 'png', 'pdfium', magic('\x89PNG')],
   [
     'blue.pdf',
@@ -55,6 +65,7 @@ const PAIRS = [
   ['clip.mkv', 'webm', 'webcodecs vp9+opus', (b) => b.readUInt32BE(0) === 0x1a45dfa3],
   ['clip.webm', 'wav', 'webcodecs extract', (b) => magic('RIFF')(b) && magic('WAVE', 8)(b)],
   ['clip.webm', 'mp4', 'ffmpeg video', magic('ftyp', 4)],
+  ['clip.webm', 'gif', 'ffmpeg gif', magic('GIF89a')],
   [
     'audio.wav',
     'mp3',
@@ -71,6 +82,24 @@ const PAIRS = [
   ['data.csv', 'xlsx', 'xlsx writer', magic('PK')],
   ['data.json', 'yaml', 'yaml', (b) => b.toString().includes('name:')],
   ['doc.md', 'html', 'document', (b) => /<(h1|strong|a)\b/i.test(b.toString())],
+  ['doc.pdf', 'pdf', 'pdf-lib edit', magic('%PDF')],
+  [
+    'sub.srt',
+    'vtt',
+    'subtitles',
+    (b) => /^WEBVTT\n\n00:00:01\.000 --> 00:00:03\.500\nHello <i>there<\/i>/.test(b.toString()),
+  ],
+  ['ocr.png', 'txt', 'tesseract OCR', (b) => /reads printed text/.test(b.toString())],
+  ['scan.pdf', 'txt', 'scanned PDF → OCR', (b) => /Invoice 2026 total 314/.test(b.toString())],
+  ['doc.md', 'docx', 'docx writer', (b) => magic('PK')(b) && b.includes('word/document.xml')],
+  [
+    'notes.docx',
+    'html',
+    'mammoth (worker)',
+    (b) => b.toString().includes('<h1>Meeting notes</h1>'),
+  ],
+  ['notes.docx', 'pdf', 'docx → pdf (main)', magic('%PDF')],
+  ['img.png', 'pdf', 'pdf-lib image', magic('%PDF')],
   ['doc.txt', 'pdf', 'jspdf (worker)', magic('%PDF')],
   ['data.json', 'pdf', 'jspdf json (worker)', magic('%PDF')],
   ['doc.md', 'pdf', 'jspdf md (main)', magic('%PDF')],
@@ -147,7 +176,7 @@ for (const [fixture, target, label, check] of PAIRS) {
       await page.close();
       continue;
     }
-    await page.setInputFiles('input[type="file"]', join(DIR, fixture));
+    await page.setInputFiles('input[type="file"]:not([webkitdirectory])', join(DIR, fixture));
     await page.waitForSelector('[role="listitem"]', { timeout: 15000 });
 
     const select = page.locator('select[aria-label="Target format"]').first();
@@ -210,6 +239,34 @@ for (const [fixture, target, label, check] of PAIRS) {
     row.note = `${err.message.split('\n')[0]}${consoleErrors.length ? ` | ${consoleErrors[0]}` : ''}`;
   }
 
+  results.push(row);
+  await page.close();
+}
+
+// Merge: a batch action, not a pair. Three files through the toolbar button,
+// in list order, must come back as one PDF with a page each.
+{
+  const row = { pair: 'pdf+png+pdf', label: 'merge into PDF', ok: false, note: '' };
+  const page = await browser.newPage();
+  try {
+    await page.goto(APP, { waitUntil: 'networkidle' });
+    await page.setInputFiles(
+      'input[type="file"]:not([webkitdirectory])',
+      ['doc.pdf', 'img.png', 'blue.pdf'].map((f) => join(DIR, f)),
+    );
+    await page.waitForSelector('[role="listitem"]');
+    const [download] = await Promise.all([
+      page.waitForEvent('download', { timeout: 60000 }),
+      page.locator('button[aria-label="MERGE INTO PDF"]').click(),
+    ]);
+    const bytes = readFileSync(await download.path());
+    const { PDFDocument } = await import('pdf-lib');
+    const pages = (await PDFDocument.load(bytes)).getPageCount();
+    row.ok = pages === 3;
+    row.note = `${bytes.length}B, ${pages} pages → ${download.suggestedFilename()}`;
+  } catch (err) {
+    row.note = err.message.split('\n')[0];
+  }
   results.push(row);
   await page.close();
 }

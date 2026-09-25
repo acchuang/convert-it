@@ -9,6 +9,8 @@ import initOxipng, {
   optimise as oxipngOptimise,
 } from '@jsquash/oxipng/codec/pkg/squoosh_oxipng.js';
 import { defaultOptions as OXIPNG_DEFAULTS } from '@jsquash/oxipng/meta';
+import { defaultOptions as AVIF_DEFAULTS } from '@jsquash/avif/meta';
+import { defaultOptions as JXL_DEFAULTS } from '@jsquash/jxl/meta';
 import { encodeIcoBlob } from 'ico-codec';
 import type { ConversionSettings } from './types';
 import { mimeFor } from './formats';
@@ -119,6 +121,59 @@ function ensureOxipng(): Promise<unknown> {
   return oxipngReady;
 }
 
+// AVIF and JPEG XL go through jSquash's single-threaded emscripten glue,
+// imported directly: like oxipng, their entry points switch to a
+// multi-threaded build under cross-origin isolation, and that build needs a
+// pthread worker script we don't ship. Loaded on first use (3.5 MB and 1.4 MB
+// of wasm); a failed load isn't kept, so the next job retries.
+interface EmscriptenEncoder {
+  encode(data: BufferSource, width: number, height: number, options: object): Uint8Array | null;
+}
+interface EmscriptenDecoder {
+  decode(data: BufferSource): ImageData | null;
+}
+type Factory<T> = (options: object) => Promise<T>;
+
+function lazyModule<T>(load: () => Promise<{ default: unknown }>): () => Promise<T> {
+  let ready: Promise<T> | null = null;
+  return () =>
+    (ready ??= load()
+      .then(({ default: factory }) =>
+        (factory as Factory<T>)({
+          noInitialRun: true,
+          locateFile: (path: string) => `${ASSET_BASE}/${path}`,
+        }),
+      )
+      .catch((err) => {
+        ready = null;
+        throw err;
+      }));
+}
+
+const avifEncoder = lazyModule<EmscriptenEncoder>(
+  () => import('@jsquash/avif/codec/enc/avif_enc.js'),
+);
+const jxlEncoder = lazyModule<EmscriptenEncoder>(() => import('@jsquash/jxl/codec/enc/jxl_enc.js'));
+const jxlDecoder = lazyModule<EmscriptenDecoder>(() => import('@jsquash/jxl/codec/dec/jxl_dec.js'));
+
+/**
+ * The app's 0–1 quality on each codec's own scale. libjxl's quality is built
+ * to track JPEG's, so it maps 1:1. AVIF reaches the same look far lower (its
+ * 50 is a good photo), so the slider is shifted: the default 92 % is AVIF 67,
+ * not a near-lossless 92.
+ */
+export function codecQuality(ext: 'avif' | 'jxl', quality: number): number {
+  const pct = Math.round(quality * 100);
+  return ext === 'avif' ? Math.min(100, Math.max(0, pct - 25)) : Math.min(100, Math.max(1, pct));
+}
+
+export async function decodeJxl(file: Blob): Promise<ImageData> {
+  const decoder = await jxlDecoder();
+  const image = decoder.decode(await file.arrayBuffer());
+  if (!image) throw new Error('JPEG XL decoding failed: not a valid .jxl file');
+  return image;
+}
+
 // Lossless PNG optimisation post-pass via oxipng (level 2 — the codec's default).
 // Runs after the libpng encode so standalone PNG and ICO inner-PNG output are
 // smaller without any quality loss.
@@ -146,7 +201,7 @@ function flattenOverWhite(imageData: ImageData): ImageData {
   return new ImageData(out, width, height);
 }
 
-// Encodes ImageData to a Blob using jSquash WASM codecs for jpg/png/webp and a
+// Encodes ImageData to a Blob using jSquash WASM codecs for jpg/png/webp/avif/jxl and a
 // small hand-rolled encoder for BMP, which has no jSquash codec.
 // `quality` is the app's 0–1 value; it is mapped to each codec's 0–100 scale.
 export async function encodeImageData(
@@ -173,6 +228,19 @@ export async function encodeImageData(
     await ensureWebp();
     const buffer = await encodeWebp(input, { quality: Math.round(quality * 100) });
     return new Blob([buffer], { type: mime });
+  }
+
+  if (ext === 'avif' || ext === 'jxl') {
+    const encoder = await (ext === 'avif' ? avifEncoder() : jxlEncoder());
+    const defaults = ext === 'avif' ? AVIF_DEFAULTS : JXL_DEFAULTS;
+    const { data, width, height } = input;
+    const pixels = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+    const out = encoder.encode(pixels, width, height, {
+      ...defaults,
+      quality: codecQuality(ext, quality),
+    });
+    if (!out) throw new Error(`${ext.toUpperCase()} encoding failed`);
+    return new Blob([out as Uint8Array<ArrayBuffer>], { type: mime });
   }
 
   if (ext === 'bmp') {
@@ -297,7 +365,7 @@ export function transformImageData(imageData: ImageData, transform: ImageTransfo
 }
 
 // Only the lossy codecs have a quality knob to trade against a size budget.
-const TARGET_SIZE_FORMATS = new Set(['jpg', 'jpeg', 'webp']);
+const TARGET_SIZE_FORMATS = new Set(['jpg', 'jpeg', 'webp', 'avif', 'jxl']);
 
 const TARGET_SIZE_STEPS = 7;
 

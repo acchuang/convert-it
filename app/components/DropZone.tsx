@@ -54,6 +54,7 @@ interface DropZoneProps {
   /** Opens the file picker. The <input> lives in ConverterApp, not here: this
    *  component unmounts once files are queued, and "Add files" still needs it. */
   onBrowse: () => void;
+  onBrowseFolder: () => void;
 }
 
 export function DropZone({
@@ -64,6 +65,7 @@ export function DropZone({
   onDragLeave,
   onDrop,
   onBrowse,
+  onBrowseFolder,
 }: DropZoneProps) {
   const { t } = useLocale();
   return (
@@ -148,6 +150,18 @@ export function DropZone({
           >
             {t('dropzone.subtitle')}
           </p>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation(); // not the file picker the zone itself opens
+              onBrowseFolder();
+            }}
+            onKeyDown={(e) => e.stopPropagation()}
+            className="text-xs underline text-[var(--text-muted)] hover:text-[var(--text-primary)] mb-4"
+            style={{ fontFamily: 'var(--font-mono)' }}
+          >
+            {t('dropzone.folder')}
+          </button>
 
           <div className="flex flex-wrap justify-center gap-2">
             {ALL_CATEGORIES.map((cat) => (

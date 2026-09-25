@@ -1,5 +1,5 @@
 import type { ConversionSettings } from './types';
-import { ASSET_BASE, finishImage } from './image-encode';
+import { ASSET_BASE, encodeImageData, finishImage } from './image-encode';
 import { htmlToPlainText } from './html-text';
 import { escapeHtml } from './markup';
 import { renderPdf, textBlocks } from './pdf-layout';
@@ -32,7 +32,7 @@ export function pdfRenderToImageData(render: {
   return new ImageData(new Uint8ClampedArray(data), width, height);
 }
 
-async function loadPdfDocument(file: File) {
+export async function loadPdfDocument(file: Blob) {
   const library = await ensurePdfium();
   const data = new Uint8Array(await file.arrayBuffer());
   return library.loadDocument(data);
@@ -85,12 +85,31 @@ type PdfDocument = Awaited<ReturnType<typeof loadPdfDocument>>;
 
 // Text of every page, reporting progress per page: a 500-page PDF otherwise
 // sits at 10% until it's suddenly done.
-function pageTexts(doc: PdfDocument, onProgress?: (pct: number) => void): string[] {
+// A page with no text layer is a scan (or a photo of a page): it is
+// rendered and read by OCR instead of coming out blank. OCR is loaded only
+// when a page needs it.
+async function pageTexts(
+  doc: PdfDocument,
+  settings?: ConversionSettings,
+  onProgress?: (pct: number) => void,
+): Promise<string[]> {
   const count = doc.getPageCount();
   const parts: string[] = [];
+  const report = (i: number, within = 1) => onProgress?.(Math.round(((i + within) / count) * 100));
   for (let i = 0; i < count; i++) {
-    parts.push(doc.getPage(i).getText());
-    onProgress?.(Math.round(((i + 1) / count) * 100));
+    const page = doc.getPage(i);
+    let text = page.getText();
+    if (!text.trim()) {
+      const [{ recognize }, { tidy }] = await Promise.all([
+        import('./ocr'),
+        import('./ocr-converters'),
+      ]);
+      const image = pdfRenderToImageData(await page.render({ scale: 2 }));
+      const bmp = await encodeImageData(image, 'bmp', 1);
+      text = tidy(await recognize(bmp, settings?.ocrLanguage ?? 'eng', (f) => report(i, f))).trim();
+    }
+    parts.push(text);
+    report(i);
   }
   return parts;
 }
@@ -100,12 +119,12 @@ export async function pdfToText(
   file: File,
   _sourceExt: string,
   _targetExt: string,
-  _settings?: ConversionSettings,
+  settings?: ConversionSettings,
   onProgress?: (pct: number) => void,
 ): Promise<Blob> {
   const doc = await loadPdfDocument(file);
   try {
-    const parts = pageTexts(doc, onProgress);
+    const parts = await pageTexts(doc, settings, onProgress);
     return new Blob([parts.join('\n\n')], { type: 'text/plain;charset=utf-8' });
   } finally {
     doc.destroy();
@@ -117,12 +136,14 @@ export async function pdfToHtml(
   file: File,
   _sourceExt: string,
   _targetExt: string,
-  _settings?: ConversionSettings,
+  settings?: ConversionSettings,
   onProgress?: (pct: number) => void,
 ): Promise<Blob> {
   const doc = await loadPdfDocument(file);
   try {
-    const parts = pageTexts(doc, onProgress).map((text) => `<pre>${escapeHtml(text)}</pre>`);
+    const parts = (await pageTexts(doc, settings, onProgress)).map(
+      (text) => `<pre>${escapeHtml(text)}</pre>`,
+    );
     const html =
       '<!DOCTYPE html>\n<html><head><meta charset="utf-8"><title>Converted PDF</title></head>\n' +
       `<body>\n${parts.join('\n')}\n</body></html>`;

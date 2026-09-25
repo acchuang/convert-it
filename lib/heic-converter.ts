@@ -1,12 +1,9 @@
 import type { ConversionSettings } from './types';
+import { withMetadata } from './image-converters';
 import { finishImage } from './image-encode';
 
-export default async function convertHeic(
-  file: File,
-  targetExt: string,
-  settings?: ConversionSettings,
-  onProgress?: (pct: number) => void,
-): Promise<Blob> {
+/** Decodes the first image of a HEIC file. */
+export async function decodeHeicToImageData(file: Blob): Promise<ImageData> {
   const libheif = await import('libheif-js');
   const data = new Uint8Array(await file.arrayBuffer());
   const decoder = new libheif.default.HeifDecoder();
@@ -20,13 +17,24 @@ export default async function convertHeic(
     throw new Error(`HEIC decode failed: ${err instanceof Error ? err.message : 'unknown error'}`);
   }
 
-  const width = image.get_width();
-  const height = image.get_height();
-
-  // libheif renders straight into an ImageData buffer; pass it directly to the
-  // encode helper, which flattens to white for opaque targets (jpg/bmp).
-  const imageData = new ImageData(width, height);
+  // libheif renders straight into an ImageData buffer; the encode helper
+  // flattens it to white for opaque targets (jpg/bmp).
+  const imageData = new ImageData(image.get_width(), image.get_height());
   await image.display(imageData, () => {});
+  return imageData;
+}
 
-  return finishImage(imageData, targetExt, settings, onProgress);
+export default async function convertHeic(
+  file: File,
+  targetExt: string,
+  settings?: ConversionSettings,
+  onProgress?: (pct: number) => void,
+): Promise<Blob> {
+  const blob = await finishImage(
+    await decodeHeicToImageData(file),
+    targetExt,
+    settings,
+    onProgress,
+  );
+  return withMetadata(file, 'heic', blob, targetExt, settings);
 }

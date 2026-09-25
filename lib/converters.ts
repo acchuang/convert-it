@@ -28,6 +28,7 @@ import {
   jsonToMd,
 } from './markdown-converters';
 import { convertImage } from './image-converters';
+import { METADATA_SOURCES, METADATA_TARGETS } from './image-metadata';
 import convertHeic from './heic-converter';
 import convertAvif from './avif-converter';
 import { xlsxToCsv, xlsxToJson, csvToXlsx, jsonToXlsx } from './xlsx-converters';
@@ -42,6 +43,17 @@ import {
   pdfToHtml,
 } from './pdf-converters';
 import { txtToEpub, mdToEpub, htmlToEpub } from './epub-converter';
+import { subtitlesTo } from './subtitles';
+// Word: mammoth (~600 KB) and the writer load on first use.
+const docx =
+  (name: keyof typeof import('./docx-converters')): ConverterFn =>
+  async (file) =>
+    (await import('./docx-converters'))[name](file);
+
+// pdf-lib is ~700 KB: loaded when a PDF tool first runs, not with the page.
+const editPdf: ConverterFn = async (...args) => (await import('./pdf-tools')).editPdf(...args);
+const imageToPdf: ConverterFn = async (...args) =>
+  (await import('./pdf-tools')).imageToPdf(...args);
 
 export type { FileCategory, FormatInfo, ConverterFn, ConversionSettings } from './types';
 export { DEFAULT_SETTINGS } from './types';
@@ -64,9 +76,21 @@ export type SettingKey =
   | 'jsonIndent' // jsonIndent
   | 'xmlRoot' // xmlRootElement
   | 'audioBitrate' // audioBitrate
-  | 'video' // videoQuality, videoPreset
+  | 'videoQuality' // videoQuality
+  | 'videoPreset' // videoPreset
+  | 'animation' // animFps, animWidth
+  | 'trim' // trimStart, trimEnd, cutStart, cutEnd
+  | 'burnSubtitles' // subtitleFile
+  | 'videoSize' // videoMaxWidth
+  | 'mute' // mute
+  | 'metadata' // metadata
+  | 'ocr' // ocrLanguage
+  | 'subtitleOffset' // subtitleOffset
   | 'pdfPages' // pdfAllPages
   | 'pdfScale' // pdfScale
+  | 'pdfEdit' // pdfPageRange, pdfRotate, pdfSplit
+  | 'pdfCompress' // pdfCompress
+  | 'pdfPageSize' // pdfPageSize
   | 'xlsxSheets'; // xlsxAllSheets
 
 export const SETTING_FIELDS: Record<SettingKey, (keyof ConversionSettings)[]> = {
@@ -82,9 +106,21 @@ export const SETTING_FIELDS: Record<SettingKey, (keyof ConversionSettings)[]> = 
   jsonIndent: ['jsonIndent'],
   xmlRoot: ['xmlRootElement'],
   audioBitrate: ['audioBitrate'],
-  video: ['videoQuality', 'videoPreset'],
+  videoQuality: ['videoQuality'],
+  videoPreset: ['videoPreset'],
+  animation: ['animFps', 'animWidth'],
+  trim: ['trimStart', 'trimEnd', 'cutStart', 'cutEnd'],
+  burnSubtitles: ['subtitleFile'],
+  videoSize: ['videoMaxWidth'],
+  mute: ['mute'],
+  metadata: ['metadata'],
+  ocr: ['ocrLanguage'],
+  subtitleOffset: ['subtitleOffset'],
   pdfPages: ['pdfAllPages'],
   pdfScale: ['pdfScale'],
+  pdfEdit: ['pdfPageRange', 'pdfRotate', 'pdfSplit'],
+  pdfCompress: ['pdfCompress'],
+  pdfPageSize: ['pdfPageSize'],
   xlsxSheets: ['xlsxAllSheets'],
 };
 
@@ -117,10 +153,14 @@ function add(
 
 // Lossy targets have a quality knob and can be compressed to a size budget;
 // lossless ones only take crop/resize.
-function imageSettings(to: string): SettingKey[] {
-  return to === 'jpg' || to === 'jpeg' || to === 'webp'
+// Metadata can be kept only from a source exifr reads to a target we can
+// write EXIF into; everywhere else it's always stripped.
+function imageSettings(to: string, from?: string): SettingKey[] {
+  const keys: SettingKey[] = ['jpg', 'jpeg', 'webp', 'avif', 'jxl'].includes(to)
     ? ['quality', 'imageTransform', 'targetSize']
     : ['imageTransform'];
+  if (from && METADATA_SOURCES.has(from) && METADATA_TARGETS.has(to)) keys.push('metadata');
+  return keys;
 }
 
 const heic: ConverterFn = (file, _s, to, settings, onProgress) =>
@@ -129,27 +169,53 @@ const avif: ConverterFn = (file, _s, to, settings, onProgress) =>
   convertAvif(file, to, settings, onProgress);
 
 const IMAGE_TARGETS: Record<string, string[]> = {
-  jpg: ['png', 'webp', 'bmp', 'ico', 'jpg'],
-  jpeg: ['png', 'webp', 'bmp', 'ico', 'jpg'],
-  png: ['jpg', 'webp', 'bmp', 'ico', 'png'],
-  webp: ['jpg', 'png', 'bmp', 'webp'],
-  gif: ['png', 'jpg', 'webp'],
-  bmp: ['jpg', 'png', 'webp'],
+  jpg: ['png', 'webp', 'avif', 'jxl', 'bmp', 'ico', 'jpg'],
+  jpeg: ['png', 'webp', 'avif', 'jxl', 'bmp', 'ico', 'jpg'],
+  png: ['jpg', 'webp', 'avif', 'jxl', 'bmp', 'ico', 'png'],
+  webp: ['jpg', 'png', 'avif', 'jxl', 'bmp', 'webp'],
+  gif: ['png', 'jpg', 'webp', 'avif'],
+  bmp: ['jpg', 'png', 'webp', 'avif', 'jxl'],
   ico: ['png', 'jpg', 'webp', 'bmp'],
-  svg: ['png', 'jpg', 'webp'],
-  heic: ['jpg', 'png', 'webp', 'bmp', 'ico'],
-  avif: ['jpg', 'png', 'webp', 'bmp', 'ico'],
+  svg: ['png', 'jpg', 'webp', 'avif'],
+  heic: ['jpg', 'png', 'webp', 'avif', 'jxl', 'bmp', 'ico'],
+  avif: ['jpg', 'png', 'webp', 'jxl', 'bmp', 'ico'],
+  jxl: ['png', 'jpg', 'webp', 'avif'],
 };
 for (const [from, targets] of Object.entries(IMAGE_TARGETS)) {
   const run = from === 'heic' ? heic : from === 'avif' ? avif : convertImage;
-  for (const to of targets) add(from, to, run, imageSettings(to));
+  for (const to of targets) add(from, to, run, imageSettings(to, from));
+}
+
+// Image → text by OCR (tesseract.js, loaded on first use).
+const imageToText: ConverterFn = async (...args) =>
+  (await import('./ocr-converters')).imageToText(...args);
+for (const from of ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'heic', 'avif', 'jxl']) {
+  add(from, 'txt', imageToText, ['ocr']);
 }
 
 // --- Video and audio (ffmpeg.wasm runs in its own worker, so 'main') ------------
 
 // Lossless audio has no bitrate (buildFfmpegArgs leaves -b:a out for them).
+// Every media conversion can be trimmed.
 const audioSettings = (to: string): SettingKey[] =>
-  AUDIO_CODECS[to]?.bitrate ? ['audioBitrate'] : [];
+  AUDIO_CODECS[to]?.bitrate ? ['audioBitrate', 'trim'] : ['trim'];
+
+// mpeg4 (AVI) and Sorenson (FLV) take a fixed quantiser: no speed preset.
+function videoSettings(to: string): SettingKey[] {
+  if (to === 'gif' || to === 'webp') return ['animation', 'trim', 'burnSubtitles'];
+  if (to === 'avi' || to === 'flv') {
+    return ['videoQuality', 'videoSize', 'audioBitrate', 'mute', 'trim', 'burnSubtitles'];
+  }
+  return [
+    'videoQuality',
+    'videoPreset',
+    'videoSize',
+    'audioBitrate',
+    'mute',
+    'trim',
+    'burnSubtitles',
+  ];
+}
 
 const VIDEO_TARGETS = [
   'mp4',
@@ -163,6 +229,7 @@ const VIDEO_TARGETS = [
   'aac',
   'ogg',
   'webp',
+  'gif',
 ];
 const VIDEO_SOURCES: Record<string, string[]> = {
   mp4: VIDEO_TARGETS.filter((t) => t !== 'mp4'),
@@ -177,9 +244,7 @@ const VIDEO_SOURCES: Record<string, string[]> = {
 for (const [from, targets] of Object.entries(VIDEO_SOURCES)) {
   for (const to of targets) {
     if (AUDIO_CODECS[to]) add(from, to, extractAudio, audioSettings(to), 'main');
-    else if (to === 'webp')
-      add(from, to, convertAudioVideo, [], 'main'); // animated WebP: fixed quality
-    else add(from, to, convertAudioVideo, ['video', 'audioBitrate'], 'main');
+    else add(from, to, convertAudioVideo, videoSettings(to), 'main');
   }
 }
 
@@ -242,13 +307,42 @@ add('txt', 'md', txtToMd);
 add('txt', 'pdf', txtToPdf);
 add('txt', 'epub', txtToEpub);
 
+// Word. Reading is mammoth (no DOM); anything that goes on through Turndown
+// (HTML → Markdown) needs the DOM, like the other HTML routes.
+add('md', 'docx', docx('mdToDocx'));
+add('txt', 'docx', docx('txtToDocx'));
+add('html', 'docx', docx('htmlToDocx'), [], 'main');
+add('docx', 'pdf', docx('docxToPdf'), [], 'main');
+add('docx', 'html', docx('docxToHtml'));
+add('docx', 'md', docx('docxToMd'), [], 'main');
+add('docx', 'txt', docx('docxToTxt'));
+add('docx', 'epub', docx('docxToEpub'), [], 'main');
+
+// --- Subtitles ------------------------------------------------------------------
+// SRT ⇄ VTT, and to themselves for re-timing; → txt is the transcript.
+
+for (const [from, targets] of [
+  ['srt', ['vtt', 'srt', 'txt']],
+  ['vtt', ['srt', 'vtt', 'txt']],
+] as const) {
+  for (const to of targets) add(from, to, subtitlesTo, to === 'txt' ? [] : ['subtitleOffset']);
+}
+
 // --- PDF input ---------------------------------------------------------------------
 
 for (const to of ['png', 'jpg', 'webp']) {
   add('pdf', to, pdfToImage, ['pdfPages', 'pdfScale', ...imageSettings(to)]);
 }
-add('pdf', 'txt', pdfToText);
-add('pdf', 'html', pdfToHtml);
+// Pages without a text layer (scans) are read by OCR, in the chosen language.
+add('pdf', 'txt', pdfToText, ['ocr']);
+add('pdf', 'html', pdfToHtml, ['ocr']);
+// PDF tools: pick/reorder/rotate/split pages and compress (pdf-lib, + PDFium
+// to render when compressing); every image format onto a page. Merging
+// several files is a batch action (mergePdf), not a route.
+add('pdf', 'pdf', editPdf, ['pdfEdit', 'pdfCompress']);
+for (const from of ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg', 'heic', 'avif', 'jxl']) {
+  add(from, 'pdf', imageToPdf, ['pdfPageSize']);
+}
 
 // --- Queries -------------------------------------------------------------------------
 

@@ -11,7 +11,7 @@ export function AppHeader() {
   const { t } = useLocale();
   return (
     <header
-      className="border-b border-app px-6 py-4 flex items-center justify-between sticky top-0 z-40 backdrop-blur-sm"
+      className="border-b border-app px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-40 backdrop-blur-sm"
       style={{ backgroundColor: 'var(--header-bg)' }}
       role="banner"
     >
@@ -20,13 +20,13 @@ export function AppHeader() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ type: 'spring', stiffness: 100, damping: 20 }}
         style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
-        className="text-3xl tracking-wide"
+        className="text-2xl sm:text-3xl tracking-wide whitespace-nowrap"
       >
         <span className="text-[var(--accent)]">Convert</span>
         <span className="text-[var(--text-primary)]">-it</span>
       </motion.div>
 
-      <div className="flex items-center gap-3 sm:gap-4">
+      <div className="flex items-center gap-1.5 sm:gap-4">
         <LanguageSelector />
 
         <button

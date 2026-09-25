@@ -52,6 +52,42 @@ export function crfToQualityTier(crf: number): 'veryHigh' | 'high' | 'medium' | 
   return 'veryLow';
 }
 
+/** The trim settings as mediabunny's range; same rules as ffmpeg's trimArgs. */
+export function trimRange(
+  settings?: Partial<ConversionSettings>,
+): { start?: number; end?: number } | undefined {
+  const start = Math.max(0, settings?.trimStart ?? 0);
+  const end = settings?.trimEnd ?? 0;
+  if (!start && !(end > start)) return undefined;
+  return { ...(start ? { start } : {}), ...(end > start ? { end } : {}) };
+}
+
+/**
+ * The output size for a max width, as ffmpeg's scale='min(W,iw)':-2 gives it:
+ * only ever smaller, aspect kept, both sides even (H.264 and VP9 need that).
+ */
+export function fitWidth(
+  width: number,
+  height: number,
+  maxWidth: number,
+): { width: number; height: number } | null {
+  if (!(maxWidth > 0) || width <= maxWidth) return null;
+  const even = (n: number) => Math.max(2, Math.round(n / 2) * 2);
+  return { width: even(maxWidth), height: even((height * maxWidth) / width) };
+}
+
+async function downscale(
+  input: {
+    getPrimaryVideoTrack(): Promise<{ displayWidth: number; displayHeight: number } | null>;
+  },
+  maxWidth: number,
+): Promise<{ width?: number; height?: number; fit?: 'fill' }> {
+  if (!(maxWidth > 0)) return {};
+  const track = await input.getPrimaryVideoTrack();
+  const size = track && fitWidth(track.displayWidth, track.displayHeight, maxWidth);
+  return size ? { ...size, fit: 'fill' } : {};
+}
+
 let active: Conversion | null = null;
 // Bumped by every cancel, so one that lands while a job is still probing its
 // input (before execute starts) is not lost.
@@ -76,6 +112,8 @@ export async function convertWithWebCodecs(
   onProgress?: (pct: number) => void,
 ): Promise<Blob | null> {
   if (!webCodecsCandidate(sourceExt, targetExt)) return null;
+  // mediabunny trims but can't cut a section out or draw subtitles: ffmpeg does those.
+  if ((settings?.cutEnd ?? 0) > (settings?.cutStart ?? 0) || settings?.subtitleFile) return null;
   const started = generation;
   const target = TARGETS[targetExt.toLowerCase()];
   const mb = await import('mediabunny');
@@ -103,7 +141,8 @@ export async function convertWithWebCodecs(
       target: new mb.BufferTarget(),
     });
     const bitrate = (settings?.audioBitrate ?? 192) * 1000;
-    const audioTrack = await input.getPrimaryAudioTrack();
+    // Muting drops the audio outright: nothing to encode or copy.
+    const audioTrack = settings?.mute ? null : await input.getPrimaryAudioTrack();
 
     // Re-encode audio at the chosen bitrate when the browser can; otherwise
     // copy it if it is already in the target codec (AAC into MP4 on Linux
@@ -133,8 +172,10 @@ export async function convertWithWebCodecs(
       input,
       output,
       tracks: 'primary',
+      trim: trimRange(settings),
       video: target.video
         ? {
+            ...(await downscale(input, settings?.videoMaxWidth ?? 0)),
             codec: target.video,
             quality: tiers[crfToQualityTier(settings?.videoQuality ?? 23)],
             // Always re-encode, so the quality setting means what it says.

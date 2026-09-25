@@ -15,14 +15,22 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 const formats = [
-  { catKey: 'image', color: '#FF4D00', exts: 'JPG, PNG, WebP, GIF, BMP, ICO, SVG, HEIC, AVIF' },
+  {
+    catKey: 'image',
+    color: '#FF4D00',
+    exts: 'JPG, PNG, WebP, AVIF, JPEG XL, GIF, BMP, ICO, SVG, HEIC',
+  },
   {
     catKey: 'video',
     color: '#FF00C8',
-    exts: 'MP4, WebM, AVI, MOV, MKV, FLV, M4V, 3GP, Animated WebP',
+    exts: 'MP4, WebM, AVI, MOV, MKV, FLV, M4V, 3GP, GIF, Animated WebP',
   },
   { catKey: 'audio', color: '#00E5A0', exts: 'MP3, WAV, AAC, OGG, FLAC, M4A, WMA, OPUS' },
-  { catKey: 'document', color: '#00C2FF', exts: 'TXT, Markdown, HTML, PDF, ePub' },
+  {
+    catKey: 'document',
+    color: '#00C2FF',
+    exts: 'TXT, Markdown, HTML, PDF, Word (DOCX), ePub, SRT, WebVTT',
+  },
   { catKey: 'data', color: '#AAFF44', exts: 'CSV, JSON, XML, YAML, TSV, Excel' },
 ];
 
@@ -36,6 +44,10 @@ const techStack = [
   { labelKey: 'about.techSvg', val: 'resvg WASM' },
   { labelKey: 'about.techPng', val: 'oxipng' },
   { labelKey: 'about.techPdf', val: 'PDFium WASM' },
+  { labelKey: 'about.techPdfTools', val: 'pdf-lib' },
+  { labelKey: 'about.techWord', val: 'mammoth' },
+  { labelKey: 'about.techOcr', val: 'tesseract.js' },
+  { labelKey: 'about.techMetadata', val: 'exifr' },
   { labelKey: 'about.techHeif', val: 'libheif-js' },
   { labelKey: 'about.techSheets', val: 'jszip + fast-xml-parser' },
   { labelKey: 'about.techHosting', val: 'Cloudflare Pages + R2' },
@@ -54,13 +66,13 @@ export default function AboutPage() {
     >
       {/* Header */}
       <header
-        className="border-b border-app px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-sm"
+        className="border-b border-app px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-sm"
         style={{ backgroundColor: 'var(--header-bg)' }}
         role="banner"
       >
         <div
           style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
-          className="text-3xl tracking-wide"
+          className="text-2xl sm:text-3xl tracking-wide whitespace-nowrap"
         >
           <Link href="/" className="hover:opacity-80 transition-opacity">
             <span className="text-[var(--accent)]">Convert</span>
@@ -264,7 +276,7 @@ export default function AboutPage() {
             {t('about.improvementsHeading')}
           </h2>
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6 space-y-3">
-            {Array.from({ length: 40 }, (_, i) => i + 1).map((n) => (
+            {Array.from({ length: 49 }, (_, i) => i + 1).map((n) => (
               <div key={n} className="flex items-start gap-3">
                 <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] flex-shrink-0 mt-2" />
                 <p className="text-sm text-[var(--text-secondary)] leading-relaxed">

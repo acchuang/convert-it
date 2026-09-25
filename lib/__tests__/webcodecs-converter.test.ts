@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { crfToQualityTier } from '@/lib/webcodecs-converter';
+import { crfToQualityTier, fitWidth, trimRange } from '@/lib/webcodecs-converter';
 
 describe('crfToQualityTier', () => {
   it('maps the CRF slider onto quality tiers, default CRF 23 → high', () => {
@@ -15,6 +15,25 @@ describe('crfToQualityTier', () => {
       'veryLow',
       'veryLow',
     ]);
+  });
+});
+
+describe('fitWidth', () => {
+  it('matches ffmpeg scale=min(W,iw):-2 — down only, aspect kept, even sides', () => {
+    expect(fitWidth(1920, 1080, 1280)).toEqual({ width: 1280, height: 720 });
+    expect(fitWidth(1920, 1080, 854)).toEqual({ width: 854, height: 480 });
+    expect(fitWidth(1000, 750, 333)).toEqual({ width: 334, height: 250 });
+    expect(fitWidth(640, 360, 1280)).toBeNull();
+    expect(fitWidth(1920, 1080, 0)).toBeNull();
+  });
+});
+
+describe('trimRange', () => {
+  it('matches the ffmpeg trim rules', () => {
+    expect(trimRange({ trimStart: 0, trimEnd: 0 })).toBeUndefined();
+    expect(trimRange({ trimStart: 2, trimEnd: 7 })).toEqual({ start: 2, end: 7 });
+    expect(trimRange({ trimStart: 5, trimEnd: 5 })).toEqual({ start: 5 });
+    expect(trimRange({ trimStart: 0, trimEnd: 4 })).toEqual({ end: 4 });
   });
 });
 
@@ -130,6 +149,47 @@ describe('convertWithWebCodecs', () => {
     });
     expect(progress.at(-1)).toBe(100);
     expect(disposed).toBe(1);
+  });
+
+  it('mute discards the audio without probing it', async () => {
+    const { convertWithWebCodecs } = await load();
+    world.audioTrack = { codec: 'aac', numberOfChannels: 2, sampleRate: 44100 };
+    world.canEncodeAudio = false; // would otherwise send the job to ffmpeg
+    const blob = await convertWithWebCodecs(file(), 'mkv', 'webm', {
+      ...(settings as object),
+      mute: true,
+    } as never);
+    expect(blob).not.toBeNull();
+    expect(initOptions?.audio).toEqual({ discard: true });
+  });
+
+  it('leaves cuts and burnt-in subtitles to ffmpeg', async () => {
+    const { convertWithWebCodecs } = await load();
+    const base = settings as object;
+    expect(
+      await convertWithWebCodecs(file(), 'mkv', 'webm', {
+        ...base,
+        cutStart: 1,
+        cutEnd: 2,
+      } as never),
+    ).toBeNull();
+    expect(
+      await convertWithWebCodecs(file(), 'mkv', 'webm', {
+        ...base,
+        subtitleFile: new File([''], 's.srt'),
+      } as never),
+    ).toBeNull();
+    expect(initOptions).toBeUndefined();
+  });
+
+  it('passes the trim through', async () => {
+    const { convertWithWebCodecs } = await load();
+    await convertWithWebCodecs(file(), 'mkv', 'webm', {
+      ...(settings as object),
+      trimStart: 1,
+      trimEnd: 3,
+    } as never);
+    expect(initOptions?.trim).toEqual({ start: 1, end: 3 });
   });
 
   it('declines pairs it does not handle, and browsers without WebCodecs', async () => {

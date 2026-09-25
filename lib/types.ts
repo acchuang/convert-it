@@ -16,9 +16,24 @@ export interface ConversionSettings {
   audioBitrate: number; // 64 | 128 | 192 | 256 | 320 (kbps)
   videoQuality: number; // 0-51, lower is better quality (CRF)
   videoPreset: string; // ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow
+  videoMaxWidth: number; // video→video: downscale to at most this width in px; 0 = keep
+  mute: boolean; // video→video: drop the audio track
+  trimStart: number; // seconds into the source; 0 = from the start
+  trimEnd: number; // seconds into the source; 0 (or ≤ trimStart) = to the end
+  cutStart: number; // seconds into the source: a section to remove from the middle…
+  cutEnd: number; // …up to here; 0 (or ≤ cutStart) = no cut
+  subtitleFile: File | null; // video output: an .srt/.vtt to burn into the picture
+  animFps: number; // video → GIF / animated WebP frame rate
+  animWidth: number; // video → GIF / animated WebP max width in px; 0 = source width
   // PDF input settings
   pdfAllPages: boolean; // pdf→image: render all pages (zip) vs page 1 (single image)
   pdfScale: number; // pdf→image render scale (1 | 2 | 3)
+  // PDF tools
+  pdfPageRange: string; // pdf→pdf pages in output order, e.g. "1-3, 5, 8-"; '' = all
+  pdfRotate: number; // pdf→pdf clockwise rotation added to every page: 0 | 90 | 180 | 270
+  pdfSplit: boolean; // pdf→pdf: one PDF per page (zip) instead of one PDF
+  pdfCompress: string; // pdf→pdf: 'off' | 'medium' | 'strong' (re-render pages as JPEG)
+  pdfPageSize: string; // image→pdf and merge: 'a4' | 'letter' | 'fit' (page = image)
   // Spreadsheet input
   xlsxAllSheets: boolean; // xlsx→csv: zip of one CSV per sheet; xlsx→json: object keyed by sheet name
   // Image toolbox — applied to any image output before encoding
@@ -27,6 +42,9 @@ export interface ConversionSettings {
   imageResizeWidth: number; // 0 = derive from height, or from the percent
   imageResizeHeight: number; // 0 = derive from width, or from the percent
   imageTargetSizeKb: number; // 0 = off; jpg/webp only — quality is searched to fit
+  metadata: string; // image output: 'strip' (default) | 'keep' | 'keep-no-gps'
+  ocrLanguage: string; // image → text, and scanned pages in PDF → text: a tesseract code ('eng')
+  subtitleOffset: number; // seconds added to every subtitle cue (negative = earlier)
 }
 
 export const DEFAULT_SETTINGS: ConversionSettings = {
@@ -37,14 +55,31 @@ export const DEFAULT_SETTINGS: ConversionSettings = {
   audioBitrate: 192,
   videoQuality: 23,
   videoPreset: 'medium',
+  videoMaxWidth: 0,
+  mute: false,
+  trimStart: 0,
+  trimEnd: 0,
+  cutStart: 0,
+  cutEnd: 0,
+  subtitleFile: null,
+  animFps: 12,
+  animWidth: 480,
   pdfAllPages: false,
   pdfScale: 1,
+  pdfPageRange: '',
+  pdfRotate: 0,
+  pdfSplit: false,
+  pdfCompress: 'off',
+  pdfPageSize: 'a4',
   xlsxAllSheets: false,
   imageCropAspect: 'none',
   imageResizePercent: 100,
   imageResizeWidth: 0,
   imageResizeHeight: 0,
   imageTargetSizeKb: 0,
+  metadata: 'strip',
+  ocrLanguage: 'eng',
+  subtitleOffset: 0,
 };
 
 export interface HistoryEntry {

@@ -1,5 +1,6 @@
 import type { ConversionSettings } from './types';
-import { ASSET_BASE, decodeToImageData, finishImage } from './image-encode';
+import { METADATA_SOURCES, METADATA_TARGETS, applyMetadata } from './image-metadata';
+import { ASSET_BASE, decodeJxl, decodeToImageData, finishImage } from './image-encode';
 
 // resvg's JS glue is small but the wasm is ~2.4 MB, so both load lazily: the
 // module is dynamically imported only when an SVG is actually converted (non-SVG
@@ -46,7 +47,7 @@ async function resvgFontOptions() {
 // Renders SVG source via resvg (Rust→wasm) to an ImageData, independent of the
 // browser's SVG engine. Replaces the old <img>+canvas rasterization, which had
 // inconsistent output, no foreignObject support, and no real font loading.
-async function renderSvgToImageData(svgText: string): Promise<ImageData> {
+export async function renderSvgToImageData(svgText: string): Promise<ImageData> {
   const { Resvg } = await loadResvg();
   await ensureResvg();
   const font = await resvgFontOptions();
@@ -74,10 +75,37 @@ export async function convertImage(
   settings?: ConversionSettings,
   onProgress?: (pct: number) => void,
 ): Promise<Blob> {
+  // No browser decodes JPEG XL natively except Safari, so it goes through jSquash.
   const imageData =
     sourceExt === 'svg'
       ? await renderSvgToImageData(await file.text())
-      : await decodeToImageData(file);
+      : sourceExt === 'jxl'
+        ? await decodeJxl(file)
+        : await decodeToImageData(file);
 
-  return finishImage(imageData, targetExt, settings, onProgress);
+  const blob = await finishImage(imageData, targetExt, settings, onProgress);
+  return withMetadata(file, sourceExt, blob, targetExt, settings);
+}
+
+/** Writes the source's metadata back when the route offers it and the setting asks. */
+export async function withMetadata(
+  file: File,
+  sourceExt: string,
+  blob: Blob,
+  targetExt: string,
+  settings?: ConversionSettings,
+): Promise<Blob> {
+  if (!METADATA_SOURCES.has(sourceExt) || !METADATA_TARGETS.has(targetExt)) return blob;
+  return applyMetadata(file, blob, targetExt, settings);
+}
+
+/** Pixels of any image format the app reads (for OCR and image → PDF). */
+export async function decodeAnyImage(file: Blob, ext: string): Promise<ImageData> {
+  if (ext === 'jxl') return decodeJxl(file);
+  if (ext === 'svg') return renderSvgToImageData(await file.text());
+  if (ext === 'heic') {
+    const { decodeHeicToImageData } = await import('./heic-converter');
+    return decodeHeicToImageData(file);
+  }
+  return decodeToImageData(file);
 }

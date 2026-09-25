@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { multiThreadEligible } from '@/lib/audio-video-converters';
+import { DEFAULT_SETTINGS } from '@/lib/types';
 
 describe('multiThreadEligible', () => {
   it('needs cross-origin isolation', () => {
@@ -23,11 +24,13 @@ describe('core selection and fallback', () => {
   const MT = 'https://cdn.example/core-mt';
   let behaviour: { mtLoad: 'ok' | 'fail'; mtExec: 'ok' | 'crash' | 'exit1' };
   let loads: string[];
+  let writes: Map<string, Uint8Array>;
 
   beforeEach(() => {
     vi.resetModules();
     behaviour = { mtLoad: 'ok', mtExec: 'ok' };
     loads = [];
+    writes = new Map();
     vi.stubEnv('NEXT_PUBLIC_FFMPEG_BASE_URL', ST);
     vi.stubEnv('NEXT_PUBLIC_FFMPEG_MT_BASE_URL', MT);
     vi.stubGlobal('crossOriginIsolated', true);
@@ -52,7 +55,12 @@ describe('core selection and fallback', () => {
             throw new Error('RuntimeError: memory access out of bounds');
           return this.mode === 'mt' && behaviour.mtExec === 'exit1' ? 1 : 0;
         }
-        async writeFile() {}
+        async writeFile(path: string, data: Uint8Array) {
+          writes.set(path, data);
+        }
+        async createDir(path: string) {
+          writes.set(`${path}/`, new Uint8Array());
+        }
         async readFile() {
           return new TextEncoder().encode(this.mode);
         }
@@ -149,6 +157,27 @@ describe('core selection and fallback', () => {
     } finally {
       vi.doUnmock('@/lib/webcodecs-converter');
     }
+  });
+
+  it('burn-in writes the subtitles as ASS, shifted by the trim, and only the fonts they need', async () => {
+    vi.stubEnv('NEXT_PUBLIC_FFMPEG_MT_BASE_URL', '');
+    const { mod } = await load();
+    const subs = new File(['1\n00:00:05,000 --> 00:00:07,000\n你好 world\n'], 'movie.srt');
+    const blob = await mod.convertAudioVideo(new File(['x'], 'a.mp4'), 'mp4', 'mkv', {
+      ...DEFAULT_SETTINGS,
+      subtitleFile: subs,
+      trimStart: 2,
+    });
+    expect(blob.size).toBeGreaterThan(0);
+    const ass = new TextDecoder().decode(writes.get('burn.ass'));
+    expect(ass).toContain('Dialogue: 0,0:00:03.00,0:00:05.00,Default');
+    expect(ass).toContain('{\\fnNoto Sans SC}你好');
+    expect([...writes.keys()].filter((k) => k.startsWith('/fonts/')).sort()).toEqual([
+      '/fonts/',
+      '/fonts/noto-sans-cjk-regular.ttf',
+      '/fonts/noto-sans-regular.ttf',
+    ]);
+    expect(fetch).toHaveBeenCalledWith('/fonts/pdf/noto-sans-cjk-regular.ttf');
   });
 
   it('does not rerun a clean ffmpeg failure: that is the input, not the core', async () => {

@@ -15,6 +15,7 @@ export const FORMATS: FormatInfo[] = [
   { ext: 'svg', label: 'SVG', mimeType: 'image/svg+xml', category: 'image' },
   { ext: 'heic', label: 'HEIC', mimeType: 'image/heic', category: 'image' },
   { ext: 'avif', label: 'AVIF', mimeType: 'image/avif', category: 'image' },
+  { ext: 'jxl', label: 'JPEG XL', mimeType: 'image/jxl', category: 'image' },
   // Video
   { ext: 'mp4', label: 'MP4', mimeType: 'video/mp4', category: 'video' },
   { ext: 'webm', label: 'WebM', mimeType: 'video/webm', category: 'video' },
@@ -39,6 +40,14 @@ export const FORMATS: FormatInfo[] = [
   { ext: 'html', label: 'HTML', mimeType: 'text/html', category: 'document' },
   { ext: 'pdf', label: 'PDF', mimeType: 'application/pdf', category: 'document' },
   { ext: 'epub', label: 'ePub', mimeType: 'application/epub+zip', category: 'document' },
+  { ext: 'srt', label: 'SRT', mimeType: 'application/x-subrip', category: 'document' },
+  { ext: 'vtt', label: 'WebVTT', mimeType: 'text/vtt', category: 'document' },
+  {
+    ext: 'docx',
+    label: 'Word',
+    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    category: 'document',
+  },
   // Data
   { ext: 'csv', label: 'CSV', mimeType: 'text/csv', category: 'data' },
   { ext: 'json', label: 'JSON', mimeType: 'application/json', category: 'data' },

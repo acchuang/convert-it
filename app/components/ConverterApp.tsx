@@ -3,7 +3,7 @@
 import { useState, useRef, useMemo, useEffect, useCallback, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getFileExtension, getTargetFormats, FORMATS, getFormatInfo } from '@/lib/converters';
-import { JobCard, type FileJob } from './JobCard';
+import { JobCard, describeError, type FileJob } from './JobCard';
 import { HistoryPanel } from './HistoryPanel';
 import { getHistory, type HistoryEntry } from '@/lib/history';
 import { useLocale } from './LocaleProvider';
@@ -12,6 +12,8 @@ import ErrorBoundary from './ErrorBoundary';
 import Footer from './Footer';
 import { AppHeader } from './AppHeader';
 import { DragOverlay, DropZone } from './DropZone';
+import { filesFromDrop, filesFromInput } from '@/lib/drop-files';
+import { DEFAULT_NAME_TEMPLATE } from '@/lib/filenames';
 
 const LARGE_FILE_THRESHOLD_MB = 100;
 const WARN_FILE_THRESHOLD_MB = 250;
@@ -43,6 +45,13 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
     convertAll,
     clearAll,
     doneCount,
+    moveJob,
+    merge,
+    mergeableCount,
+    mergeToPdf,
+    nameTemplate,
+    setNameTemplate,
+    nameFor,
   } = useJobManager({ preferredTarget, onHistoryUpdate: () => setHistory(getHistory()) });
   const [dragging, setDragging] = useState(false);
   const [dragCategory, setDragCategory] = useState<string | null>(null);
@@ -52,6 +61,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
   // server HTML (React #418) for anyone who has converted something before.
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+  const folderRef = useRef<HTMLInputElement | null>(null);
   const { t } = useLocale();
 
   useEffect(() => setHistory(getHistory()), []);
@@ -131,8 +141,10 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
       dragCounter = 0;
       setDragging(false);
       setDragCategory(null);
-      if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-        addFiles(e.dataTransfer.files);
+      // Every drop lands here, the drop zone's included: folders are expanded
+      // (entries must be read inside this handler, before any await).
+      if (e.dataTransfer) {
+        filesFromDrop(e.dataTransfer).then((files) => files.length && addFiles(files));
       }
     };
 
@@ -182,7 +194,8 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
     e.preventDefault();
     setDragging(false);
     setDragCategory(null);
-    if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+    // Not addFiles: the drop bubbles on to the window listener, which adds the
+    // files. Adding them here too put every dropped file in the list twice.
   };
 
   return (
@@ -231,7 +244,21 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
             type="file"
             multiple
             onChange={(e) => {
-              if (e.target.files) addFiles(e.target.files);
+              if (e.target.files) addFiles(filesFromInput(e.target.files));
+              e.target.value = '';
+            }}
+            className="hidden"
+            aria-hidden="true"
+          />
+          <input
+            ref={(el) => {
+              folderRef.current = el;
+              // Not a React prop: set as an attribute so every browser sees it.
+              el?.setAttribute('webkitdirectory', '');
+            }}
+            type="file"
+            onChange={(e) => {
+              if (e.target.files) addFiles(filesFromInput(e.target.files));
               e.target.value = '';
             }}
             className="hidden"
@@ -248,6 +275,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 onBrowse={() => inputRef.current?.click()}
+                onBrowseFolder={() => folderRef.current?.click()}
               />
             )}
           </AnimatePresence>
@@ -358,6 +386,14 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                       </svg>
                       {t('toolbar.addFiles')}
                     </button>
+                    <button
+                      onClick={() => folderRef.current?.click()}
+                      className="px-4 py-2 border border-[var(--border-secondary)] rounded-lg text-xs text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] transition-all font-medium"
+                      style={{ fontFamily: 'var(--font-mono)' }}
+                      aria-label={t('toolbar.addFolder')}
+                    >
+                      {t('toolbar.addFolder')}
+                    </button>
 
                     <span
                       className="text-xs text-[var(--text-muted)]"
@@ -369,6 +405,20 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                   </div>
 
                   <div className="flex items-center gap-2">
+                    {mergeableCount >= 2 && (
+                      <button
+                        onClick={mergeToPdf}
+                        disabled={merge.status === 'running'}
+                        className="px-4 py-2 border border-[var(--border-secondary)] rounded-lg text-xs text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] transition-all disabled:opacity-60"
+                        style={{ fontFamily: 'var(--font-mono)' }}
+                        aria-label={t('toolbar.mergePdf')}
+                      >
+                        {merge.status === 'running'
+                          ? `${t('toolbar.merging')} ${merge.progress}%`
+                          : `${t('toolbar.mergePdf')} (${mergeableCount})`}
+                      </button>
+                    )}
+
                     {doneCount > 0 && (
                       <button
                         onClick={downloadAllAsZip}
@@ -403,6 +453,22 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                     </button>
                   </div>
                 </div>
+
+                {merge.status === 'error' && (
+                  <div
+                    role="alert"
+                    className="mb-4 px-4 py-3 rounded-xl border text-xs"
+                    style={{
+                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                      borderColor: 'rgba(239, 68, 68, 0.3)',
+                      color: 'var(--error)',
+                      fontFamily: 'var(--font-mono)',
+                    }}
+                  >
+                    <p className="font-semibold">{describeError(merge.error, 'pdf', t).title}</p>
+                    <p className="mt-0.5 opacity-80">{merge.error.detail}</p>
+                  </div>
+                )}
 
                 {/* Batch format selector */}
                 {jobs.length > 1 && (
@@ -455,10 +521,43 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                   </div>
                 )}
 
+                {/* Output names */}
+                <div
+                  className="flex items-center gap-2 mb-4 flex-wrap"
+                  style={{ fontFamily: 'var(--font-mono)' }}
+                >
+                  <label
+                    htmlFor="name-template"
+                    className="text-xs text-[var(--text-muted)] uppercase tracking-wider"
+                  >
+                    {t('toolbar.nameAs')}
+                  </label>
+                  <input
+                    id="name-template"
+                    type="text"
+                    value={nameTemplate}
+                    onChange={(e) => setNameTemplate(e.target.value)}
+                    placeholder={DEFAULT_NAME_TEMPLATE}
+                    title={t('toolbar.nameHint')}
+                    className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] text-[var(--text-primary)] text-xs rounded-lg px-3 py-1.5 w-56 focus:outline-none focus:border-[var(--accent)]"
+                  />
+                  {jobs[0]?.targetExt && (
+                    <span
+                      className="text-xs text-[var(--text-muted)] truncate"
+                      data-testid="name-preview"
+                    >
+                      → {nameFor(jobs[0])}
+                    </span>
+                  )}
+                  <span className="text-xs text-[var(--text-muted)] w-full sm:w-auto">
+                    {t('toolbar.nameHint')}
+                  </span>
+                </div>
+
                 {/* Job cards */}
                 <div className="space-y-3" role="list" aria-label={t('toolbar.files')}>
                   <AnimatePresence>
-                    {jobs.map((job) => (
+                    {jobs.map((job, index) => (
                       <JobCard
                         key={job.id}
                         job={job}
@@ -474,6 +573,8 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                         onDownload={() => downloadJob(job)}
                         onRemove={() => removeJob(job.id)}
                         onSettingsChange={(patch) => updateJobSettings(job.id, patch)}
+                        onMoveUp={index > 0 ? () => moveJob(job.id, -1) : undefined}
+                        onMoveDown={index < jobs.length - 1 ? () => moveJob(job.id, 1) : undefined}
                         t={t}
                       />
                     ))}

@@ -38,6 +38,34 @@ _Reviewed at `7a92641` (2026-09-24). Scope: every file in `lib/`, the app shell,
   - **New bugs found and fixed:**
     - **"Add files":** after the first file, "Add files" and the compact drop target did nothing. The only file input unmounted with the drop zone.
     - **oxipng under isolation:** `@jsquash/oxipng` switched to its parallel build (whose wasm isn't shipped), which would have broken every PNG output. It is now pinned to the single-threaded glue.
+- **Phase 4: done (items 1–9; item 10 left for a policy decision).**
+  - **1 Video → GIF / animated WebP:** one-pass palettegen/paletteuse GIF; frame rate and width controls for both; trim.
+  - **2 AVIF and JPEG XL:** output for every raster source, plus JPEG XL input, on jSquash's single-threaded glue (the multi-threaded builds need pthread worker scripts we don't ship). Verified by decoding the real codecs' output under Node.
+  - **3 PDF tools (pdf-lib):**
+    - pick, reorder, rotate or split pages
+    - opt-in compression by re-rendering pages as JPEG (kept only if smaller)
+    - images → PDF
+    - a toolbar "merge into PDF" with move up/down ordering
+  - **4 Media editing:**
+    - trim on every audio/video route (ffmpeg and WebCodecs), with a scrubber
+    - resize and mute for video
+    - Removing a section from the middle of a clip (select/aselect, keeping variable frame rates).
+  - **5 Metadata:**
+    - The panel shows what a photo carries. Remove all (the default), keep without location, or keep.
+    - Kept EXIF is written fresh: no maker notes or thumbnails, Orientation 1.
+  - **6 DOCX:**
+    - Input via mammoth; output written by hand from the PDF block model.
+    - Word's schema element order is enforced by a test.
+    - Validated with mammoth and python-docx, including a third-party fixture.
+  - **7 OCR:** tesseract.js, fully self-hosted: worker, cores and 8 languages under `/ocr`, since the CDN defaults would break the CSP and the privacy promise. Scanned PDF pages are OCR'd automatically.
+  - **8 Subtitles:** SRT ⇄ VTT, re-timing, and transcripts, checked against Chromium's own WebVTT parser. Burn-in attaches an .srt/.vtt to a video job; it is rendered by libass from generated ASS that names a font per script (no fontconfig means no fallback), and verified frame by frame with Latin, CJK, Hangul and Greek.
+  - **9 Folders and names:** folder drop and pick with the structure kept in the zip; output name templates with measured `{w}x{h}`.
+  - **10 Analytics:** not done. It needs a decision against the "no tracking" promise.
+  - **Bugs found and fixed along the way:**
+    - **Double drop:** dropping onto the drop zone added every file twice.
+    - **HTML → Markdown tables:** every table cell became its own paragraph.
+    - **GPS in PDFs:** image → PDF carried a photo's GPS location into the PDF.
+    - **Phone header:** it overflowed the viewport, and the logo wrapped.
 
 ## 1. Executive summary
 

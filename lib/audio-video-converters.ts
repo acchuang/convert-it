@@ -2,6 +2,8 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
 import type { ConversionSettings } from './types';
 import { mimeFor } from './formats';
+import { ConversionError } from './errors';
+import { isCjk, isHangul } from './scripts';
 import { cancelWebCodecs, convertWithWebCodecs } from './webcodecs-converter';
 
 // Self-hosted on R2 rather than unpkg: a third-party CDN is both a single point of
@@ -246,27 +248,51 @@ function crfToQscale(crf: number): string {
   return String(Math.min(31, Math.max(1, Math.round(crf / 4.5))));
 }
 
+// The settings a command line can use, read only when a codec asks for one
+// (getters): registry.test records which fields each route reads, and a
+// setting the panel shows must be one the conversion actually uses.
+interface Knobs {
+  readonly crf: number;
+  readonly preset: string;
+  readonly kbps: number;
+}
+
+function knobsFrom(settings?: Partial<ConversionSettings>): Knobs {
+  return {
+    // `??`, not `||`: CRF 0 is lossless, not "unset".
+    get crf() {
+      return settings?.videoQuality ?? 23;
+    },
+    get preset() {
+      return settings?.videoPreset || 'medium';
+    },
+    get kbps() {
+      return settings?.audioBitrate ?? 192;
+    },
+  };
+}
+
 interface VideoContainer {
-  video: (crf: number, preset: string) => string[];
+  video: (k: Knobs) => string[];
   // Each muxer only accepts some audio codecs; WebM, for one, rejects AAC outright.
-  audio: (kbps: number) => string[];
+  audio: (k: Knobs) => string[];
   extra?: string[];
 }
 
-const x264 = (crf: number, preset: string) => [
+const x264 = (k: Knobs) => [
   '-c:v',
   'libx264',
   '-preset',
-  preset,
+  k.preset,
   '-crf',
-  String(crf),
+  String(k.crf),
   // 10-bit or 4:4:4 sources otherwise come out as High 4:4:4 H.264, which
   // browsers and QuickTime refuse to play.
   '-pix_fmt',
   'yuv420p',
 ];
-const aac = (kbps: number) => ['-c:a', 'aac', '-b:a', `${kbps}k`];
-const mp3 = (kbps: number) => ['-c:a', 'libmp3lame', '-b:a', `${kbps}k`, '-ar', '44100'];
+const aac = (k: Knobs) => ['-c:a', 'aac', '-b:a', `${k.kbps}k`];
+const mp3 = (k: Knobs) => ['-c:a', 'libmp3lame', '-b:a', `${k.kbps}k`, '-ar', '44100'];
 
 const VIDEO_CONTAINERS: Record<string, VideoContainer> = {
   mp4: { video: x264, audio: aac, extra: ['-movflags', '+faststart'] },
@@ -279,25 +305,96 @@ const VIDEO_CONTAINERS: Record<string, VideoContainer> = {
   // Vorbis encode cleanly, both are valid WebM, and every browser plays them.
   // In constrained-quality mode -b:v is only a ceiling; CRF decides the quality.
   webm: {
-    video: (crf, preset) => [
+    video: (k) => [
       '-c:v',
       'libvpx',
       '-crf',
-      crfToVp8(crf),
+      crfToVp8(k.crf),
       '-b:v',
       '4M',
       '-deadline',
       'good',
       '-cpu-used',
-      VP8_CPU_USED[preset] ?? '2',
+      VP8_CPU_USED[k.preset] ?? '2',
       '-pix_fmt',
       'yuv420p',
     ],
-    audio: (kbps) => ['-c:a', 'libvorbis', '-b:a', `${kbps}k`],
+    audio: (k) => ['-c:a', 'libvorbis', '-b:a', `${k.kbps}k`],
   },
-  avi: { video: (crf) => ['-c:v', 'mpeg4', '-q:v', crfToQscale(crf)], audio: mp3 },
-  flv: { video: (crf) => ['-c:v', 'flv', '-q:v', crfToQscale(crf)], audio: mp3 },
+  // Fixed-quantiser encoders: no speed preset to offer.
+  avi: { video: (k) => ['-c:v', 'mpeg4', '-q:v', crfToQscale(k.crf)], audio: mp3 },
+  flv: { video: (k) => ['-c:v', 'flv', '-q:v', crfToQscale(k.crf)], audio: mp3 },
 };
+
+/**
+ * Input options for a trim: -ss seeks before decoding (fast, and frame-exact
+ * when re-encoding), -t caps the length read from there. An end at or before
+ * the start means "to the end".
+ */
+export function trimArgs(settings?: Partial<ConversionSettings>): string[] {
+  const start = Math.max(0, settings?.trimStart ?? 0);
+  const end = settings?.trimEnd ?? 0;
+  const args: string[] = [];
+  if (start > 0) args.push('-ss', String(start));
+  if (end > start) args.push('-t', String(+(end - start).toFixed(3)));
+  return args;
+}
+
+/**
+ * The section to cut out, in the trimmed clip's timeline (-ss restarts it at
+ * 0). The settings give it in the source's own time, like the trim.
+ */
+export function cutRange(settings?: Partial<ConversionSettings>): [number, number] | null {
+  const from = settings?.cutStart ?? 0;
+  const to = settings?.cutEnd ?? 0;
+  if (!(to > from)) return null;
+  const offset = Math.max(0, settings?.trimStart ?? 0);
+  const a = +Math.max(0, from - offset).toFixed(3);
+  const b = +(to - offset).toFixed(3);
+  return b > a ? [a, b] : null;
+}
+
+/** Subtitle burn-in: the files runMedia writes into ffmpeg's filesystem. */
+export const BURN = { subtitles: 'burn.ass', fontsDir: '/fonts' } as const;
+
+/**
+ * Video filters that come before any scaling: burnt-in subtitles first (their
+ * times are the trimmed clip's), then the cut. The cut drops the frames in
+ * [a, b] and moves everything after it back by b - a, which keeps variable
+ * frame rates intact (N/FRAME_RATE/TB would not).
+ */
+function videoPre(settings?: Partial<ConversionSettings>): string[] {
+  const filters: string[] = [];
+  // The style and per-script fonts are in the ASS file itself (toAss).
+  if (settings?.subtitleFile) {
+    filters.push(`subtitles=filename=${BURN.subtitles}:fontsdir=${BURN.fontsDir}`);
+  }
+  const cut = cutRange(settings);
+  if (cut) {
+    const [a, b] = cut;
+    filters.push(
+      `select='not(between(t,${a},${b}))'`,
+      `setpts='PTS-gte(T,${b})*${+(b - a).toFixed(3)}/TB'`,
+    );
+  }
+  return filters;
+}
+
+/** The audio side of the cut: audio runs at a fixed sample rate, so N/SR/TB is exact. */
+function audioCut(settings?: Partial<ConversionSettings>): string[] {
+  const cut = cutRange(settings);
+  if (!cut) return [];
+  return ['-af', `aselect='not(between(t,${cut[0]},${cut[1]}))',asetpts=N/SR/TB`];
+}
+
+/** fps and width for animated output; width 0 keeps the source width. */
+function animationFilter(settings?: Partial<ConversionSettings>): string {
+  const fps = settings?.animFps || 12;
+  const width = settings?.animWidth ?? 480;
+  // Only ever scale down; -2 keeps the height even, which libwebp requires.
+  const scale = width > 0 ? `,scale='min(${width},iw)':-2:flags=lanczos` : '';
+  return `fps=${fps}${scale}`;
+}
 
 /**
  * The ffmpeg command line for one conversion. Pure, so the per-container codec
@@ -313,23 +410,36 @@ export function buildFfmpegArgs(
   const category = getCategory(sourceExt);
   if (!category) throw new Error(`Unsupported file type: ${sourceExt}`);
 
-  // `??`, not `||`: CRF 0 is lossless, not "unset".
-  const crf = settings?.videoQuality ?? 23;
-  const preset = settings?.videoPreset || 'medium';
-  const kbps = settings?.audioBitrate ?? 192;
+  const k = knobsFrom(settings);
+  const input = [...trimArgs(settings), '-i', inputName];
+  const cutAudio = audioCut(settings);
 
   const audioTarget = AUDIO_CODECS[targetExt];
   if (audioTarget) {
     // -vn also drops embedded cover art, which ogg and wav can't carry anyway.
-    const args = ['-i', inputName, '-vn', '-c:a', audioTarget.codec];
-    if (audioTarget.bitrate) args.push('-b:a', `${kbps}k`, '-ar', '44100');
+    const args = [...input, '-vn', ...cutAudio, '-c:a', audioTarget.codec];
+    if (audioTarget.bitrate) args.push('-b:a', `${k.kbps}k`, '-ar', '44100');
     return [...args, '-y', outputName];
+  }
+
+  if (category === 'video' && targetExt === 'gif') {
+    // One pass, two branches: palettegen builds a 256-colour palette from the
+    // whole clip, paletteuse maps every frame onto it. Without it GIF gets
+    // the generic web palette and banding. diff_mode=rectangle re-dithers
+    // only what changed between frames, which keeps static areas from
+    // shimmering and the file smaller.
+    const filter =
+      [...videoPre(settings), animationFilter(settings)].join(',') +
+      ',split[a][b];[a]palettegen=stats_mode=diff[p];' +
+      '[b][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle';
+    return [...input, '-filter_complex', filter, '-loop', '0', '-y', outputName];
   }
 
   if (category === 'video' && targetExt === 'webp') {
     return [
-      '-i',
-      inputName,
+      ...input,
+      '-vf',
+      [...videoPre(settings), animationFilter(settings)].join(','),
       '-c:v',
       'libwebp',
       '-loop',
@@ -347,11 +457,18 @@ export function buildFfmpegArgs(
   const container = category === 'video' ? VIDEO_CONTAINERS[targetExt] : undefined;
   if (!container) throw new Error(`Unsupported conversion: ${sourceExt} → ${targetExt}`);
 
+  // Resize: only ever down, keeping the aspect ratio and an even height
+  // (x264 and libvpx need even dimensions). Mute drops the audio stream.
+  const maxWidth = settings?.videoMaxWidth ?? 0;
+  const video = [
+    ...videoPre(settings),
+    ...(maxWidth > 0 ? [`scale='min(${maxWidth},iw)':-2`] : []),
+  ];
   return [
-    '-i',
-    inputName,
-    ...container.video(crf, preset),
-    ...container.audio(kbps),
+    ...input,
+    ...(video.length ? ['-vf', video.join(',')] : []),
+    ...container.video(k),
+    ...(settings?.mute ? ['-an'] : [...cutAudio, ...container.audio(k)]),
     ...(container.extra ?? []),
     '-y',
     outputName,
@@ -438,11 +555,12 @@ async function execOnce(
 ): Promise<Blob> {
   const inputName = `input.${sourceExt}`;
   const outputName = `output.${targetExt}`;
-  const args = buildFfmpegArgs(sourceExt, targetExt, inputName, outputName, settings);
 
   const log = createLogWatcher(onProgress);
   ff.on('log', log.handler);
   try {
+    await prepareSubtitles(ff, settings);
+    const args = buildFfmpegArgs(sourceExt, targetExt, inputName, outputName, settings);
     await ff.writeFile(inputName, await fetchFile(file));
     const code = await ff.exec(args);
     // A non-zero exit leaves no output file, and readFile's "no such file"
@@ -464,8 +582,59 @@ async function execOnce(
     // MEMFS for the next one to run out of memory on.
     await removeQuietly(ff, inputName);
     await removeQuietly(ff, outputName);
+    await removeQuietly(ff, BURN.subtitles);
   }
 }
+
+// Fonts already written into this instance's filesystem (the CJK subset alone
+// is 5 MB): fetched once per instance, not per job.
+const fontsWritten = new WeakMap<FFmpeg, Set<string>>();
+
+/**
+ * For burn-in: the subtitles, moved by the trim so their times match the
+ * trimmed clip, as an ASS file whose text names a font per script (see
+ * toAss: without fontconfig, libass never falls back), plus just the Noto
+ * fonts that text needs.
+ */
+async function prepareSubtitles(ff: FFmpeg, settings?: ConversionSettings): Promise<void> {
+  const source = settings?.subtitleFile;
+  if (!source) return;
+  const { parseSubtitles, shift, toAss } = await import('./subtitles');
+  const cues = shift(parseSubtitles(await source.text()), -Math.max(0, settings.trimStart ?? 0));
+  if (!cues.length) {
+    throw new ConversionError(
+      'invalid-settings',
+      `${source.name} has no subtitle cues in the clip (expected lines like 00:00:01,000 --> 00:00:04,000)`,
+    );
+  }
+  const fonts = new Set(['noto-sans-regular.ttf']);
+  const ass = toAss(cues, (cp) => {
+    if (isHangul(cp)) {
+      fonts.add('noto-sans-hangul-regular.ttf');
+      return 'Noto Sans KR';
+    }
+    if (isCjk(cp)) {
+      fonts.add('noto-sans-cjk-regular.ttf');
+      return 'Noto Sans SC';
+    }
+    return 'Noto Sans';
+  });
+
+  const written = fontsWritten.get(ff) ?? new Set<string>();
+  fontsWritten.set(ff, written);
+  if (!written.size) await ff.createDir(BURN.fontsDir).catch(() => {});
+  for (const font of fonts) {
+    if (written.has(font)) continue;
+    const res = await fetch(`${SUBTITLE_FONT_BASE}/${font}`);
+    if (!res.ok) throw new ConversionError('engine-load', `${font}: HTTP ${res.status}`);
+    await ff.writeFile(`${BURN.fontsDir}/${font}`, new Uint8Array(await res.arrayBuffer()));
+    written.add(font);
+  }
+  await ff.writeFile(BURN.subtitles, new TextEncoder().encode(ass));
+}
+
+// The same Noto subsets the PDF typesetter uses.
+const SUBTITLE_FONT_BASE = '/fonts/pdf';
 
 // deleteFile rejects when the file was never written, or when a cancel already
 // terminated the instance; neither is worth surfacing.

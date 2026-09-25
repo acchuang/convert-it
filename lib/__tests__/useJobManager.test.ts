@@ -388,3 +388,67 @@ describe('downloadJob', () => {
     }
   });
 });
+
+describe('reorder and merge', () => {
+  const files = () => [
+    new File(['%PDF-1.4'], 'a.pdf'),
+    new File(['x'], 'b.csv'),
+    new File(['png'], 'c.png'),
+  ];
+
+  it('moveJob swaps neighbours and ignores moves past either end', () => {
+    const { result } = renderHook(() => useJobManager());
+    act(() => result.current.addFiles(files()));
+    const names = () => result.current.jobs.map((j) => j.file.name);
+    act(() => result.current.moveJob(result.current.jobs[2].id, -1));
+    expect(names()).toEqual(['a.pdf', 'c.png', 'b.csv']);
+    act(() => result.current.moveJob(result.current.jobs[0].id, -1));
+    act(() => result.current.moveJob(result.current.jobs[2].id, 1));
+    expect(names()).toEqual(['a.pdf', 'c.png', 'b.csv']);
+  });
+
+  it('counts only PDFs and images as mergeable', () => {
+    const { result } = renderHook(() => useJobManager());
+    act(() => result.current.addFiles(files()));
+    expect(result.current.mergeableCount).toBe(2);
+  });
+
+  it('a failed merge is reported, not thrown', async () => {
+    const { result } = renderHook(() => useJobManager());
+    act(() => result.current.addFiles(files())); // a.pdf is not a real PDF
+    await act(() => result.current.mergeToPdf());
+    expect(result.current.merge).toMatchObject({
+      status: 'error',
+      error: { code: 'corrupt-input' },
+    });
+  });
+});
+
+describe('download names and folders', () => {
+  it('"download all" applies the template and rebuilds dropped folders', async () => {
+    mockConvertFile.mockResolvedValue(new Blob(['{}'], { type: 'application/json' }));
+    const blobs: Blob[] = [];
+    vi.spyOn(URL, 'createObjectURL').mockImplementation((b) => {
+      blobs.push(b as Blob);
+      return 'blob:x';
+    });
+    const { result } = renderHook(() => useJobManager());
+    act(() =>
+      result.current.addFiles([
+        { file: new File(['a,b\n1,2'], 'one.csv'), folder: 'Data/2026' },
+        { file: new File(['a,b\n1,2'], 'two.csv'), folder: '' },
+      ]),
+    );
+    act(() => result.current.setNameTemplate('{n}-{name}'));
+    for (const job of result.current.jobs) await act(() => result.current.convertJob(job));
+    await waitFor(() => expect(result.current.doneCount).toBe(2));
+    await act(() => result.current.downloadAllAsZip());
+    const JSZip = (await import('jszip')).default;
+    const zip = await JSZip.loadAsync(await blobs.at(-1)!.arrayBuffer());
+    expect(
+      Object.keys(zip.files)
+        .filter((n) => !n.endsWith('/'))
+        .sort(),
+    ).toEqual(['2-two.json', 'Data/2026/1-one.json']);
+  });
+});

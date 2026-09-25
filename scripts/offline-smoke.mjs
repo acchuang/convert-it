@@ -36,9 +36,9 @@ const down = async () => {
 
 async function convert(page, fixture, target) {
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await page.waitForSelector('input[type="file"]', { state: 'attached' });
+  await page.waitForSelector('input[type="file"]:not([webkitdirectory])', { state: 'attached' });
   await page.waitForTimeout(1500); // hydration
-  await page.setInputFiles('input[type="file"]', join(FIX, fixture));
+  await page.setInputFiles('input[type="file"]:not([webkitdirectory])', join(FIX, fixture));
   const card = page.locator('[role="listitem"]').last();
   await card.locator('select[aria-label="Target format"]').selectOption(target);
   await card.locator('button[aria-label^="CONVERT →"]').click();

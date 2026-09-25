@@ -2,7 +2,7 @@
 // it for the image converters), so the PNG comes from that rather than a hand-rolled
 // encoder. The WebM has to come from a real browser — MediaRecorder is the only encoder
 // available without adding a dependency — so playwright writes it in a separate pass.
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createCanvas } from 'canvas';
 
@@ -16,6 +16,73 @@ ctx.fillRect(0, 0, 64, 48);
 ctx.fillStyle = '#FF4D00';
 ctx.fillRect(8, 8, 24, 24);
 writeFileSync(join(DIR, 'img.png'), canvas.toBuffer('image/png'));
+
+// OCR: text as pixels, and the same as a "scanned" PDF with no text layer.
+{
+  const text = createCanvas(900, 200);
+  const tctx = text.getContext('2d');
+  tctx.fillStyle = '#fff';
+  tctx.fillRect(0, 0, 900, 200);
+  tctx.fillStyle = '#111';
+  tctx.font = '44px sans-serif';
+  tctx.fillText('Convert-it reads printed text', 30, 80);
+  tctx.fillText('Invoice 2026 total 314 EUR', 30, 150);
+  const png = text.toBuffer('image/png');
+  writeFileSync(join(DIR, 'ocr.png'), png);
+  const { PDFDocument } = await import('pdf-lib');
+  const doc = await PDFDocument.create();
+  const image = await doc.embedPng(new Uint8Array(png));
+  doc.addPage([450, 100]).drawImage(image, { x: 0, y: 0, width: 450, height: 100 });
+  writeFileSync(join(DIR, 'scan.pdf'), await doc.save());
+}
+
+// Subtitles as they circulate: BOM, CRLF, a missing cue number, "." before
+// the milliseconds, a <font> tag.
+writeFileSync(
+  join(DIR, 'sub.srt'),
+  '\uFEFF1\r\n00:00:01,000 --> 00:00:03,500\r\n<font color="#ff0">Hello</font> <i>there</i>\r\n\r\n' +
+    '00:00:04.200 --> 00:00:06,000\r\nSecond line\r\n',
+);
+
+// A Word document from another producer (python-docx on Word's default
+// template), shared with the unit tests.
+copyFileSync(
+  join(process.cwd(), 'lib', '__tests__', 'fixtures', 'python-docx-sample.docx'),
+  join(DIR, 'notes.docx'),
+);
+
+// A geotagged JPEG: the same pixels with an EXIF block (camera, date, and a
+// location at the Eiffel Tower) in APP1. The TIFF bytes were made by
+// buildExif in lib/image-metadata.ts, which is tested against exifr.
+{
+  const tiff = Buffer.from(
+    'TU0AKgAAAAgABQEPAAIAAAALAAAASgEQAAIAAAASAAAAVgESAAMAAAABAAEAAIdpAAQAAAABAAAAaIglAAQAAAABAAAAjgAAAABDb252ZXJ0LWl0AABTbW9rZSBUZXN0IENhbWVyYQAAAZADAAIAAAAUAAAAegAAAAAyMDI0OjA1OjAxIDE0OjAzOjIyAAAFAAAAAQAAAAQCAgAAAAEAAgAAAAJOAAAAAAIABQAAAAMAAADQAAMAAgAAAAJFAAAAAAQABQAAAAMAAADoAAAAAAAAADAAAAABAAAAMwAAAAEABJ1AAAAnEAAAAAIAAAABAAAAEQAAAAEABiJQAAAnEA==',
+    'base64',
+  );
+  const payload = Buffer.concat([Buffer.from('Exif\0\0', 'latin1'), tiff]);
+  const app1 = Buffer.concat([
+    Buffer.from([0xff, 0xe1, (payload.length + 2) >> 8, (payload.length + 2) & 0xff]),
+    payload,
+  ]);
+  const jpeg = canvas.toBuffer('image/jpeg');
+  writeFileSync(join(DIR, 'geo.jpg'), Buffer.concat([jpeg.subarray(0, 2), app1, jpeg.subarray(2)]));
+}
+
+// The same pixels as JPEG XL, for the jxl → png pair. No browser in CI decodes
+// JXL, so the fixture comes from the codec the app ships (its glue fetches the
+// wasm even under Node, hence the fetch shim).
+{
+  const wasm = join(process.cwd(), 'public', 'wasm');
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (path) =>
+    new Response(readFileSync(String(path)), { headers: { 'content-type': 'application/wasm' } });
+  const { default: factory } = await import('@jsquash/jxl/codec/enc/jxl_enc.js');
+  const { defaultOptions } = await import('@jsquash/jxl/meta.js');
+  const jxl = await factory({ noInitialRun: true, locateFile: (f) => join(wasm, f) });
+  const { data } = ctx.getImageData(0, 0, 64, 48);
+  writeFileSync(join(DIR, 'img.jxl'), jxl.encode(data, 64, 48, { ...defaultOptions, quality: 90 }));
+  globalThis.fetch = realFetch;
+}
 
 // 0.5s 440Hz mono 16-bit PCM.
 const rate = 8000;

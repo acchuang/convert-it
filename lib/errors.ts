@@ -13,6 +13,7 @@ export type ErrorCode =
   | 'corrupt-input' // the file is damaged, or isn't really the format its name says
   | 'unsupported' // no converter for this pair, or a feature of the file we can't handle
   | 'engine-load' // couldn't download or verify an engine (FFmpeg core, fonts, codecs)
+  | 'invalid-settings' // a setting doesn't fit this file (e.g. page 9 of a 5-page PDF)
   | 'unknown';
 
 export interface ConversionFailure {

@@ -13,18 +13,52 @@ import { FILE_SIZE_LIMITS } from '@/lib/types';
 import { CancelledError, cancelInWorker, runInWorker, runsOnMainThread } from '@/lib/worker-pool';
 import { terminateFFmpeg } from '@/lib/audio-video-converters';
 import type { FileJob } from '@/app/components/JobCard';
-import { uniqueName } from './filenames';
-import { classifyError } from './errors';
+import { classifyError, type ConversionFailure } from './errors';
+import { canMerge } from './pdf-options';
+import { DEFAULT_NAME_TEMPLATE, applyNameTemplate, safeFileStem, uniqueName } from './filenames';
+import type { PickedFile } from './drop-files';
 import { addHistoryEntry, getHistory, type HistoryEntry } from '@/lib/history';
 
 /**
  * The download name for a finished job. Multi-page PDF → image comes back as a
  * zip blob, so it is named .zip whatever image format was picked.
  */
-export function outputFilename(job: Pick<FileJob, 'file' | 'targetExt' | 'resultBlob'>): string {
-  const base = job.file.name.replace(/\.[^.]+$/, '');
-  const ext = job.resultBlob?.type === 'application/zip' ? 'zip' : job.targetExt;
-  return `${base}.${ext}`;
+export function outputFilename(
+  job: Pick<FileJob, 'file' | 'targetExt' | 'resultBlob' | 'sourceExt'> &
+    Partial<Pick<FileJob, 'resultWidth' | 'resultHeight'>>,
+  template = DEFAULT_NAME_TEMPLATE,
+  n = 1,
+  total = 1,
+): string {
+  return applyNameTemplate(template, {
+    name: job.file.name.replace(/\.[^.]+$/, ''),
+    ext: job.resultBlob?.type === 'application/zip' ? 'zip' : (job.targetExt ?? ''),
+    source: job.sourceExt,
+    n,
+    total,
+    width: job.resultWidth,
+    height: job.resultHeight,
+  });
+}
+
+const TEMPLATE_KEY = 'convert-it:name-template';
+
+// Output images the browser can decode, to read their size for {w}x{h}.
+const MEASURABLE = new Set(['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'avif', 'ico']);
+
+async function measure(
+  blob: Blob,
+  ext: string,
+): Promise<{ resultWidth?: number; resultHeight?: number }> {
+  if (!MEASURABLE.has(ext) || blob.type === 'application/zip') return {};
+  try {
+    const bitmap = await createImageBitmap(blob);
+    const size = { resultWidth: bitmap.width, resultHeight: bitmap.height };
+    bitmap.close();
+    return size;
+  } catch {
+    return {};
+  }
 }
 
 export { uniqueName } from './filenames';
@@ -52,7 +86,7 @@ interface UseJobManagerOptions {
 
 interface UseJobManagerReturn {
   jobs: FileJob[];
-  addFiles: (files: FileList | File[]) => void;
+  addFiles: (files: FileList | File[] | PickedFile[]) => void;
   updateJob: (id: string, patch: Partial<FileJob>) => void;
   updateJobSettings: (id: string, patch: Partial<ConversionSettings>) => void;
   convertJob: (job: FileJob) => Promise<void>;
@@ -64,6 +98,15 @@ interface UseJobManagerReturn {
   convertAll: () => void;
   clearAll: () => void;
   doneCount: number;
+  moveJob: (id: string, delta: -1 | 1) => void;
+  merge: MergeState;
+  /** PDFs and images in the list: what "merge into PDF" would take. */
+  mergeableCount: number;
+  mergeToPdf: () => Promise<void>;
+  /** Output-name template ({name}.{ext} by default) and the name it gives a job. */
+  nameTemplate: string;
+  setNameTemplate: (template: string) => void;
+  nameFor: (job: FileJob) => string;
 }
 
 export function useJobManager(options?: UseJobManagerOptions): UseJobManagerReturn {
@@ -84,7 +127,10 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
   });
 
   const addFiles = useCallback(
-    (files: FileList | File[]) => {
+    (picked: FileList | File[] | PickedFile[]) => {
+      const files: PickedFile[] = Array.from(picked as ArrayLike<File | PickedFile>).map((f) =>
+        f instanceof File ? { file: f, folder: '' } : f,
+      );
       const pickTarget = (ext: string) => {
         const targets = getTargetFormats(ext);
         if (preferredTarget && targets.includes(preferredTarget)) return preferredTarget;
@@ -92,7 +138,7 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
       };
 
       const newJobs: FileJob[] = [];
-      for (const file of Array.from(files)) {
+      for (const { file, folder } of files) {
         const ext = getFileExtension(file.name);
         const category = getFormatInfo(ext)?.category;
         const limit = category ? FILE_SIZE_LIMITS[category] : FILE_SIZE_LIMITS.document;
@@ -114,6 +160,7 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
               },
             },
             settings: { ...DEFAULT_SETTINGS },
+            folder,
           });
           continue;
         }
@@ -126,6 +173,7 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
           status: 'idle',
           progress: 0,
           settings: { ...DEFAULT_SETTINGS },
+          folder,
         });
       }
       setJobs((prev) => [...prev, ...newJobs]);
@@ -193,10 +241,11 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
         : await runInWorker(job.id, job.file, job.targetExt, job.settings, onProgress);
 
       if (cancelledRef.current.delete(job.id)) return;
+      const size = await measure(blob, job.targetExt);
       setJobs((prev) =>
         prev.map((j) =>
           j.id === job.id
-            ? { ...j, status: 'done', resultBlob: blob, progress: 100, stage: 'Complete' }
+            ? { ...j, status: 'done', resultBlob: blob, progress: 100, stage: 'Complete', ...size }
             : j,
         ),
       );
@@ -248,10 +297,38 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
     );
   }, []);
 
-  const downloadJob = useCallback((job: FileJob) => {
-    if (!job.resultBlob || !job.targetExt) return;
-    saveBlob(job.resultBlob, outputFilename(job));
+  // The output-name template, remembered per viewer (a convenience only).
+  const [nameTemplate, setNameTemplateState] = useState(DEFAULT_NAME_TEMPLATE);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(TEMPLATE_KEY);
+      if (saved) setNameTemplateState(saved);
+    } catch {
+      // storage blocked: keep the default
+    }
   }, []);
+  const setNameTemplate = useCallback((template: string) => {
+    setNameTemplateState(template);
+    try {
+      localStorage.setItem(TEMPLATE_KEY, template);
+    } catch {
+      // storage blocked: the template still applies for this visit
+    }
+  }, []);
+
+  const nameFor = useCallback(
+    (job: FileJob) =>
+      outputFilename(job, nameTemplate, jobs.indexOf(job) + 1 || 1, jobs.length || 1),
+    [jobs, nameTemplate],
+  );
+
+  const downloadJob = useCallback(
+    (job: FileJob) => {
+      if (!job.resultBlob || !job.targetExt) return;
+      saveBlob(job.resultBlob, nameFor(job));
+    },
+    [nameFor],
+  );
 
   const downloadAllAsZip = useCallback(async () => {
     const doneJobs = jobs.filter((j) => j.status === 'done' && j.resultBlob && j.targetExt);
@@ -261,12 +338,14 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
     const zip = new JSZip();
     const used = new Set<string>();
 
+    // Files from a dropped folder go back into the same folders.
     for (const job of doneJobs) {
-      zip.file(uniqueName(outputFilename(job), used), job.resultBlob!);
+      const path = job.folder ? `${job.folder}/${nameFor(job)}` : nameFor(job);
+      zip.file(uniqueName(path, used), job.resultBlob!);
     }
 
     saveBlob(await zip.generateAsync({ type: 'blob' }), 'converted-files.zip');
-  }, [jobs]);
+  }, [jobs, nameFor]);
 
   const applyBatchFormat = useCallback((format: string) => {
     if (!format) return;
@@ -279,6 +358,43 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
       }),
     );
   }, []);
+
+  const moveJob = useCallback(
+    (id: string, delta: -1 | 1) =>
+      setJobs((prev) => {
+        const from = prev.findIndex((j) => j.id === id);
+        const to = from + delta;
+        if (from < 0 || to < 0 || to >= prev.length) return prev;
+        const next = [...prev];
+        [next[from], next[to]] = [next[to], next[from]];
+        return next;
+      }),
+    [],
+  );
+
+  // Merge: every PDF and image in the list, in list order, into one PDF. A
+  // batch action rather than a route, since it takes many inputs.
+  const [merge, setMerge] = useState<MergeState>({ status: 'idle' });
+  const mergeable = jobs.filter((j) => canMerge(j.sourceExt));
+  const mergeToPdf = useCallback(async () => {
+    const sources = jobs.filter((j) => canMerge(j.sourceExt));
+    if (sources.length < 2) return;
+    setMerge({ status: 'running', progress: 0 });
+    try {
+      const { mergePdf } = await import('@/lib/pdf-tools');
+      // Images use the page size set on the first image job (A4 by default).
+      const pageSize = sources.find((j) => j.sourceExt !== 'pdf')?.settings.pdfPageSize;
+      const blob = await mergePdf(
+        sources.map((j) => j.file),
+        { pdfPageSize: pageSize ?? 'a4' },
+        (progress) => setMerge({ status: 'running', progress }),
+      );
+      saveBlob(blob, `${safeFileStem(sources[0].file.name.replace(/\.[^.]+$/, ''))}-merged.pdf`);
+      setMerge({ status: 'idle' });
+    } catch (err) {
+      setMerge({ status: 'error', error: classifyError(err) });
+    }
+  }, [jobs]);
 
   const removeJob = useCallback(
     (id: string) => setJobs((prev) => prev.filter((j) => j.id !== id)),
@@ -307,5 +423,17 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
     convertAll,
     clearAll,
     doneCount,
+    moveJob,
+    merge,
+    mergeableCount: mergeable.length,
+    mergeToPdf,
+    nameTemplate,
+    setNameTemplate,
+    nameFor,
   };
 }
+
+export type MergeState =
+  | { status: 'idle' }
+  | { status: 'running'; progress: number }
+  | { status: 'error'; error: ConversionFailure };

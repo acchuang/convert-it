@@ -1,4 +1,5 @@
 import type { jsPDF as JsPDF } from 'jspdf';
+import { isCjk, isHangul } from './scripts';
 
 // A small typesetter over jsPDF, used by every text-flavoured → PDF converter.
 //
@@ -88,22 +89,6 @@ function fontData(file: FontFile): Promise<string> {
 
 // Which family draws a character. Families map to a jsPDF font name.
 type Family = 'sans' | 'mono' | 'cjk' | 'hangul';
-
-function isHangul(cp: number): boolean {
-  return (
-    (cp >= 0xac00 && cp <= 0xd7a3) ||
-    (cp >= 0x1100 && cp <= 0x11ff) ||
-    (cp >= 0x3130 && cp <= 0x318f)
-  );
-}
-
-function isCjk(cp: number): boolean {
-  return (
-    (cp >= 0x2e80 && cp <= 0x9fff) || // radicals, CJK punctuation, kana, ideographs
-    (cp >= 0xf900 && cp <= 0xfaff) || // compatibility ideographs
-    (cp >= 0xff00 && cp <= 0xffef) // full-width forms
-  );
-}
 
 function familyOf(cp: number, mono: boolean): Family {
   if (isHangul(cp)) return 'hangul';

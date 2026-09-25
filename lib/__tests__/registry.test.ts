@@ -29,7 +29,10 @@ describe('converter registry', () => {
     const category = (ext: string) => FORMATS.find((f) => f.ext === ext)?.category;
     for (const r of allRoutes()) {
       const media = category(r.from) === 'video' || category(r.from) === 'audio';
-      const dom = r.from === 'html' || (r.from === 'md' && r.to === 'epub');
+      const dom =
+        r.from === 'html' ||
+        (r.from === 'md' && r.to === 'epub') ||
+        (r.from === 'docx' && ['md', 'pdf', 'epub'].includes(r.to));
       expect(r.thread, `${r.from}→${r.to}`).toBe(media || dom ? 'main' : 'worker');
     }
   });
@@ -59,6 +62,8 @@ const SAMPLES: Record<string, () => File> = {
   md: () => new File(['# T\n\ntext'], 's.md'),
   html: () => new File(['<p>t</p>'], 's.html'),
   txt: () => new File(['t'], 's.txt'),
+  srt: () => new File(['1\n00:00:01,000 --> 00:00:02,000\nHi\n'], 's.srt'),
+  vtt: () => new File(['WEBVTT\n\n00:01.000 --> 00:02.000\nHi\n'], 's.vtt'),
   xlsx: () => new File([readFileSync(join(__dirname, 'fixtures', 'sheetjs-types.xlsx'))], 's.xlsx'),
 };
 
@@ -74,13 +79,38 @@ describe('declared settings match what data and document converters read', () =>
   });
 });
 
+describe('declared settings match what the PDF tools read', async () => {
+  const { PDFDocument } = await import('pdf-lib');
+  const { createCanvas } = await import('canvas');
+  const doc = await PDFDocument.create();
+  doc.addPage([100, 100]);
+  doc.addPage([120, 100]);
+  const pdf = await doc.save();
+  const canvas = createCanvas(8, 8);
+  const samples: Record<string, () => File> = {
+    pdf: () => new File([pdf], 's.pdf'),
+    png: () => new File([canvas.toBuffer('image/png')], 's.png'),
+    jpg: () => new File([canvas.toBuffer('image/jpeg')], 's.jpg'),
+  };
+  const routes = allRoutes().filter((r) => r.to === 'pdf' && samples[r.from]);
+  it.each(routes.map((r) => [`${r.from} → ${r.to}`, r] as const))('%s', async (_name, route) => {
+    const { settings, read } = recording();
+    await route.run(samples[route.from](), route.from, route.to, settings);
+    const declared = new Set(route.settings.flatMap((k: SettingKey) => SETTING_FIELDS[k]));
+    expect([...read].sort()).toEqual([...declared].sort());
+  });
+});
+
 describe('declared settings match the ffmpeg command line', () => {
-  const media = allRoutes().filter((r) => r.thread === 'main' && !['html', 'md'].includes(r.from));
+  // Same rule as above, applied to the command line: every field the ffmpeg
+  // args read is declared, and every declared field is read.
+  const media = allRoutes().filter((r) =>
+    ['video', 'audio'].includes(FORMATS.find((f) => f.ext === r.from)?.category ?? ''),
+  );
   it.each(media.map((r) => [`${r.from} → ${r.to}`, r] as const))('%s', (_name, route) => {
-    const args = buildFfmpegArgs(route.from, route.to, 'in', 'out', DEFAULT_SETTINGS);
-    expect(route.settings.includes('audioBitrate')).toBe(args.includes('-b:a'));
-    expect(route.settings.includes('video')).toBe(
-      args.includes('-crf') || (args.includes('-q:v') && route.to !== 'webp'),
-    );
+    const { settings, read } = recording();
+    buildFfmpegArgs(route.from, route.to, 'in', 'out', settings);
+    const declared = new Set(route.settings.flatMap((k: SettingKey) => SETTING_FIELDS[k]));
+    expect([...read].sort()).toEqual([...declared].sort());
   });
 });
