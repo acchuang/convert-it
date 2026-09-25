@@ -226,7 +226,7 @@ export default function AboutPage() {
               {t('about.storedHeading')}
             </h3>
             <ul className="list-disc pl-5 space-y-1 text-sm text-[var(--text-muted)] leading-relaxed">
-              {Array.from({ length: 6 }, (_, i) => (
+              {Array.from({ length: 7 }, (_, i) => (
                 <li key={i}>{t(`about.stored${i + 1}`)}</li>
               ))}
             </ul>
@@ -281,7 +281,7 @@ export default function AboutPage() {
             {t('about.improvementsHeading')}
           </h2>
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6 space-y-3">
-            {Array.from({ length: 58 }, (_, i) => i + 1).map((n) => (
+            {Array.from({ length: 59 }, (_, i) => i + 1).map((n) => (
               <div key={n} className="flex items-start gap-3">
                 <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] flex-shrink-0 mt-2" />
                 <p className="text-sm text-[var(--text-secondary)] leading-relaxed">

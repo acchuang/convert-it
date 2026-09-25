@@ -105,7 +105,11 @@ _Reviewed at `7a92641` (2026-09-24). Scope: every file in `lib/`, the app shell,
     - two different buttons both named "CLEAR"
   - **§6 component size:** `SettingsPanel` (879 lines) is now a 60-line shell over one file per category under `app/components/settings/`.
   - **§9 time to first conversion:** the smoke suite times a cold PNG → WebP. The budgets are 1 s for the card to appear and 2 s from Convert to download; locally it takes 59 ms and 313 ms. The engine download shows as its own labelled stage, pinned by a test.
-  - **Still open:** analytics (Phase 4 item 10) and the §9 per-pair failure rate both wait on the policy decision.
+- **Analytics (Phase 4 item 10) and the §9 failure rate: decided as local-only.**
+  - Each browser counts its own conversions per format pair: how many finished, how many failed and with which error code, and the average time.
+  - "Your conversion stats" under Recent shows the counts. "Copy report" copies a Markdown table plus the browser's name and major version, for someone who chooses to paste it into an issue.
+  - Nothing is sent, so the badge stays at 0 B sent.
+  - No file names are kept. The history switch covers the stats too: turning it off stops the counting and deletes them.
 
 ## 1. Executive summary
 

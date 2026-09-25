@@ -318,13 +318,15 @@
     "improvement56": "Instalada como app: comparte archivos con ella desde otras apps o ábrelos con ella",
     "improvement57": "Mira lo que la app ha enviado (nada) y recibido por la red; desactiva el historial para no guardar nombres de archivo",
     "improvement58": "HEIC: se convierte la foto principal, no solo la primera imagen del archivo, o todas en un zip",
+    "improvement59": "Tus propias estadísticas de conversión por par de formatos, guardadas en tu dispositivo; cópialas en un aviso de error si quieres",
     "storedHeading": "Guardado en este dispositivo, y en ningún otro sitio",
     "stored1": "Conversiones recientes: nombre del archivo, formatos, tamaños y hora, 30 como máximo. Desmarca «Guardar historial en este dispositivo» en Recientes y no se guarda nada (desmarcarlo también borra la lista).",
     "stored2": "Tu tema, idioma y plantilla de nombres de salida.",
     "stored3": "Archivos de la app en caché para uso sin conexión: código, códecs, fuentes, datos de OCR y el motor FFmpeg. Nunca tus archivos ni resultados.",
     "stored4": "Un recuento de bytes enviados y recibidos, para el indicador de red.",
     "stored5": "Los archivos compartidos con la app instalada, solo hasta que la página los recoge un momento después.",
-    "stored6": "Borrar los datos de este sitio en los ajustes del navegador lo elimina todo."
+    "stored6": "Recuentos de conversiones por par de formatos (hechas, fallidas con el tipo de error, tiempo medio) para el panel de estadísticas. Sin nombres de archivo. Desactivar el historial los detiene y los borra.",
+    "stored7": "Borrar los datos de este sitio en los ajustes del navegador lo elimina todo."
   },
   "errors": {
     "tooLarge": {
@@ -393,5 +395,17 @@
   "status": {
     "local": "ESTACIÓN LOCAL",
     "inBrowser": "WebAssembly 100 % en el navegador"
+  },
+  "stats": {
+    "heading": "Tus estadísticas de conversión",
+    "note": "Se cuentan solo en este dispositivo y nunca se envían. Copia el informe si quieres compartirlo, por ejemplo en un aviso de error. Desactivar el historial detiene el recuento y borra las estadísticas.",
+    "empty": "Todavía no hay nada contado.",
+    "pair": "Conversión",
+    "done": "Hechas",
+    "failed": "Fallidas",
+    "topError": "Error más frecuente",
+    "avgTime": "Tiempo medio",
+    "copy": "Copiar informe",
+    "reset": "Borrar estadísticas"
   }
 }

@@ -33,7 +33,7 @@ export interface FileJob {
 
 const TEXT_FORMATS = new Set(['json', 'csv', 'xml', 'yaml', 'tsv', 'md', 'html', 'txt']);
 
-const ERROR_KEYS: Record<ConversionFailure['code'], string> = {
+export const ERROR_KEYS: Record<ConversionFailure['code'], string> = {
   'too-large': 'tooLarge',
   'out-of-memory': 'outOfMemory',
   'corrupt-input': 'corruptInput',
