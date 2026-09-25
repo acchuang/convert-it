@@ -137,7 +137,19 @@
     "burnSubtitles": "Burn in subtitles",
     "burnChoose": "Choose .srt or .vtt",
     "burnRemove": "Remove",
-    "burnHint": "Drawn into the picture, so every player shows them."
+    "burnHint": "Drawn into the picture, so every player shows them.",
+    "presetSmallest": "Smallest",
+    "presetBalanced": "Balanced",
+    "presetBest": "Best",
+    "presetLossless": "Lossless",
+    "losslessHint": "Exact frames, very large file. Meant for editing: many browsers and phones won’t play it.",
+    "advanced": "Advanced",
+    "crfHint": "CRF: lower = higher quality & larger file",
+    "presetFull": "Full",
+    "presetWeb": "Web",
+    "presetEmail": "Email",
+    "maxSideNote": "Longest side ≤ {n} px",
+    "maxSideClear": "Remove"
   },
   "howItWorks": {
     "heading": "HOW IT WORKS",

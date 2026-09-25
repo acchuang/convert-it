@@ -137,7 +137,19 @@
     "burnSubtitles": "字幕を焼き込む",
     "burnChoose": ".srt または .vtt を選択",
     "burnRemove": "外す",
-    "burnHint": "映像に描き込むので、どのプレーヤーでも表示されます。"
+    "burnHint": "映像に描き込むので、どのプレーヤーでも表示されます。",
+    "presetSmallest": "最小",
+    "presetBalanced": "標準",
+    "presetBest": "高画質",
+    "presetLossless": "ロスレス",
+    "losslessHint": "フレームを完全に保持（ファイルは非常に大きくなります）。編集向けで、多くのブラウザやスマートフォンでは再生できません。",
+    "advanced": "詳細設定",
+    "crfHint": "CRF：小さいほど高画質・大きいファイル",
+    "presetFull": "フル",
+    "presetWeb": "Web",
+    "presetEmail": "メール",
+    "maxSideNote": "長辺 ≤ {n} px",
+    "maxSideClear": "解除"
   },
   "howItWorks": {
     "heading": "使い方",

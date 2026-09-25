@@ -70,7 +70,7 @@ export { FORMATS, getFormatInfo, getFileExtension, formatFileSize, mimeFor } fro
 /** A group of controls in the settings panel, and the fields it edits. */
 export type SettingKey =
   | 'quality' // quality
-  | 'imageTransform' // imageCropAspect, imageResizePercent, imageResizeWidth, imageResizeHeight
+  | 'imageTransform' // imageCropAspect, imageResizePercent, imageResizeWidth, imageResizeHeight, imageMaxSide
   | 'targetSize' // imageTargetSizeKb
   | 'csvDelimiter' // csvDelimiter
   | 'jsonIndent' // jsonIndent
@@ -100,6 +100,7 @@ export const SETTING_FIELDS: Record<SettingKey, (keyof ConversionSettings)[]> = 
     'imageResizePercent',
     'imageResizeWidth',
     'imageResizeHeight',
+    'imageMaxSide',
   ],
   targetSize: ['imageTargetSizeKb'],
   csvDelimiter: ['csvDelimiter'],

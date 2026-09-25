@@ -137,7 +137,19 @@
     "burnSubtitles": "燒錄字幕",
     "burnChoose": "選擇 .srt 或 .vtt",
     "burnRemove": "移除",
-    "burnHint": "字幕會畫進畫面，任何播放器都能顯示。"
+    "burnHint": "字幕會畫進畫面，任何播放器都能顯示。",
+    "presetSmallest": "最小",
+    "presetBalanced": "均衡",
+    "presetBest": "最佳",
+    "presetLossless": "無損",
+    "losslessHint": "逐格無損，檔案非常大。適合剪輯：許多瀏覽器和手機無法播放。",
+    "advanced": "進階",
+    "crfHint": "CRF：越低畫質越高、檔案越大",
+    "presetFull": "原圖",
+    "presetWeb": "網頁",
+    "presetEmail": "郵件",
+    "maxSideNote": "長邊 ≤ {n} px",
+    "maxSideClear": "移除"
   },
   "howItWorks": {
     "heading": "使用方式",

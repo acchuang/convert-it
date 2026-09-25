@@ -137,7 +137,19 @@
     "burnSubtitles": "Incrustar subtítulos",
     "burnChoose": "Elige .srt o .vtt",
     "burnRemove": "Quitar",
-    "burnHint": "Se dibujan en la imagen, así que cualquier reproductor los muestra."
+    "burnHint": "Se dibujan en la imagen, así que cualquier reproductor los muestra.",
+    "presetSmallest": "Mínimo",
+    "presetBalanced": "Equilibrado",
+    "presetBest": "Máxima",
+    "presetLossless": "Sin pérdida",
+    "losslessHint": "Fotogramas exactos, archivo muy grande. Pensado para edición: muchos navegadores y móviles no lo reproducen.",
+    "advanced": "Avanzado",
+    "crfHint": "CRF: menor = más calidad y archivo más grande",
+    "presetFull": "Completa",
+    "presetWeb": "Web",
+    "presetEmail": "Correo",
+    "maxSideNote": "Lado mayor ≤ {n} px",
+    "maxSideClear": "Quitar"
   },
   "howItWorks": {
     "heading": "CÓMO FUNCIONA",

@@ -41,6 +41,7 @@ export interface ConversionSettings {
   imageResizePercent: number; // 100 = original; ignored when a width/height is set
   imageResizeWidth: number; // 0 = derive from height, or from the percent
   imageResizeHeight: number; // 0 = derive from width, or from the percent
+  imageMaxSide: number; // 0 = off; otherwise the longest side is shrunk to at most this (never enlarged)
   imageTargetSizeKb: number; // 0 = off; jpg/webp only — quality is searched to fit
   metadata: string; // image output: 'strip' (default) | 'keep' | 'keep-no-gps'
   ocrLanguage: string; // image → text, and scanned pages in PDF → text: a tesseract code ('eng')
@@ -76,6 +77,7 @@ export const DEFAULT_SETTINGS: ConversionSettings = {
   imageResizePercent: 100,
   imageResizeWidth: 0,
   imageResizeHeight: 0,
+  imageMaxSide: 0,
   imageTargetSizeKb: 0,
   metadata: 'strip',
   ocrLanguage: 'eng',

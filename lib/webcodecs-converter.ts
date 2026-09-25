@@ -113,7 +113,14 @@ export async function convertWithWebCodecs(
 ): Promise<Blob | null> {
   if (!webCodecsCandidate(sourceExt, targetExt)) return null;
   // mediabunny trims but can't cut a section out or draw subtitles: ffmpeg does those.
-  if ((settings?.cutEnd ?? 0) > (settings?.cutStart ?? 0) || settings?.subtitleFile) return null;
+  // Nor lossless (CRF 0): its encoders only take a bitrate.
+  if (
+    (settings?.cutEnd ?? 0) > (settings?.cutStart ?? 0) ||
+    settings?.subtitleFile ||
+    settings?.videoQuality === 0
+  ) {
+    return null;
+  }
   const started = generation;
   const target = TARGETS[targetExt.toLowerCase()];
   const mb = await import('mediabunny');

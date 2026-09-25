@@ -163,7 +163,7 @@ describe('convertWithWebCodecs', () => {
     expect(initOptions?.audio).toEqual({ discard: true });
   });
 
-  it('leaves cuts and burnt-in subtitles to ffmpeg', async () => {
+  it('leaves cuts, burnt-in subtitles and lossless to ffmpeg', async () => {
     const { convertWithWebCodecs } = await load();
     const base = settings as object;
     expect(
@@ -178,6 +178,9 @@ describe('convertWithWebCodecs', () => {
         ...base,
         subtitleFile: new File([''], 's.srt'),
       } as never),
+    ).toBeNull();
+    expect(
+      await convertWithWebCodecs(file(), 'mkv', 'mp4', { ...base, videoQuality: 0 } as never),
     ).toBeNull();
     expect(initOptions).toBeUndefined();
   });
