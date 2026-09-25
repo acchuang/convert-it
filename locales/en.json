@@ -157,7 +157,10 @@
     "applyToSimilar": "Apply to other .{ext} files ({n})",
     "appliedToSimilar": "Applied to {n}",
     "readAsAlias": ".{from} is another name for .{to}: read as .{to}.",
-    "readAsContent": "Read as .{to}: that is what its contents are, whatever the name says."
+    "readAsContent": "Read as .{to}: that is what its contents are, whatever the name says.",
+    "before": "Before",
+    "after": "After",
+    "compare": "Compare before and after"
   },
   "howItWorks": {
     "heading": "HOW IT WORKS",

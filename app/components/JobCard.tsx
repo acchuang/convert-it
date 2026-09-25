@@ -605,6 +605,7 @@ export function JobCard({
         {showPreview && canPreview && (
           <PreviewPanel
             blob={job.resultBlob}
+            source={job.file}
             targetExt={job.targetExt}
             open={showPreview}
             onClose={() => setShowPreview(false)}

@@ -157,7 +157,10 @@
     "applyToSimilar": "他の .{ext} {n} 件にも適用",
     "appliedToSimilar": "{n} 件に適用しました",
     "readAsAlias": ".{from} は .{to} の別名です。.{to} として読み込みます。",
-    "readAsContent": "名前に関係なく、中身が .{to} なので .{to} として読み込みます。"
+    "readAsContent": "名前に関係なく、中身が .{to} なので .{to} として読み込みます。",
+    "before": "変換前",
+    "after": "変換後",
+    "compare": "変換前後を比較"
   },
   "howItWorks": {
     "heading": "使い方",

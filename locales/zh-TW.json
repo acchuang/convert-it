@@ -157,7 +157,10 @@
     "applyToSimilar": "套用到其他 {n} 個 .{ext} 檔案",
     "appliedToSimilar": "已套用到 {n} 個檔案",
     "readAsAlias": ".{from} 是 .{to} 的另一個名稱，以 .{to} 讀取。",
-    "readAsContent": "以 .{to} 讀取：不論檔名為何，它的內容就是 .{to}。"
+    "readAsContent": "以 .{to} 讀取：不論檔名為何，它的內容就是 .{to}。",
+    "before": "轉換前",
+    "after": "轉換後",
+    "compare": "比較轉換前後"
   },
   "howItWorks": {
     "heading": "使用方式",
