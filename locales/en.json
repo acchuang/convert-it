@@ -149,7 +149,9 @@
     "presetWeb": "Web",
     "presetEmail": "Email",
     "maxSideNote": "Longest side ≤ {n} px",
-    "maxSideClear": "Remove"
+    "maxSideClear": "Remove",
+    "applyToSimilar": "Apply to other .{ext} files ({n})",
+    "appliedToSimilar": "Applied to {n}"
   },
   "howItWorks": {
     "heading": "HOW IT WORKS",

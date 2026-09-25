@@ -7,6 +7,7 @@ import {
   getTargetFormats,
   DEFAULT_SETTINGS,
   getFormatInfo,
+  sharedSettings,
 } from '@/lib/converters';
 import type { ConversionSettings } from '@/lib/types';
 import { FILE_SIZE_LIMITS } from '@/lib/types';
@@ -89,6 +90,8 @@ interface UseJobManagerReturn {
   addFiles: (files: FileList | File[] | PickedFile[]) => void;
   updateJob: (id: string, patch: Partial<FileJob>) => void;
   updateJobSettings: (id: string, patch: Partial<ConversionSettings>) => void;
+  /** Copies a job's settings to the other jobs with the same target (see sharedSettings). */
+  applySettingsToSimilar: (id: string) => void;
   convertJob: (job: FileJob) => Promise<void>;
   cancelJob: (id: string) => void;
   downloadJob: (job: FileJob) => void;
@@ -196,6 +199,25 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
             : j,
         ),
       ),
+    [],
+  );
+
+  const applySettingsToSimilar = useCallback(
+    (id: string) =>
+      setJobs((prev) => {
+        const from = prev.find((j) => j.id === id);
+        if (!from) return prev;
+        return prev.map((j) => {
+          if (j.id === id || j.status === 'converting') return j;
+          const patch = sharedSettings(from, j);
+          const changed = Object.entries(patch).some(
+            ([key, value]) => j.settings[key as keyof ConversionSettings] !== value,
+          );
+          return changed
+            ? { ...j, settings: { ...j.settings, ...patch }, status: 'idle', resultBlob: undefined }
+            : j;
+        });
+      }),
     [],
   );
 
@@ -414,6 +436,7 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
     addFiles,
     updateJob,
     updateJobSettings,
+    applySettingsToSimilar,
     convertJob,
     cancelJob,
     downloadJob,

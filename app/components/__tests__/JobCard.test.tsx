@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { JobCard } from '@/app/components/JobCard';
 import type { FileJob } from '@/app/components/JobCard';
+import { DEFAULT_SETTINGS } from '@/lib/types';
 
 const t = (key: string) => key;
 
@@ -138,5 +139,26 @@ describe('JobCard errors', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(
       'File too large (612 MB; the limit is 500 MB)',
     );
+  });
+
+  it('offers to copy its settings to similar files, and says how many it changed', () => {
+    const onApply = vi.fn();
+    render(
+      <JobCard
+        job={{ ...idleJob, settings: DEFAULT_SETTINGS }}
+        onTargetChange={vi.fn()}
+        onConvert={vi.fn()}
+        onDownload={vi.fn()}
+        onRemove={vi.fn()}
+        onSettingsChange={vi.fn()}
+        similarCount={3}
+        onApplyToSimilar={onApply}
+        t={t}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'job.settings' }));
+    fireEvent.click(screen.getByRole('button', { name: 'job.applyToSimilar' }));
+    expect(onApply).toHaveBeenCalledOnce();
+    expect(screen.getByRole('status')).toHaveTextContent('job.appliedToSimilar');
   });
 });

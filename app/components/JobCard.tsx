@@ -70,6 +70,9 @@ interface JobCardProps {
   onDownload: () => void;
   onRemove: () => void;
   onSettingsChange: (patch: Partial<ConversionSettings>) => void;
+  /** Other jobs this one's settings can be copied to, and the copy. */
+  similarCount?: number;
+  onApplyToSimilar?: () => void;
   /** Reorder within the list (merge order); omitted at either end. */
   onMoveUp?: () => void;
   onMoveDown?: () => void;
@@ -84,6 +87,8 @@ export function JobCard({
   onDownload,
   onRemove,
   onSettingsChange,
+  similarCount = 0,
+  onApplyToSimilar,
   onMoveUp,
   onMoveDown,
   t,
@@ -91,6 +96,7 @@ export function JobCard({
   const [showSettings, setShowSettings] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [applied, setApplied] = useState(0);
   const [copyFailed, setCopyFailed] = useState(false);
 
   const info = getFormatInfo(job.sourceExt);
@@ -555,6 +561,30 @@ export function JobCard({
             file={job.file}
             onChange={onSettingsChange}
             t={t}
+            footer={
+              onApplyToSimilar && (similarCount > 0 || applied > 0) ? (
+                <div className="mt-3 flex items-center justify-end gap-2 text-xs">
+                  {applied > 0 && (
+                    <span className="text-[var(--text-muted)]" role="status">
+                      {t('job.appliedToSimilar').replace('{n}', String(applied))}
+                    </span>
+                  )}
+                  <button
+                    onClick={() => {
+                      setApplied(similarCount);
+                      onApplyToSimilar();
+                      setTimeout(() => setApplied(0), 2500);
+                    }}
+                    disabled={similarCount === 0}
+                    className="px-3 py-1.5 rounded-lg border border-[var(--border-secondary)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] disabled:opacity-40 transition-colors"
+                  >
+                    {t('job.applyToSimilar')
+                      .replace('{n}', String(similarCount))
+                      .replace('{ext}', job.targetExt.toUpperCase())}
+                  </button>
+                </div>
+              ) : undefined
+            }
           />
         )}
       </AnimatePresence>

@@ -6,6 +6,7 @@ import {
   CONVERSION_MAP,
   FORMATS,
   SETTING_FIELDS,
+  sharedSettings,
   type SettingKey,
 } from '@/lib/converters';
 import { buildFfmpegArgs } from '@/lib/audio-video-converters';
@@ -112,5 +113,63 @@ describe('declared settings match the ffmpeg command line', () => {
     buildFfmpegArgs(route.from, route.to, 'in', 'out', settings);
     const declared = new Set(route.settings.flatMap((k: SettingKey) => SETTING_FIELDS[k]));
     expect([...read].sort()).toEqual([...declared].sort());
+  });
+});
+
+describe('sharedSettings', () => {
+  const settings = {
+    ...DEFAULT_SETTINGS,
+    quality: 0.6,
+    videoQuality: 30,
+    trimStart: 5,
+    subtitleFile: new File([''], 's.srt'),
+    pdfPageRange: '1-3',
+    pdfRotate: 90,
+  };
+
+  it('copies the fields both routes read', () => {
+    expect(
+      sharedSettings(
+        { sourceExt: 'png', targetExt: 'jpg', settings },
+        {
+          sourceExt: 'heic',
+          targetExt: 'jpg',
+        },
+      ),
+    ).toMatchObject({ quality: 0.6 });
+  });
+
+  it('never the per-file ones: trim points, a subtitle file, a page range', () => {
+    const out = sharedSettings(
+      { sourceExt: 'mp4', targetExt: 'mkv', settings },
+      {
+        sourceExt: 'mov',
+        targetExt: 'mkv',
+      },
+    );
+    expect(out).toMatchObject({ videoQuality: 30 });
+    expect(out).not.toHaveProperty('trimStart');
+    expect(out).not.toHaveProperty('subtitleFile');
+    const pdf = sharedSettings(
+      { sourceExt: 'pdf', targetExt: 'pdf', settings },
+      {
+        sourceExt: 'pdf',
+        targetExt: 'pdf',
+      },
+    );
+    expect(pdf).toMatchObject({ pdfRotate: 90 });
+    expect(pdf).not.toHaveProperty('pdfPageRange');
+  });
+
+  it('nothing across targets', () => {
+    expect(
+      sharedSettings(
+        { sourceExt: 'png', targetExt: 'jpg', settings },
+        {
+          sourceExt: 'png',
+          targetExt: 'webp',
+        },
+      ),
+    ).toEqual({});
   });
 });

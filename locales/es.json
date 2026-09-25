@@ -149,7 +149,9 @@
     "presetWeb": "Web",
     "presetEmail": "Correo",
     "maxSideNote": "Lado mayor ≤ {n} px",
-    "maxSideClear": "Quitar"
+    "maxSideClear": "Quitar",
+    "applyToSimilar": "Aplicar a los demás archivos .{ext} ({n})",
+    "appliedToSimilar": "Aplicado a {n}"
   },
   "howItWorks": {
     "heading": "CÓMO FUNCIONA",

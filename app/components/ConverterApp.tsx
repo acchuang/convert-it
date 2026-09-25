@@ -2,7 +2,13 @@
 
 import { useState, useRef, useMemo, useEffect, useCallback, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getFileExtension, getTargetFormats, FORMATS, getFormatInfo } from '@/lib/converters';
+import {
+  getFileExtension,
+  getTargetFormats,
+  FORMATS,
+  getFormatInfo,
+  sharedSettings,
+} from '@/lib/converters';
 import { JobCard, describeError, type FileJob } from './JobCard';
 import { HistoryPanel } from './HistoryPanel';
 import { getHistory, type HistoryEntry } from '@/lib/history';
@@ -36,6 +42,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
     addFiles,
     updateJob,
     updateJobSettings,
+    applySettingsToSimilar,
     convertJob,
     cancelJob,
     downloadJob,
@@ -86,6 +93,16 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
     }
     return groups;
   }, []);
+
+  // The other jobs "apply to similar files" would change: same target, some
+  // setting in common, not mid-conversion.
+  const similarCount = (job: FileJob) =>
+    jobs.filter(
+      (other) =>
+        other.id !== job.id &&
+        other.status !== 'converting' &&
+        Object.keys(sharedSettings(job, other)).length > 0,
+    ).length;
 
   const applyBatchFormat = () => {
     if (!batchFormat) return;
@@ -573,6 +590,8 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                         onDownload={() => downloadJob(job)}
                         onRemove={() => removeJob(job.id)}
                         onSettingsChange={(patch) => updateJobSettings(job.id, patch)}
+                        similarCount={similarCount(job)}
+                        onApplyToSimilar={() => applySettingsToSimilar(job.id)}
                         onMoveUp={index > 0 ? () => moveJob(job.id, -1) : undefined}
                         onMoveDown={index < jobs.length - 1 ? () => moveJob(job.id, 1) : undefined}
                         t={t}

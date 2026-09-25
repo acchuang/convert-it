@@ -149,7 +149,9 @@
     "presetWeb": "Web",
     "presetEmail": "メール",
     "maxSideNote": "長辺 ≤ {n} px",
-    "maxSideClear": "解除"
+    "maxSideClear": "解除",
+    "applyToSimilar": "他の .{ext} {n} 件にも適用",
+    "appliedToSimilar": "{n} 件に適用しました"
   },
   "howItWorks": {
     "heading": "使い方",

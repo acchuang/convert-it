@@ -364,6 +364,43 @@ export function settingsFor(sourceExt: string, targetExt: string | null): Settin
   return targetExt ? (findRoute(sourceExt, targetExt)?.settings ?? []) : [];
 }
 
+// Settings that belong to one file (a clip's trim points, its subtitle
+// file, a document's page range): never copied to other jobs.
+const PER_FILE_FIELDS: ReadonlySet<keyof ConversionSettings> = new Set([
+  'trimStart',
+  'trimEnd',
+  'cutStart',
+  'cutEnd',
+  'subtitleFile',
+  'pdfPageRange',
+]);
+
+interface RouteJob {
+  sourceExt: string;
+  targetExt: string | null;
+}
+
+/**
+ * What "apply to similar files" copies from one job to another: the fields
+ * both routes read, minus the per-file ones. Empty when the routes share
+ * nothing (a different target, or settings neither reads).
+ */
+export function sharedSettings(
+  from: RouteJob & { settings: ConversionSettings },
+  to: RouteJob,
+): Partial<ConversionSettings> {
+  const out: Partial<ConversionSettings> = {};
+  if (!from.targetExt || from.targetExt !== to.targetExt) return out;
+  const theirs = new Set(settingsFor(to.sourceExt, to.targetExt));
+  for (const key of settingsFor(from.sourceExt, from.targetExt)) {
+    if (!theirs.has(key)) continue;
+    for (const field of SETTING_FIELDS[key]) {
+      if (!PER_FILE_FIELDS.has(field)) Object.assign(out, { [field]: from.settings[field] });
+    }
+  }
+  return out;
+}
+
 export function allRoutes(): readonly Route[] {
   return ROUTES;
 }

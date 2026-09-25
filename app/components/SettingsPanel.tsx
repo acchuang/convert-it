@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { getFormatInfo, settingsFor } from '@/lib/converters';
 import { TrimScrubber } from './TrimScrubber';
@@ -103,6 +103,7 @@ export function SettingsPanel({
   onChange,
   t,
   file,
+  footer,
 }: {
   targetExt: string;
   sourceExt: string;
@@ -111,6 +112,8 @@ export function SettingsPanel({
   settings: ConversionSettings;
   onChange: (patch: Partial<ConversionSettings>) => void;
   t: (key: string) => string;
+  /** Under the controls: the job card's "apply to similar files". */
+  footer?: ReactNode;
 }) {
   const shown = new Set(settingsFor(sourceExt, targetExt));
   const showQuality = shown.has('quality');
@@ -851,6 +854,7 @@ export function SettingsPanel({
           </>
         )}
       </div>
+      {footer}
     </motion.div>
   );
 }

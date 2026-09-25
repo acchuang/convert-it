@@ -149,7 +149,9 @@
     "presetWeb": "網頁",
     "presetEmail": "郵件",
     "maxSideNote": "長邊 ≤ {n} px",
-    "maxSideClear": "移除"
+    "maxSideClear": "移除",
+    "applyToSimilar": "套用到其他 {n} 個 .{ext} 檔案",
+    "appliedToSimilar": "已套用到 {n} 個檔案"
   },
   "howItWorks": {
     "heading": "使用方式",

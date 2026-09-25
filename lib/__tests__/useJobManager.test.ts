@@ -452,3 +452,30 @@ describe('download names and folders', () => {
     ).toEqual(['2-two.json', 'Data/2026/1-one.json']);
   });
 });
+
+describe('apply settings to similar files', () => {
+  it('copies what both routes read to jobs with the same target, and resets them', () => {
+    const { result } = renderHook(() => useJobManager());
+    act(() =>
+      result.current.addFiles([
+        new File(['p'], 'a.png'),
+        new File(['h'], 'b.heic'),
+        new File(['v'], 'c.mp4'),
+        new File(['x'], 'd.csv'),
+      ]),
+    );
+    const [a, b, c] = result.current.jobs;
+    act(() => {
+      for (const job of [a, b, c]) result.current.updateJob(job.id, { targetExt: 'webp' });
+      result.current.updateJob(c.id, { status: 'done', resultBlob: new Blob(['x']) });
+      result.current.updateJobSettings(a.id, { quality: 0.5, imageMaxSide: 1280 });
+    });
+    act(() => result.current.applySettingsToSimilar(a.id));
+    const [, b2, c2, d2] = result.current.jobs;
+    expect(b2.settings).toMatchObject({ quality: 0.5, imageMaxSide: 1280 });
+    // mp4 → webp is an animation: it reads neither, so it keeps its result.
+    expect(c2.settings.quality).toBe(DEFAULT_SETTINGS.quality);
+    expect(c2.status).toBe('done');
+    expect(d2.settings.quality).toBe(DEFAULT_SETTINGS.quality);
+  });
+});
