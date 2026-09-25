@@ -205,7 +205,8 @@
     "keep": "在此设备上保留历史记录",
     "off": "历史记录已关闭：不会在此设备上保存任何关于你文件的信息。",
     "confirmClear": "确认清空？",
-    "confirmClearLabel": "确认清空全部历史记录"
+    "confirmClearLabel": "确认清空全部历史记录",
+    "clearLabel": "清空历史记录"
   },
   "footer": {
     "copyright": "© 2026 Convert-it — 所有转换均在您的浏览器中完成",

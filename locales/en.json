@@ -205,7 +205,8 @@
     "keep": "Keep history on this device",
     "off": "History is off: nothing about your files is saved on this device.",
     "confirmClear": "CONFIRM CLEAR?",
-    "confirmClearLabel": "Confirm clearing all history"
+    "confirmClearLabel": "Confirm clearing all history",
+    "clearLabel": "Clear history"
   },
   "footer": {
     "copyright": "© 2026 Convert-it — All conversions happen in your browser",

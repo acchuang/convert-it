@@ -5,33 +5,30 @@ import { useLocale } from '../components/LocaleProvider';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { useTheme } from '../components/ThemeProvider';
 import Footer from '../components/Footer';
-
-const CATEGORY_COLORS: Record<string, string> = {
-  image: '#FF4D00',
-  document: '#00C2FF',
-  data: '#AAFF44',
-  video: '#FF00C8',
-  audio: '#00E5A0',
-};
+import { CATEGORY_COLORS } from '../components/category-colors';
 
 const formats = [
   {
     catKey: 'image',
-    color: '#FF4D00',
+    color: CATEGORY_COLORS.image,
     exts: 'JPG, PNG, WebP, AVIF, JPEG XL, GIF, BMP, ICO, SVG, HEIC',
   },
   {
     catKey: 'video',
-    color: '#FF00C8',
+    color: CATEGORY_COLORS.video,
     exts: 'MP4, WebM, AVI, MOV, MKV, FLV, M4V, 3GP, GIF, Animated WebP',
   },
-  { catKey: 'audio', color: '#00E5A0', exts: 'MP3, WAV, AAC, OGG, FLAC, M4A, WMA, OPUS' },
+  {
+    catKey: 'audio',
+    color: CATEGORY_COLORS.audio,
+    exts: 'MP3, WAV, AAC, OGG, FLAC, M4A, WMA, OPUS',
+  },
   {
     catKey: 'document',
-    color: '#00C2FF',
+    color: CATEGORY_COLORS.document,
     exts: 'TXT, Markdown, HTML, PDF, Word (DOCX), ePub, SRT, WebVTT',
   },
-  { catKey: 'data', color: '#AAFF44', exts: 'CSV, JSON, XML, YAML, TSV, Excel' },
+  { catKey: 'data', color: CATEGORY_COLORS.data, exts: 'CSV, JSON, XML, YAML, TSV, Excel' },
 ];
 
 const techStack = [
@@ -75,7 +72,7 @@ export default function AboutPage() {
           className="text-2xl sm:text-3xl tracking-wide whitespace-nowrap"
         >
           <Link href="/" className="hover:opacity-80 transition-opacity">
-            <span className="text-[var(--accent)]">Convert</span>
+            <span className="text-[var(--accent-ink)]">Convert</span>
             <span className="text-[var(--text-primary)]">-it</span>
           </Link>
         </div>
@@ -85,7 +82,7 @@ export default function AboutPage() {
 
           <button
             onClick={toggleTheme}
-            className="w-9 h-9 flex items-center justify-center rounded-lg text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--bg-tertiary)] transition-all"
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-[var(--text-secondary)] hover:text-[var(--accent-ink)] hover:bg-[var(--bg-tertiary)] transition-all"
             aria-label={theme === 'dark' ? t('header.themeLight') : t('header.themeDark')}
           >
             {theme === 'dark' ? (
@@ -129,7 +126,7 @@ export default function AboutPage() {
         <section className="mb-20">
           <div
             style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
-            className="text-6xl text-[var(--accent)] mb-6"
+            className="text-6xl text-[var(--accent-ink)] mb-6"
           >
             {t('about.heading')}
           </div>
@@ -155,7 +152,7 @@ export default function AboutPage() {
               >
                 <div
                   style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
-                  className="text-3xl text-[var(--accent)] mb-3"
+                  className="text-3xl text-[var(--accent-ink)] mb-3"
                 >
                   0{n}
                 </div>

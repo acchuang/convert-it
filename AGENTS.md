@@ -25,7 +25,7 @@ Independent Next.js project deployed via Cloudflare Pages.
 - Test: `npx vitest run` (set `EPUBCHECK_JAR` to an epubcheck 5 jar to also validate EPUB output, as CI does)
 - Type-check: `npx tsc --noEmit`
 - Serve the export as Pages would (applies `out/_headers`): `npm run serve`
-- Browser smoke suite (real codecs, CSP violations fail it): `npm run fixtures`, `npm run serve`, then `npm run smoke`; offline behaviour: `node scripts/offline-smoke.mjs`. Set `SMOKE_CHROMIUM_PATH` if Google Chrome isn't installed.
+- Browser smoke suite (real codecs, CSP violations fail it): `npm run fixtures`, `npm run serve`, then `npm run smoke`; offline behaviour: `node scripts/offline-smoke.mjs`; accessibility (axe-core, WCAG 2.1 AA, both themes, serious/critical fail): `npm run a11y`. Set `SMOKE_CHROMIUM_PATH` if Google Chrome isn't installed.
 - Sync wasm assets: `npm run copy-wasm` (CI runs `npm run copy-wasm -- --check`, which fails on any file under `public/wasm` or `public/ocr` that differs from, or doesn't come from, `node_modules`) (run after install or upgrading `@jsquash/*`, `@resvg/resvg-wasm`, or `@hyzyla/pdfium`; copies all codec/library `.wasm` files from `node_modules` into `public/wasm/`). Files are committed, not gitignored.
 
 ## Converter Registry

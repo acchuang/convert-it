@@ -22,7 +22,7 @@ export function AppHeader() {
         style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
         className="text-2xl sm:text-3xl tracking-wide whitespace-nowrap"
       >
-        <span className="text-[var(--accent)]">Convert</span>
+        <span className="text-[var(--accent-ink)]">Convert</span>
         <span className="text-[var(--text-primary)]">-it</span>
       </motion.div>
 
@@ -31,7 +31,7 @@ export function AppHeader() {
 
         <button
           onClick={toggleTheme}
-          className="w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--bg-tertiary)] transition-all"
+          className="w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg text-[var(--text-secondary)] hover:text-[var(--accent-ink)] hover:bg-[var(--bg-tertiary)] transition-all"
           aria-label={theme === 'dark' ? t('header.themeLight') : t('header.themeDark')}
           title={theme === 'dark' ? t('header.themeLight') : t('header.themeDark')}
         >

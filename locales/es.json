@@ -205,7 +205,8 @@
     "keep": "Guardar historial en este dispositivo",
     "off": "El historial está desactivado: no se guarda nada sobre tus archivos en este dispositivo.",
     "confirmClear": "¿CONFIRMAR BORRADO?",
-    "confirmClearLabel": "Confirmar el borrado de todo el historial"
+    "confirmClearLabel": "Confirmar el borrado de todo el historial",
+    "clearLabel": "Borrar historial"
   },
   "footer": {
     "copyright": "© 2026 Convert-it — Todas las conversiones ocurren en tu navegador",

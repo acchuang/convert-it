@@ -103,7 +103,7 @@ export default async function PairPage({ params }: { params: Promise<{ pair: str
             <Link
               key={to}
               href={`/convert/${pair.from}-to-${to}`}
-              className="px-3 py-1 text-xs rounded-full border border-[var(--border-secondary)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
+              className="px-3 py-1 text-xs rounded-full border border-[var(--border-secondary)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent-ink)] transition-colors"
               style={{ fontFamily: 'var(--font-mono)' }}
             >
               {pair.from.toUpperCase()} → {to.toUpperCase()}

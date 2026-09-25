@@ -205,7 +205,8 @@
     "keep": "在此裝置上保留歷史記錄",
     "off": "歷史記錄已關閉：不會在此裝置上儲存任何關於你檔案的資訊。",
     "confirmClear": "確認清除？",
-    "confirmClearLabel": "確認清除全部歷史記錄"
+    "confirmClearLabel": "確認清除全部歷史記錄",
+    "clearLabel": "清除歷史記錄"
   },
   "footer": {
     "copyright": "© 2026 Convert-it — 所有轉換均在您的瀏覽器中完成",

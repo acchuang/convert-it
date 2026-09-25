@@ -205,7 +205,8 @@
     "keep": "この端末に履歴を残す",
     "off": "履歴はオフです。ファイルに関する情報はこの端末に保存されません。",
     "confirmClear": "本当に消去しますか？",
-    "confirmClearLabel": "履歴をすべて消去することを確認"
+    "confirmClearLabel": "履歴をすべて消去することを確認",
+    "clearLabel": "履歴を消去"
   },
   "footer": {
     "copyright": "© 2026 Convert-it — すべての変換はブラウザ内で行われます",

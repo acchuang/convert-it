@@ -22,6 +22,7 @@
     "test:watch": "vitest",
     "fixtures": "node scripts/make-fixtures.mjs && node scripts/make-webm.mjs",
     "smoke": "node scripts/smoke.mjs",
+    "a11y": "node scripts/a11y-smoke.mjs",
     "copy-wasm": "node scripts/copy-wasm.mjs",
     "serve": "node scripts/serve-out.mjs",
     "icons": "node scripts/build-icons.mjs"
@@ -78,6 +79,7 @@
     "@types/turndown": "^5.0.6",
     "@vitejs/plugin-react": "^6.0.2",
     "autoprefixer": "^10.4.0",
+    "axe-core": "^4.13.0",
     "canvas": "^3.2.3",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.6",

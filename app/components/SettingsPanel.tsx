@@ -178,6 +178,7 @@ export function SettingsPanel({
               max={100}
               value={qualityPct}
               onChange={(e) => onChange({ quality: Number(e.target.value) / 100 })}
+              aria-label={t('job.quality')}
               className="w-full accent-[var(--accent)]"
             />
             <div className="flex justify-between text-xs text-[var(--text-muted)]">

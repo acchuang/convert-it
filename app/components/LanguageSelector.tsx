@@ -73,7 +73,7 @@ export function LanguageSelector() {
                 }}
                 className={`w-full text-left px-3 py-2 text-xs transition-colors flex items-center gap-2 ${
                   locale === l.code
-                    ? 'text-[var(--accent)] bg-[var(--accent)]/5'
+                    ? 'text-[var(--accent-ink)] bg-[var(--accent)]/5'
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
                 }`}
                 style={{ fontFamily: 'var(--font-mono)' }}

@@ -429,7 +429,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2.5"
-                    className="text-[var(--accent)]"
+                    className="text-[var(--accent-ink)]"
                   >
                     <path d="M12 5v14M5 12h14" />
                   </svg>
@@ -678,7 +678,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                 >
                   <div
                     style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
-                    className="text-3xl text-[var(--accent)] mb-3"
+                    className="text-3xl text-[var(--accent-ink)] mb-3"
                   >
                     {String(n).padStart(2, '0')}
                   </div>
@@ -723,7 +723,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                 </span>
                 <button
                   onClick={undoRemove}
-                  className="font-semibold text-[var(--accent)] hover:underline flex-shrink-0"
+                  className="font-semibold text-[var(--accent-ink)] hover:underline flex-shrink-0"
                 >
                   {t('toolbar.undo')}
                 </button>
