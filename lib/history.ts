@@ -1,5 +1,6 @@
 import type { HistoryEntry } from './types';
 import { readStored, writeStored, removeStored } from './storage';
+import { clearStats } from './stats';
 
 const HISTORY_KEY = 'convert-it-history';
 const MAX_ENTRIES = 30;
@@ -29,6 +30,7 @@ export function setHistoryEnabled(on: boolean): void {
   } else {
     writeStored(HISTORY_OFF_KEY, '1');
     clearHistory();
+    clearStats();
   }
 }
 

@@ -11,6 +11,7 @@ import {
 } from '@/lib/converters';
 import { JobCard, describeError, type FileJob } from './JobCard';
 import { HistoryPanel } from './HistoryPanel';
+import { StatsPanel } from './StatsPanel';
 import { getHistory, type HistoryEntry } from '@/lib/history';
 import { useLocale } from './LocaleProvider';
 import { useJobManager } from '@/lib/useJobManager';
@@ -698,6 +699,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
 
           {/* History is always accessible */}
           <HistoryPanel entries={history} onClear={() => setHistory([])} t={t} />
+          <StatsPanel t={t} />
         </div>
 
         <AnimatePresence>
