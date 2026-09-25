@@ -5,7 +5,8 @@
     "github": "Ver código en GitHub",
     "buyCoffee": "Invítame un café",
     "about": "ACERCA DE",
-    "home": "← INICIO"
+    "home": "← INICIO",
+    "language": "Elegir idioma"
   },
   "dropzone": {
     "title": "ARRASTRAR Y SOLTAR",
@@ -16,7 +17,9 @@
     "document": "DOCUMENTO",
     "data": "DATOS",
     "folder": "o elige una carpeta",
-    "paste": "o pega (Ctrl/⌘+V): archivos, capturas o un rango de una hoja de cálculo"
+    "paste": "o pega (Ctrl/⌘+V): archivos, capturas o un rango de una hoja de cálculo",
+    "anywhere": "SUELTA LOS ARCHIVOS DONDE QUIERAS",
+    "local": "Procesado 100 % en tu dispositivo"
   },
   "toolbar": {
     "addFiles": "AÑADIR ARCHIVOS",
@@ -38,7 +41,9 @@
     "removedOne": "Se quitó {name}",
     "removedMany": "Se quitaron {n} archivos",
     "undo": "Deshacer",
-    "dismiss": "Cerrar"
+    "dismiss": "Cerrar",
+    "dropMore": "Suelta más archivos aquí o haz clic para buscar",
+    "shortcut": "Atajo de teclado: Ctrl/⌘+Intro"
   },
   "warning": {
     "largeFile": "Archivo grande detectado",
@@ -165,7 +170,18 @@
     "heicImages": "Imágenes del archivo",
     "heicPrimary": "Foto principal",
     "heicAll": "Todas (zip)",
-    "heicHint": "Para ráfagas y secuencias; una sola foto no cambia."
+    "heicHint": "Para ráfagas y secuencias; una sola foto no cambia.",
+    "qualityLow": "Baja (compacto)",
+    "qualityHigh": "Alta (nítido)",
+    "ready": "Listo",
+    "readyDownload": "Listo para descargar",
+    "stage": {
+      "engine": "Cargando el motor de conversión…",
+      "converting": "Convirtiendo en tu dispositivo…",
+      "processing": "Procesando {pct} %",
+      "finalizing": "Terminando…",
+      "complete": "Hecho"
+    }
   },
   "howItWorks": {
     "heading": "CÓMO FUNCIONA",
@@ -187,7 +203,10 @@
     "clear": "LIMPIAR",
     "empty": "Sin conversiones aún — arrastra un archivo arriba para comenzar",
     "keep": "Guardar historial en este dispositivo",
-    "off": "El historial está desactivado: no se guarda nada sobre tus archivos en este dispositivo."
+    "off": "El historial está desactivado: no se guarda nada sobre tus archivos en este dispositivo.",
+    "confirmClear": "¿CONFIRMAR BORRADO?",
+    "confirmClearLabel": "Confirmar el borrado de todo el historial",
+    "clearLabel": "Borrar historial"
   },
   "footer": {
     "copyright": "© 2026 Convert-it — Todas las conversiones ocurren en tu navegador",
@@ -350,6 +369,10 @@
       "video": "Este formato de vídeo aún no se lee aquí. Expórtalo como {formats} desde la app que lo creó.",
       "audio": "Este formato de audio aún no se lee aquí. Expórtalo como {formats} desde la app que lo creó.",
       "unknown": "Su contenido no coincide con ningún formato que esta app lea. Si sabes qué es, renómbralo con la extensión correcta y añádelo de nuevo."
+    },
+    "boundary": {
+      "title": "Algo salió mal",
+      "retry": "Reintentar"
     }
   },
   "offline": {
@@ -363,5 +386,12 @@
     "received": "· recibido",
     "offline": "Sin conexión, sigue funcionando ·",
     "hint": "Lo cuenta el service worker de la app, por el que pasa cada petición: lo enviado (tus archivos nunca) y lo descargado (la app y sus motores) por la red en este navegador. Lo que sale de la caché no cuenta."
+  },
+  "app": {
+    "label": "Convertidor de archivos Convert-it"
+  },
+  "status": {
+    "local": "ESTACIÓN LOCAL",
+    "inBrowser": "WebAssembly 100 % en el navegador"
   }
 }

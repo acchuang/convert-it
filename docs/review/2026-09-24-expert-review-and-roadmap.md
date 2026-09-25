@@ -93,6 +93,19 @@ _Reviewed at `7a92641` (2026-09-24). Scope: every file in `lib/`, the app shell,
     - **HEIC:** an image that failed to render came out blank instead of failing.
     - **Retry:** it was shown on errors with no target, where it could do nothing.
     - **Preview:** video results were previewed as a broken `<img>`.
+- **Phase 6: done (the §9 quality bars and the last §6 item, now enforced in CI).**
+  - **i18n:** the remaining English in the UI moved to `locales/`: the status bar, drop overlay, job stages, history times (now `Intl.RelativeTimeFormat`), the crash screen and others. Two tests keep it that way:
+    - `i18n-literals` walks the components' JSX and fails on hard-coded English.
+    - `i18n-keys` checks all five locales have the same keys, and that every key the code names exists.
+    - The `/convert/*` SEO pages stay English on purpose.
+  - **Accessibility:** `npm run a11y` runs axe-core (WCAG 2.1 AA) in CI on every page and interactive state, in both themes. It found, and this phase fixed:
+    - contrast in the light theme and on faded category chips, fixed with a new `--accent-ink` and per-theme category tokens
+    - a button nested inside the drop zone's button role
+    - an unlabelled slider
+    - two different buttons both named "CLEAR"
+  - **§6 component size:** `SettingsPanel` (879 lines) is now a 60-line shell over one file per category under `app/components/settings/`.
+  - **§9 time to first conversion:** the smoke suite times a cold PNG → WebP. The budgets are 1 s for the card to appear and 2 s from Convert to download; locally it takes 59 ms and 313 ms. The engine download shows as its own labelled stage, pinned by a test.
+  - **Still open:** analytics (Phase 4 item 10) and the §9 per-pair failure rate both wait on the policy decision.
 
 ## 1. Executive summary
 

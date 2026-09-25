@@ -5,7 +5,8 @@
     "github": "在 GitHub 上查看源码",
     "buyCoffee": "请我喝杯咖啡",
     "about": "关于",
-    "home": "← 首页"
+    "home": "← 首页",
+    "language": "选择语言"
   },
   "dropzone": {
     "title": "拖放文件",
@@ -16,7 +17,9 @@
     "document": "文档",
     "data": "数据",
     "folder": "或选择一个文件夹",
-    "paste": "或粘贴（Ctrl/⌘+V）：文件、截图、电子表格中的区域"
+    "paste": "或粘贴（Ctrl/⌘+V）：文件、截图、电子表格中的区域",
+    "anywhere": "拖放到任意位置",
+    "local": "100% 在你的设备上处理"
   },
   "toolbar": {
     "addFiles": "添加文件",
@@ -38,7 +41,9 @@
     "removedOne": "已移除 {name}",
     "removedMany": "已移除 {n} 个文件",
     "undo": "撤销",
-    "dismiss": "关闭"
+    "dismiss": "关闭",
+    "dropMore": "将更多文件拖到这里，或点击浏览",
+    "shortcut": "键盘快捷键：Ctrl/⌘+Enter"
   },
   "warning": {
     "largeFile": "检测到大文件",
@@ -165,7 +170,18 @@
     "heicImages": "文件中的图片",
     "heicPrimary": "主照片",
     "heicAll": "全部 (zip)",
-    "heicHint": "用于连拍和图片序列；单张照片不受影响。"
+    "heicHint": "用于连拍和图片序列；单张照片不受影响。",
+    "qualityLow": "低（体积小）",
+    "qualityHigh": "高（清晰）",
+    "ready": "就绪",
+    "readyDownload": "可以下载",
+    "stage": {
+      "engine": "正在加载转换引擎…",
+      "converting": "正在你的设备上转换…",
+      "processing": "处理中 {pct}%",
+      "finalizing": "即将完成…",
+      "complete": "完成"
+    }
   },
   "howItWorks": {
     "heading": "使用方式",
@@ -187,7 +203,10 @@
     "clear": "清除",
     "empty": "尚无转换记录 — 将文件拖拽至上方即可开始",
     "keep": "在此设备上保留历史记录",
-    "off": "历史记录已关闭：不会在此设备上保存任何关于你文件的信息。"
+    "off": "历史记录已关闭：不会在此设备上保存任何关于你文件的信息。",
+    "confirmClear": "确认清空？",
+    "confirmClearLabel": "确认清空全部历史记录",
+    "clearLabel": "清空历史记录"
   },
   "footer": {
     "copyright": "© 2026 Convert-it — 所有转换均在您的浏览器中完成",
@@ -350,6 +369,10 @@
       "video": "暂不支持读取这种视频格式。请在创建它的应用中导出为 {formats}。",
       "audio": "暂不支持读取这种音频格式。请在创建它的应用中导出为 {formats}。",
       "unknown": "它的内容与本应用支持的任何格式都不匹配。如果你知道它是什么，请改成正确的扩展名后重新添加。"
+    },
+    "boundary": {
+      "title": "出了点问题",
+      "retry": "重试"
     }
   },
   "offline": {
@@ -363,5 +386,12 @@
     "received": "· 已接收",
     "offline": "离线，仍可使用 ·",
     "hint": "由本应用的 Service Worker 统计，所有请求都经过它：在此浏览器中通过网络发送的数据（你的文件从不发送）和下载的数据（应用和转换引擎）。缓存读取不计入。"
+  },
+  "app": {
+    "label": "Convert-it 文件转换器"
+  },
+  "status": {
+    "local": "本地工作站",
+    "inBrowser": "100% 浏览器内 WebAssembly"
   }
 }

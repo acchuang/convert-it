@@ -271,6 +271,38 @@ for (const [fixture, target, label, check] of PAIRS) {
   await page.close();
 }
 
+// Time to first conversion (review §9): a cold page (fresh context, nothing
+// cached), one PNG → WebP. Measured from the user's side: file added → card
+// shown, and Convert pressed → download ready, which includes fetching and
+// starting the worker and the codec. Playwright's own wait for the button's
+// entry animation is not counted.
+{
+  const BUDGET = { card: 1000, convert: 2000 };
+  const row = { pair: 'png → webp', label: 'cold, timed', ok: false, note: '' };
+  const page = await browser.newPage();
+  try {
+    await page.goto(APP, { waitUntil: 'networkidle' });
+    let start = Date.now();
+    await page.setInputFiles('input[type="file"]:not([webkitdirectory])', join(DIR, 'img.png'));
+    const card = page.locator('[role="listitem"]').first();
+    await card.waitFor();
+    const cardMs = Date.now() - start;
+    await card.locator('select[aria-label="Target format"]').selectOption('webp');
+    const convert = card.locator('button[aria-label^="CONVERT →"]');
+    await convert.click({ trial: true }); // waits until it can be clicked
+    start = Date.now();
+    await convert.click();
+    await card.locator('button[aria-label="DOWNLOAD"]').waitFor({ timeout: 30000 });
+    const convertMs = Date.now() - start;
+    row.ok = cardMs <= BUDGET.card && convertMs <= BUDGET.convert;
+    row.note = `card ${cardMs} ms (≤ ${BUDGET.card}), convert ${convertMs} ms (≤ ${BUDGET.convert})`;
+  } catch (err) {
+    row.note = err.message.split('\n')[0];
+  }
+  results.push(row);
+  await page.close();
+}
+
 await browser.close();
 
 console.log(`\n=== ${engine} ===`);

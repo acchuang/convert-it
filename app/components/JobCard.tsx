@@ -7,6 +7,7 @@ import { getTargetFormats, getFormatInfo, formatFileSize, settingsFor } from '@/
 import type { ConversionSettings } from '@/lib/types';
 import { PreviewPanel } from './PreviewPanel';
 import { SettingsPanel } from './SettingsPanel';
+import { CATEGORY_COLORS, tint } from './category-colors';
 import { asClipboardPng } from '@/lib/paste';
 
 export interface FileJob {
@@ -18,7 +19,8 @@ export interface FileJob {
   resultBlob?: Blob;
   error?: ConversionFailure;
   progress: number;
-  stage?: string;
+  /** Where the conversion is, as a key under job.stage in locales/. */
+  stage?: 'engine' | 'converting' | 'processing' | 'finalizing' | 'complete';
   settings: ConversionSettings;
   /** Folder the file came from within a dropped/picked folder ('' or unset: top level). */
   folder?: string;
@@ -28,14 +30,6 @@ export interface FileJob {
   /** Renamed because its name didn't match what it is (see lib/identify). */
   identified?: { from: string; reason: 'alias' | 'content' };
 }
-
-const CATEGORY_COLORS: Record<string, string> = {
-  image: '#FF4D00',
-  document: '#00C2FF',
-  data: '#AAFF44',
-  video: '#FF00C8',
-  audio: '#00E5A0',
-};
 
 const TEXT_FORMATS = new Set(['json', 'csv', 'xml', 'yaml', 'tsv', 'md', 'html', 'txt']);
 
@@ -113,7 +107,7 @@ export function JobCard({
 
   const info = getFormatInfo(job.sourceExt);
   const category = info?.category ?? 'document';
-  const categoryColor = CATEGORY_COLORS[category] ?? '#666';
+  const categoryColor = CATEGORY_COLORS[category] ?? 'var(--text-muted)';
   const targets = getTargetFormats(job.sourceExt);
   const canConfigure = settingsFor(job.sourceExt, job.targetExt).length > 0;
   const canPreview =
@@ -200,7 +194,7 @@ export function JobCard({
             <span
               className="px-2 py-0.5 text-xs rounded-md border flex-shrink-0 font-medium"
               style={{
-                borderColor: categoryColor + '40',
+                borderColor: tint(categoryColor, 25),
                 color: categoryColor,
               }}
             >
@@ -272,7 +266,7 @@ export function JobCard({
               aria-label={t('job.settings')}
               className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all hover:bg-[var(--bg-tertiary)] ${
                 showSettings
-                  ? 'text-[var(--accent)] bg-[var(--accent)]/10'
+                  ? 'text-[var(--accent-ink)] bg-[var(--accent)]/10'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >
@@ -348,11 +342,11 @@ export function JobCard({
           {job.status === 'idle' && (
             <span className="text-[var(--text-muted)] flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)]" />
-              Ready
+              {t('job.ready')}
             </span>
           )}
           {job.status === 'converting' && (
-            <div className="flex items-center gap-2 text-[var(--accent)]" aria-live="polite">
+            <div className="flex items-center gap-2 text-[var(--accent-ink)]" aria-live="polite">
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
@@ -361,7 +355,7 @@ export function JobCard({
               <span className="font-semibold">{job.progress}%</span>
               <span className="text-[var(--text-muted)] text-[10px]">·</span>
               <span className="text-[var(--text-muted)] truncate max-w-[180px] sm:max-w-xs">
-                {job.stage || 'Processing locally...'}
+                {t(`job.stage.${job.stage ?? 'converting'}`).replace('{pct}', String(job.progress))}
               </span>
             </div>
           )}
@@ -377,7 +371,7 @@ export function JobCard({
               >
                 <polyline points="20 6 9 17 4 12" />
               </svg>
-              Ready to download
+              {t('job.readyDownload')}
             </span>
           )}
           {job.status === 'error' && (
@@ -442,7 +436,7 @@ export function JobCard({
                   onClick={copyResult}
                   className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors flex items-center gap-1.5 ${
                     copied
-                      ? 'border-[var(--accent)]/50 text-[var(--accent)]'
+                      ? 'border-[var(--accent)]/50 text-[var(--accent-ink)]'
                       : copyFailed
                         ? 'border-[var(--error)]/50 text-[var(--error)]'
                         : 'border-[var(--border-secondary)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-primary'
@@ -507,7 +501,7 @@ export function JobCard({
                   onClick={() => setShowPreview((s) => !s)}
                   className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors flex items-center gap-1.5 ${
                     showPreview
-                      ? 'border-[var(--accent)]/50 text-[var(--accent)] bg-[var(--accent)]/5'
+                      ? 'border-[var(--accent)]/50 text-[var(--accent-ink)] bg-[var(--accent)]/5'
                       : 'border-[var(--border-secondary)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-primary'
                   }`}
                   style={{ fontFamily: 'var(--font-mono)' }}

@@ -59,7 +59,7 @@ export default function NetworkBadge() {
       title={t('network.hint')}
       data-testid="network-badge"
     >
-      {!online && <span className="text-[var(--accent)]">{t('network.offline')}</span>}
+      {!online && <span className="text-[var(--accent-ink)]">{t('network.offline')}</span>}
       <span>
         {t('network.sent')}{' '}
         <strong className={log.sent ? 'text-[var(--error)]' : 'text-[var(--success)]'}>

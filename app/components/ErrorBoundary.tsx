@@ -4,7 +4,11 @@ import { Component, type ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
+  /** Localized text; the English fallback is for a crash above the locale provider. */
+  labels?: { title: string; retry: string };
 }
+
+const FALLBACK = { title: 'Something went wrong', retry: 'Try again' };
 
 interface State {
   error: Error | null;
@@ -40,7 +44,9 @@ export default class ErrorBoundary extends Component<Props, State> {
           >
             !
           </div>
-          <p className="text-[var(--text-primary)] mb-2 text-lg">Something went wrong</p>
+          <p className="text-[var(--text-primary)] mb-2 text-lg">
+            {(this.props.labels ?? FALLBACK).title}
+          </p>
           <p
             className="text-[var(--text-muted)] text-sm mb-6"
             style={{ fontFamily: 'var(--font-mono)' }}
@@ -52,7 +58,7 @@ export default class ErrorBoundary extends Component<Props, State> {
             className="px-6 py-2.5 bg-[var(--accent)] text-[var(--accent-text)] text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
-            Try again
+            {(this.props.labels ?? FALLBACK).retry}
           </button>
         </div>
       );

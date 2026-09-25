@@ -44,10 +44,12 @@ export function clearHistory(): void {
   removeStored(HISTORY_KEY);
 }
 
-export function timeAgo(isoDate: string): string {
+/** "3 minutes ago", in the page's language (Intl does the wording). */
+export function timeAgo(isoDate: string, locale = 'en'): string {
   const seconds = Math.floor((Date.now() - new Date(isoDate).getTime()) / 1000);
-  if (seconds < 60) return 'just now';
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-  return `${Math.floor(seconds / 86400)}d ago`;
+  const format = new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style: 'short' });
+  if (seconds < 60) return format.format(0, 'second');
+  if (seconds < 3600) return format.format(-Math.floor(seconds / 60), 'minute');
+  if (seconds < 86400) return format.format(-Math.floor(seconds / 3600), 'hour');
+  return format.format(-Math.floor(seconds / 86400), 'day');
 }

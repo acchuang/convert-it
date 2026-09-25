@@ -5,7 +5,8 @@
     "github": "在 GitHub 上查看原始碼",
     "buyCoffee": "請我喝杯咖啡",
     "about": "關於",
-    "home": "← 首頁"
+    "home": "← 首頁",
+    "language": "選擇語言"
   },
   "dropzone": {
     "title": "拖放檔案",
@@ -16,7 +17,9 @@
     "document": "文件",
     "data": "資料",
     "folder": "或選擇一個資料夾",
-    "paste": "或貼上（Ctrl/⌘+V）：檔案、螢幕截圖、試算表中的範圍"
+    "paste": "或貼上（Ctrl/⌘+V）：檔案、螢幕截圖、試算表中的範圍",
+    "anywhere": "拖放到任意位置",
+    "local": "100% 在你的裝置上處理"
   },
   "toolbar": {
     "addFiles": "新增檔案",
@@ -38,7 +41,9 @@
     "removedOne": "已移除 {name}",
     "removedMany": "已移除 {n} 個檔案",
     "undo": "復原",
-    "dismiss": "關閉"
+    "dismiss": "關閉",
+    "dropMore": "將更多檔案拖到這裡，或點擊瀏覽",
+    "shortcut": "鍵盤快速鍵：Ctrl/⌘+Enter"
   },
   "warning": {
     "largeFile": "偵測到大檔案",
@@ -165,7 +170,18 @@
     "heicImages": "檔案中的圖片",
     "heicPrimary": "主要照片",
     "heicAll": "全部 (zip)",
-    "heicHint": "用於連拍和圖片序列；單張照片不受影響。"
+    "heicHint": "用於連拍和圖片序列；單張照片不受影響。",
+    "qualityLow": "低（體積小）",
+    "qualityHigh": "高（清晰）",
+    "ready": "就緒",
+    "readyDownload": "可以下載",
+    "stage": {
+      "engine": "正在載入轉換引擎…",
+      "converting": "正在你的裝置上轉換…",
+      "processing": "處理中 {pct}%",
+      "finalizing": "即將完成…",
+      "complete": "完成"
+    }
   },
   "howItWorks": {
     "heading": "使用方式",
@@ -187,7 +203,10 @@
     "clear": "清除",
     "empty": "尚無轉換記錄 — 將檔案拖曳至上方可開始使用",
     "keep": "在此裝置上保留歷史記錄",
-    "off": "歷史記錄已關閉：不會在此裝置上儲存任何關於你檔案的資訊。"
+    "off": "歷史記錄已關閉：不會在此裝置上儲存任何關於你檔案的資訊。",
+    "confirmClear": "確認清除？",
+    "confirmClearLabel": "確認清除全部歷史記錄",
+    "clearLabel": "清除歷史記錄"
   },
   "footer": {
     "copyright": "© 2026 Convert-it — 所有轉換均在您的瀏覽器中完成",
@@ -350,6 +369,10 @@
       "video": "尚不支援讀取這種影片格式。請在建立它的應用程式中匯出為 {formats}。",
       "audio": "尚不支援讀取這種音訊格式。請在建立它的應用程式中匯出為 {formats}。",
       "unknown": "它的內容與本應用程式支援的任何格式都不符。如果你知道它是什麼，請改成正確的副檔名後重新加入。"
+    },
+    "boundary": {
+      "title": "發生問題",
+      "retry": "重試"
     }
   },
   "offline": {
@@ -363,5 +386,12 @@
     "received": "· 已接收",
     "offline": "離線，仍可使用 ·",
     "hint": "由本應用程式的 Service Worker 統計，所有請求都經過它：在此瀏覽器中透過網路傳送的資料（你的檔案從不傳送）和下載的資料（應用程式和轉換引擎）。快取讀取不計入。"
+  },
+  "app": {
+    "label": "Convert-it 檔案轉換器"
+  },
+  "status": {
+    "local": "本機工作站",
+    "inBrowser": "100% 瀏覽器內 WebAssembly"
   }
 }

@@ -277,7 +277,7 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
               ...j,
               status: 'converting',
               progress: 10,
-              stage: isMedia ? 'Initializing WebAssembly engine...' : 'Converting locally...',
+              stage: isMedia ? 'engine' : 'converting',
             }
           : j,
       ),
@@ -289,7 +289,7 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
             ? {
                 ...j,
                 progress: pct,
-                stage: pct >= 100 ? 'Finalizing output...' : `Processing ${pct}%`,
+                stage: pct >= 100 ? 'finalizing' : 'processing',
               }
             : j,
         ),
@@ -305,7 +305,7 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
       setJobs((prev) =>
         prev.map((j) =>
           j.id === job.id
-            ? { ...j, status: 'done', resultBlob: blob, progress: 100, stage: 'Complete', ...size }
+            ? { ...j, status: 'done', resultBlob: blob, progress: 100, stage: 'complete', ...size }
             : j,
         ),
       );

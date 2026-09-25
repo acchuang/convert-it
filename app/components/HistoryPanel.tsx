@@ -2,7 +2,9 @@
 
 import { useReducer, useState, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatFileSize } from '@/lib/converters';
+import { formatFileSize, getFormatInfo } from '@/lib/converters';
+import { CATEGORY_COLORS } from './category-colors';
+import { useLocale } from './LocaleProvider';
 import {
   timeAgo,
   clearHistory,
@@ -11,43 +13,10 @@ import {
   type HistoryEntry,
 } from '@/lib/history';
 
-const CATEGORY_COLORS: Record<string, string> = {
-  jpg: '#FF4D00',
-  jpeg: '#FF4D00',
-  png: '#FF4D00',
-  webp: '#FF4D00',
-  gif: '#FF4D00',
-  bmp: '#FF4D00',
-  ico: '#FF4D00',
-  svg: '#FF4D00',
-  mp4: '#FF00C8',
-  webm: '#FF00C8',
-  avi: '#FF00C8',
-  mov: '#FF00C8',
-  mkv: '#FF00C8',
-  flv: '#FF00C8',
-  mp3: '#00E5A0',
-  wav: '#00E5A0',
-  aac: '#00E5A0',
-  ogg: '#00E5A0',
-  flac: '#00E5A0',
-  m4a: '#00E5A0',
-  txt: '#00C2FF',
-  md: '#00C2FF',
-  html: '#00C2FF',
-  pdf: '#00C2FF',
-  csv: '#AAFF44',
-  json: '#AAFF44',
-  xml: '#AAFF44',
-  yaml: '#AAFF44',
-  tsv: '#AAFF44',
-  xlsx: '#AAFF44',
-};
-
 const subscribeNever = () => () => {};
 
 function getColor(ext: string) {
-  return CATEGORY_COLORS[ext.toLowerCase()] ?? '#666';
+  return CATEGORY_COLORS[getFormatInfo(ext)?.category ?? ''] ?? 'var(--text-muted)';
 }
 
 export function HistoryPanel({
@@ -59,6 +28,7 @@ export function HistoryPanel({
   onClear: () => void;
   t: (key: string) => string;
 }) {
+  const { locale } = useLocale();
   const [open, setOpen] = useState(true);
   const [confirmClear, setConfirmClear] = useState(false);
   // The static page renders "on"; the stored choice is read on hydration
@@ -128,7 +98,7 @@ export function HistoryPanel({
         <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-2 group">
           <h2
             style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
-            className="text-lg text-primary group-hover:text-[var(--accent)] transition-colors"
+            className="text-lg text-primary group-hover:text-[var(--accent-ink)] transition-colors"
           >
             {t('history.heading')}
           </h2>
@@ -161,9 +131,9 @@ export function HistoryPanel({
                 : 'text-[var(--text-muted)] hover:text-[var(--error)]'
             }`}
             style={{ fontFamily: 'var(--font-mono)' }}
-            aria-label={confirmClear ? 'Confirm clear all history' : t('history.clear')}
+            aria-label={confirmClear ? t('history.confirmClearLabel') : t('history.clearLabel')}
           >
-            {confirmClear ? 'CONFIRM CLEAR?' : t('history.clear')}
+            {confirmClear ? t('history.confirmClear') : t('history.clear')}
           </button>
         </div>
       </div>
@@ -209,7 +179,7 @@ export function HistoryPanel({
                         {formatFileSize(entry.fileSize)} → {formatFileSize(entry.resultSize)}
                       </span>
                       <span className="text-[var(--text-muted)] text-xs">
-                        {timeAgo(entry.convertedAt)}
+                        {timeAgo(entry.convertedAt, locale)}
                       </span>
                     </div>
                   </div>

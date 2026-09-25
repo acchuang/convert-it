@@ -3,14 +3,7 @@
 import type { DragEvent } from 'react';
 import { motion } from 'framer-motion';
 import { useLocale } from './LocaleProvider';
-
-export const CATEGORY_COLORS: Record<string, string> = {
-  image: '#FF4D00',
-  document: '#00C2FF',
-  data: '#AAFF44',
-  video: '#FF00C8',
-  audio: '#00E5A0',
-};
+import { CATEGORY_COLORS, tint } from './category-colors';
 
 const ALL_CATEGORIES = ['image', 'video', 'audio', 'document', 'data'] as const;
 
@@ -30,15 +23,15 @@ export function DragOverlay({ dragCategory }: { dragCategory: string | null }) {
         style={{
           fontFamily: 'var(--font-display)',
           color: dragCategory
-            ? (CATEGORY_COLORS[dragCategory] ?? 'var(--accent)')
-            : 'var(--accent)',
+            ? (CATEGORY_COLORS[dragCategory] ?? 'var(--accent-ink)')
+            : 'var(--accent-ink)',
           letterSpacing: '0.08em',
         }}
       >
-        {dragCategory ? t(`dropzone.${dragCategory}`) : 'DROP FILES ANYWHERE'}
+        {dragCategory ? t(`dropzone.${dragCategory}`) : t('dropzone.anywhere')}
       </div>
       <p className="text-sm text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-mono)' }}>
-        {t('dropzone.subtitle')} · Processed 100% locally on your device
+        {t('dropzone.subtitle')} · {t('dropzone.local')}
       </p>
     </motion.div>
   );
@@ -82,13 +75,10 @@ export function DropZone({
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
+        // A click anywhere opens the picker, for the mouse. Keyboard and
+        // screen-reader users get the two real buttons inside instead of one
+        // big button that contains another (which they can't reach).
         onClick={onBrowse}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') onBrowse();
-        }}
-        role="button"
-        tabIndex={0}
-        aria-label={t('dropzone.subtitle')}
         className={`
                   relative border-2 border-dashed rounded-3xl p-12 text-center cursor-pointer
                   transition-all duration-300
@@ -109,7 +99,7 @@ export function DropZone({
               className="text-6xl font-bold"
               style={{
                 fontFamily: 'var(--font-display)',
-                color: CATEGORY_COLORS[dragCategory] ?? '#C8FF00',
+                color: CATEGORY_COLORS[dragCategory] ?? 'var(--accent-ink)',
                 letterSpacing: '0.08em',
               }}
             >
@@ -120,7 +110,7 @@ export function DropZone({
         <div className={dragging ? 'opacity-0' : 'opacity-100 transition-opacity duration-200'}>
           <div
             style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}
-            className="text-6xl text-[var(--accent)] mb-4"
+            className="text-6xl text-[var(--accent-ink)] mb-4"
           >
             <svg
               width="48"
@@ -144,19 +134,23 @@ export function DropZone({
           >
             {t('dropzone.title')}
           </div>
-          <p
-            className="text-[var(--text-muted)] text-sm mb-4"
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation(); // the zone's own click would open a second picker
+              onBrowse();
+            }}
+            className="block mx-auto text-[var(--text-muted)] text-sm mb-4 hover:text-[var(--text-primary)]"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             {t('dropzone.subtitle')}
-          </p>
+          </button>
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation(); // not the file picker the zone itself opens
               onBrowseFolder();
             }}
-            onKeyDown={(e) => e.stopPropagation()}
             className="text-xs underline text-[var(--text-muted)] hover:text-[var(--text-primary)] mb-4"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
@@ -173,9 +167,9 @@ export function DropZone({
             {ALL_CATEGORIES.map((cat) => (
               <span
                 key={cat}
-                className="px-3 py-1 text-xs rounded-full border opacity-75 font-medium"
+                className="px-3 py-1 text-xs rounded-full border font-medium"
                 style={{
-                  borderColor: CATEGORY_COLORS[cat] + '40',
+                  borderColor: tint(CATEGORY_COLORS[cat], 25),
                   color: CATEGORY_COLORS[cat],
                   fontFamily: 'var(--font-mono)',
                 }}
