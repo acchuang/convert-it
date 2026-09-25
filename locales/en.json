@@ -15,7 +15,8 @@
     "audio": "AUDIO",
     "document": "DOCUMENT",
     "data": "DATA",
-    "folder": "or choose a folder"
+    "folder": "or choose a folder",
+    "paste": "or paste (Ctrl/⌘+V): files, screenshots, a range from a spreadsheet"
   },
   "toolbar": {
     "addFiles": "ADD FILES",

@@ -19,6 +19,7 @@ import Footer from './Footer';
 import { AppHeader } from './AppHeader';
 import { DragOverlay, DropZone } from './DropZone';
 import { filesFromDrop, filesFromInput } from '@/lib/drop-files';
+import { filesFromClipboard } from '@/lib/paste';
 import { DEFAULT_NAME_TEMPLATE } from '@/lib/filenames';
 
 const LARGE_FILE_THRESHOLD_MB = 100;
@@ -201,6 +202,26 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [convertAll, removed.length, undoRemove]);
+
+  // Paste anywhere outside a text field: files and screenshots as they are,
+  // text as a file named for what it looks like (lib/paste).
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const target = e.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.closest('input, textarea, select') || target.isContentEditable)
+      ) {
+        return;
+      }
+      const files = filesFromClipboard(e.clipboardData);
+      if (!files.length) return;
+      e.preventDefault();
+      addFiles(files);
+    };
+    window.addEventListener('paste', onPaste);
+    return () => window.removeEventListener('paste', onPaste);
+  }, [addFiles]);
 
   // The Undo toast goes away on its own; the removed files are then let go.
   useEffect(() => {

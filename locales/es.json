@@ -15,7 +15,8 @@
     "audio": "AUDIO",
     "document": "DOCUMENTO",
     "data": "DATOS",
-    "folder": "o elige una carpeta"
+    "folder": "o elige una carpeta",
+    "paste": "o pega (Ctrl/⌘+V): archivos, capturas o un rango de una hoja de cálculo"
   },
   "toolbar": {
     "addFiles": "AÑADIR ARCHIVOS",

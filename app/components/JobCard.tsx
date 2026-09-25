@@ -7,6 +7,7 @@ import { getTargetFormats, getFormatInfo, formatFileSize, settingsFor } from '@/
 import type { ConversionSettings } from '@/lib/types';
 import { PreviewPanel } from './PreviewPanel';
 import { SettingsPanel } from './SettingsPanel';
+import { asClipboardPng } from '@/lib/paste';
 
 export interface FileJob {
   id: string;
@@ -121,6 +122,14 @@ export function JobCard({
     !!job.targetExt &&
     job.resultBlob.type !== 'application/zip';
   const isTextResult = job.targetExt ? TEXT_FORMATS.has(job.targetExt) : false;
+  // Copied as PNG, the one image type every clipboard takes. Not ICO or JPEG
+  // XL (the browser can't decode them to redraw), nor a zip of pages.
+  const isImageResult =
+    !!job.targetExt &&
+    getFormatInfo(job.targetExt)?.category === 'image' &&
+    !['ico', 'jxl'].includes(job.targetExt) &&
+    !!job.resultBlob?.type.startsWith('image/') &&
+    typeof ClipboardItem !== 'undefined';
 
   // A converter that silently doubles a file is a bug the user can only see if
   // we show the delta, so this renders for growth as well as shrinkage.
@@ -135,8 +144,15 @@ export function JobCard({
   const copyResult = async () => {
     if (!job.resultBlob) return;
     try {
-      const text = await job.resultBlob.text();
-      await navigator.clipboard.writeText(text);
+      if (isImageResult) {
+        // The PNG promise goes straight into the ClipboardItem: Safari only
+        // accepts a write started inside the click.
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': asClipboardPng(job.resultBlob) }),
+        ]);
+      } else {
+        await navigator.clipboard.writeText(await job.resultBlob.text());
+      }
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -418,7 +434,7 @@ export function JobCard({
 
           {job.status === 'done' && (
             <div className="flex items-center gap-1.5">
-              {isTextResult && (
+              {(isTextResult || isImageResult) && (
                 <motion.button
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}

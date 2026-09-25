@@ -51,4 +51,20 @@ describe('ConverterApp', () => {
     fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
     await waitFor(() => expect(screen.getAllByRole('listitem')).toHaveLength(2));
   });
+
+  it('pasting a spreadsheet range adds it as TSV; pasting into a text field does not', async () => {
+    const { container } = renderApp();
+    const paste = (target: EventTarget, text: string) => {
+      const event = new Event('paste', { bubbles: true, cancelable: true });
+      Object.defineProperty(event, 'clipboardData', {
+        value: { files: [], getData: (type: string) => (type === 'text/plain' ? text : '') },
+      });
+      target.dispatchEvent(event);
+    };
+    paste(document.body, 'a\tb\n1\t2');
+    await waitFor(() => expect(screen.getAllByRole('listitem')).toHaveLength(1));
+    expect(screen.getByText('pasted.tsv')).toBeTruthy();
+    paste(container.querySelector('#name-template')!, 'x\ty\n3\t4');
+    expect(screen.getAllByRole('listitem')).toHaveLength(1);
+  });
 });

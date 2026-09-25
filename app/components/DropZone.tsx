@@ -162,6 +162,12 @@ export function DropZone({
           >
             {t('dropzone.folder')}
           </button>
+          <p
+            className="text-xs text-[var(--text-muted)] -mt-2 mb-4"
+            style={{ fontFamily: 'var(--font-mono)' }}
+          >
+            {t('dropzone.paste')}
+          </p>
 
           <div className="flex flex-wrap justify-center gap-2">
             {ALL_CATEGORIES.map((cat) => (

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { JobCard, describeError } from '@/app/components/JobCard';
 import type { FileJob } from '@/app/components/JobCard';
 import { DEFAULT_SETTINGS } from '@/lib/types';
@@ -210,5 +210,31 @@ describe('JobCard errors', () => {
       />,
     );
     expect(screen.getByTestId('identified')).toHaveTextContent('.YML is .YAML; read as .YAML.');
+  });
+
+  it('copies an image result to the clipboard as PNG', async () => {
+    const write = vi.fn().mockResolvedValue(undefined);
+    class FakeItem {
+      constructor(readonly items: Record<string, Promise<Blob>>) {}
+    }
+    vi.stubGlobal('ClipboardItem', FakeItem);
+    Object.defineProperty(navigator, 'clipboard', { value: { write }, configurable: true });
+    const png = new Blob(['png'], { type: 'image/png' });
+    render(
+      <JobCard
+        job={{ ...doneJob, sourceExt: 'jpg', targetExt: 'png', resultBlob: png }}
+        onTargetChange={vi.fn()}
+        onConvert={vi.fn()}
+        onDownload={vi.fn()}
+        onRemove={vi.fn()}
+        onSettingsChange={vi.fn()}
+        t={t}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'job.copy' }));
+    await waitFor(() => expect(write).toHaveBeenCalledOnce());
+    const [item] = write.mock.calls[0][0] as FakeItem[];
+    expect(await item.items['image/png']).toBe(png);
+    vi.unstubAllGlobals();
   });
 });

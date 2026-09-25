@@ -15,7 +15,8 @@
     "audio": "音频",
     "document": "文档",
     "data": "数据",
-    "folder": "或选择一个文件夹"
+    "folder": "或选择一个文件夹",
+    "paste": "或粘贴（Ctrl/⌘+V）：文件、截图、电子表格中的区域"
   },
   "toolbar": {
     "addFiles": "添加文件",
