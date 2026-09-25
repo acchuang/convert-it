@@ -15,6 +15,10 @@
  *    the home converter for pages never visited.
  *  - "offline-pack" message: caches everything, for people who want the whole
  *    app offline (Footer's "Save for offline use").
+ *  - POST /share-target (the installed app in the share sheet): the shared
+ *    files go into a cache the page reads on /?shared=1.
+ *  - Everything that reaches the network is counted (bytes sent, received)
+ *    for the page's network badge.
  *
  * A new version waits until every tab of the old one is closed instead of
  * taking over mid-conversion (no skipWaiting).
@@ -52,6 +56,61 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Network log, for the page's "sent / received" badge: bytes that actually
+// crossed the network (cache hits don't), counted here because every request
+// from the pages and their workers passes through this worker. Kept across
+// versions, so it covers the app's whole life in this browser.
+const LOG_CACHE = 'network-log';
+const LOG_URL = '/__network-log';
+const logChannel = new BroadcastChannel('network-log');
+let logReady = null;
+let logSaving = null;
+
+function readLog() {
+  logReady ??= caches
+    .match(LOG_URL)
+    .then((saved) => (saved ? saved.json() : null))
+    .catch(() => null)
+    .then((saved) => ({ sent: 0, received: 0, ...saved }));
+  return logReady;
+}
+
+async function record(sent, received) {
+  if (!sent && !received) return;
+  const log = await readLog();
+  log.sent += sent;
+  log.received += received;
+  logChannel.postMessage(log);
+  logSaving ??= new Promise((resolve) => setTimeout(resolve, 1000)).then(async () => {
+    logSaving = null;
+    await (await caches.open(LOG_CACHE)).put(LOG_URL, new Response(JSON.stringify(log)));
+  });
+  await logSaving;
+}
+
+/** fetch(), counted: the request body going out, the response coming in. */
+async function net(request) {
+  const sent =
+    request.method === 'GET' || request.method === 'HEAD'
+      ? 0
+      : (await request.clone().arrayBuffer()).byteLength;
+  const response = await fetch(request);
+  // Content-Length is the size on the wire (compressed); without it, the body.
+  const length = Number(response.headers.get('content-length'));
+  const received =
+    length > 0
+      ? Promise.resolve(length)
+      : response.type === 'opaque'
+        ? Promise.resolve(0)
+        : response
+            .clone()
+            .arrayBuffer()
+            .then((body) => body.byteLength)
+            .catch(() => 0);
+  received.then((bytes) => record(sent, bytes)).catch(() => {});
+  return response;
+}
+
 async function put(cacheName, request, response) {
   if (response.ok && (response.type === 'basic' || response.type === 'cors')) {
     const cache = await caches.open(cacheName);
@@ -63,12 +122,12 @@ async function put(cacheName, request, response) {
 async function cacheFirst(request) {
   const cached = await caches.match(request);
   if (cached) return cached;
-  return put(ASSET_CACHE, request, await fetch(request));
+  return put(ASSET_CACHE, request, await net(request));
 }
 
 async function staleWhileRevalidate(request) {
   const cached = await caches.match(request);
-  const network = fetch(request)
+  const network = net(request)
     .then((response) => put(ASSET_CACHE, request, response))
     .catch(() => cached);
   return cached ?? network;
@@ -76,7 +135,7 @@ async function staleWhileRevalidate(request) {
 
 async function networkFirst(request, cacheName) {
   try {
-    return await put(cacheName, request, await fetch(request));
+    return await put(cacheName, request, await net(request));
   } catch (err) {
     const cached = await caches.match(request, { ignoreSearch: true });
     if (cached) return cached;
@@ -86,7 +145,7 @@ async function networkFirst(request, cacheName) {
 
 async function navigate(request) {
   try {
-    return await put(SHELL_CACHE, request, await fetch(request));
+    return await put(SHELL_CACHE, request, await net(request));
   } catch {
     const url = new URL(request.url);
     const cached =
@@ -99,10 +158,45 @@ async function navigate(request) {
   }
 }
 
+// The share sheet POSTs here (manifest share_target). There's no server to
+// receive it, so the worker does: the files (or the shared text, as a file)
+// go into the share inbox cache, and the page picks them up from there
+// (app/components/ConverterApp.tsx, ?shared=1) and empties it.
+const SHARE_INBOX = 'share-inbox';
+
+async function receiveShare(request) {
+  const form = await request.formData();
+  const inbox = await caches.open(SHARE_INBOX);
+  let n = 0;
+  const keep = (blob, name) =>
+    inbox.put(
+      `/share-inbox/${Date.now()}-${n++}`,
+      new Response(blob, {
+        headers: {
+          'content-type': blob.type || 'application/octet-stream',
+          'x-file-name': encodeURIComponent(name),
+        },
+      }),
+    );
+  const files = form.getAll('files').filter((f) => typeof f !== 'string' && f.size > 0);
+  for (const file of files) await keep(file, file.name);
+  if (!files.length) {
+    const text = [form.get('title'), form.get('text'), form.get('url')]
+      .filter((part) => typeof part === 'string' && part.trim())
+      .join('\n');
+    if (text) await keep(new Blob([text], { type: 'text/plain' }), 'shared.txt');
+  }
+  return Response.redirect('/?shared=1', 303);
+}
+
 self.addEventListener('fetch', (event) => {
   const request = event.request;
-  if (request.method !== 'GET') return;
   const url = new URL(request.url);
+  if (request.method === 'POST' && url.origin === self.location.origin) {
+    if (url.pathname === '/share-target') return event.respondWith(receiveShare(request));
+  }
+  // Anything else that isn't a GET goes out as is, but counted.
+  if (request.method !== 'GET') return event.respondWith(net(request));
 
   if (url.origin === self.location.origin) {
     if (request.mode === 'navigate') return event.respondWith(navigate(request));
@@ -112,16 +206,21 @@ self.addEventListener('fetch', (event) => {
     }
     // RSC payloads for client-side navigation (/about.txt?_rsc=…).
     if (url.pathname.endsWith('.txt')) return event.respondWith(networkFirst(request, SHELL_CACHE));
-    return;
+  } else if (MEDIA_ORIGINS.includes(url.origin)) {
+    return event.respondWith(cacheFirst(request));
   }
-
-  if (MEDIA_ORIGINS.includes(url.origin)) event.respondWith(cacheFirst(request));
+  // The rest (and other origins, which the CSP limits) passes straight
+  // through, counted.
+  event.respondWith(net(request));
 });
 
 // Offline pack: fetch every app asset not cached yet, reporting progress.
 self.addEventListener('message', (event) => {
   const port = event.ports[0];
   if (!port) return;
+  if (event.data === 'network-log') {
+    event.waitUntil(readLog().then((log) => port.postMessage(log)));
+  }
   if (event.data === 'offline-pack-status') {
     event.waitUntil(
       missing().then((left) => port.postMessage({ total: PACK.length, left: left.length })),
@@ -135,7 +234,9 @@ self.addEventListener('message', (event) => {
         let done = PACK.length - left.length;
         for (const path of left) {
           try {
-            await cache.add(path);
+            const response = await net(new Request(path));
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            await cache.put(path, response);
           } catch {
             port.postMessage({ error: path });
             return;

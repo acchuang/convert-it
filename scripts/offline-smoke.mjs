@@ -70,7 +70,33 @@ try {
     String(await page.evaluate(() => !!navigator.serviceWorker.controller)),
     'true',
   );
+  const netLog = () =>
+    page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const channel = new MessageChannel();
+          channel.port1.onmessage = ({ data }) => resolve(data);
+          navigator.serviceWorker.controller.postMessage('network-log', [channel.port2]);
+        }),
+    );
+  const before = await netLog();
   check('online png → webp', await convert(page, 'img.png', 'webp'), 'converted');
+  // The network badge is the worker's count. The WebP codec is fetched by the
+  // conversion worker, not the page, so seeing it in "received" shows worker
+  // traffic is counted too; nothing is sent.
+  const after = await netLog();
+  const codec = await page.evaluate(async () => {
+    const cached = await caches.match('/wasm/webp_enc_simd.wasm');
+    return cached ? (await cached.arrayBuffer()).byteLength : 0;
+  });
+  const badge = page.locator('[data-testid="network-badge"]');
+  await badge.waitFor({ timeout: 10000 });
+  check('network badge: 0 B sent', `${after.sent} / ${await badge.innerText()}`, /^0 \/ Sent 0 B/);
+  check(
+    'network badge: counts the codec the worker fetched',
+    String(codec > 0 && after.received - before.received >= codec),
+    'true',
+  );
 
   await down();
   check(
@@ -103,6 +129,29 @@ try {
     await convert(page, 'unicode.txt', 'pdf'),
     'converted',
   );
+
+  // Share sheet (installed app): the OS POSTs to /share-target, which only
+  // the service worker answers (the server is down here, and a static host
+  // has nothing there anyway); the page then collects the file on /?shared=1.
+  const shared = await page.evaluate(async () => {
+    const form = new FormData();
+    form.append('files', new File(['a,b\n1,2\n'], 'shared-data.csv', { type: 'text/csv' }));
+    const res = await fetch('/share-target', { method: 'POST', body: form, redirect: 'manual' });
+    return res.type;
+  });
+  check('share target: the worker takes the POST', shared, 'opaqueredirect');
+  await page.goto(`${APP}/?shared=1`, { waitUntil: 'domcontentloaded' });
+  const sharedCard = page.locator('[role="listitem"][aria-label="shared-data.csv"]');
+  check(
+    'share target: the shared file is queued, the inbox emptied',
+    await sharedCard
+      .waitFor({ timeout: 15000 })
+      .then(() => page.evaluate(async () => String(await caches.has('share-inbox'))))
+      .catch(() => 'not queued'),
+    'false',
+  );
+  check('share target: ?shared is dropped from the URL', new URL(page.url()).search, '');
+
   check('no CSP violations', String(csp.length), '0');
 } finally {
   await browser.close();

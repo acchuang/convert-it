@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { PreviewPanel } from '@/app/components/PreviewPanel';
 
 const t = (key: string) => key;
@@ -18,12 +18,64 @@ describe('PreviewPanel', () => {
     expect(screen.getByText('job.preview')).toBeDefined();
   });
 
-  it('renders image preview for non-text extensions', async () => {
+  it('says so for a format it can’t show', () => {
     const blob = new Blob(['data'], { type: 'application/octet-stream' });
-    render(<PreviewPanel blob={blob} targetExt="bin" open={true} onClose={vi.fn()} t={t} />);
-    const img = await screen.findByAltText('job.preview');
-    expect(img).toBeDefined();
-    expect((img as HTMLImageElement).src).toContain('blob:');
+    render(<PreviewPanel blob={blob} targetExt="pdf" open={true} onClose={vi.fn()} t={t} />);
+    expect(screen.getByText('job.previewUnavailable')).toBeDefined();
+  });
+
+  it('compares before and after for an image the browser can show, with both sizes', () => {
+    const source = new File([new Uint8Array(2048)], 'photo.png', { type: 'image/png' });
+    const blob = new Blob([new Uint8Array(512)], { type: 'image/webp' });
+    render(
+      <PreviewPanel
+        blob={blob}
+        source={source}
+        targetExt="webp"
+        open={true}
+        onClose={vi.fn()}
+        t={t}
+      />,
+    );
+    const before = screen.getByAltText('job.before') as HTMLImageElement;
+    const after = screen.getByAltText('job.preview') as HTMLImageElement;
+    expect(before.src).toContain('blob:');
+    expect(after.style.clipPath).toBe('inset(0 0 0 50%)');
+    fireEvent.change(screen.getByRole('slider', { name: 'job.compare' }), {
+      target: { value: '20' },
+    });
+    expect(after.style.clipPath).toBe('inset(0 0 0 20%)');
+    expect(document.body.textContent).toContain('2.0 KB');
+    expect(document.body.textContent).toContain('512 B');
+  });
+
+  it('no before side for a source <img> can’t show (HEIC)', () => {
+    const source = new File(['x'], 'photo.heic');
+    render(
+      <PreviewPanel
+        blob={new Blob(['y'], { type: 'image/jpeg' })}
+        source={source}
+        targetExt="jpg"
+        open={true}
+        onClose={vi.fn()}
+        t={t}
+      />,
+    );
+    expect(screen.queryByAltText('job.before')).toBeNull();
+    expect(screen.getByAltText('job.preview')).toBeDefined();
+  });
+
+  it('plays a video result', () => {
+    const { container } = render(
+      <PreviewPanel
+        blob={new Blob(['v'], { type: 'video/mp4' })}
+        targetExt="mp4"
+        open={true}
+        onClose={vi.fn()}
+        t={t}
+      />,
+    );
+    expect(container.querySelector('video[controls]')).not.toBeNull();
   });
 
   it('renders image preview with blob URL', async () => {

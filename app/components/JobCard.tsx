@@ -7,6 +7,7 @@ import { getTargetFormats, getFormatInfo, formatFileSize, settingsFor } from '@/
 import type { ConversionSettings } from '@/lib/types';
 import { PreviewPanel } from './PreviewPanel';
 import { SettingsPanel } from './SettingsPanel';
+import { asClipboardPng } from '@/lib/paste';
 
 export interface FileJob {
   id: string;
@@ -24,6 +25,8 @@ export interface FileJob {
   /** Pixel size of an image result, for {w}x{h} in the name template. */
   resultWidth?: number;
   resultHeight?: number;
+  /** Renamed because its name didn't match what it is (see lib/identify). */
+  identified?: { from: string; reason: 'alias' | 'content' };
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -58,6 +61,15 @@ export function describeError(
       const value = failure.params?.[name];
       return value === undefined ? whole : String(value);
     });
+  const kind = failure.code === 'unsupported' ? failure.params?.kind : undefined;
+  if (kind) {
+    // A file nothing reads (lib/identify): say what it is and what to do.
+    const title = failure.params?.label ? 'title' : 'titleNoExt';
+    return {
+      title: fill(t(`errors.unsupportedFile.${title}`)),
+      hint: fill(t(`errors.unsupportedFile.${kind}`)),
+    };
+  }
   const key = `errors.${ERROR_KEYS[failure.code] ?? 'unknown'}`;
   return { title: fill(t(`${key}.title`)), hint: fill(t(`${key}.hint`)) };
 }
@@ -70,6 +82,9 @@ interface JobCardProps {
   onDownload: () => void;
   onRemove: () => void;
   onSettingsChange: (patch: Partial<ConversionSettings>) => void;
+  /** Other jobs this one's settings can be copied to, and the copy. */
+  similarCount?: number;
+  onApplyToSimilar?: () => void;
   /** Reorder within the list (merge order); omitted at either end. */
   onMoveUp?: () => void;
   onMoveDown?: () => void;
@@ -84,6 +99,8 @@ export function JobCard({
   onDownload,
   onRemove,
   onSettingsChange,
+  similarCount = 0,
+  onApplyToSimilar,
   onMoveUp,
   onMoveDown,
   t,
@@ -91,6 +108,7 @@ export function JobCard({
   const [showSettings, setShowSettings] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [applied, setApplied] = useState(0);
   const [copyFailed, setCopyFailed] = useState(false);
 
   const info = getFormatInfo(job.sourceExt);
@@ -104,6 +122,14 @@ export function JobCard({
     !!job.targetExt &&
     job.resultBlob.type !== 'application/zip';
   const isTextResult = job.targetExt ? TEXT_FORMATS.has(job.targetExt) : false;
+  // Copied as PNG, the one image type every clipboard takes. Not ICO or JPEG
+  // XL (the browser can't decode them to redraw), nor a zip of pages.
+  const isImageResult =
+    !!job.targetExt &&
+    getFormatInfo(job.targetExt)?.category === 'image' &&
+    !['ico', 'jxl'].includes(job.targetExt) &&
+    !!job.resultBlob?.type.startsWith('image/') &&
+    typeof ClipboardItem !== 'undefined';
 
   // A converter that silently doubles a file is a bug the user can only see if
   // we show the delta, so this renders for growth as well as shrinkage.
@@ -118,8 +144,15 @@ export function JobCard({
   const copyResult = async () => {
     if (!job.resultBlob) return;
     try {
-      const text = await job.resultBlob.text();
-      await navigator.clipboard.writeText(text);
+      if (isImageResult) {
+        // The PNG promise goes straight into the ClipboardItem: Safari only
+        // accepts a write started inside the click.
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': asClipboardPng(job.resultBlob) }),
+        ]);
+      } else {
+        await navigator.clipboard.writeText(await job.resultBlob.text());
+      }
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -401,7 +434,7 @@ export function JobCard({
 
           {job.status === 'done' && (
             <div className="flex items-center gap-1.5">
-              {isTextResult && (
+              {(isTextResult || isImageResult) && (
                 <motion.button
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -520,7 +553,8 @@ export function JobCard({
             </div>
           )}
 
-          {job.status === 'error' && (
+          {/* No target (too large, or nothing reads it): retrying can't help. */}
+          {job.status === 'error' && job.targetExt && (
             <button
               onClick={onConvert}
               className="px-4 py-1.5 text-[var(--error)] text-xs rounded-lg border border-[var(--error)]/30 bg-[var(--error)]/10 hover:bg-[var(--error)]/20 transition-colors font-medium flex items-center gap-1"
@@ -555,6 +589,30 @@ export function JobCard({
             file={job.file}
             onChange={onSettingsChange}
             t={t}
+            footer={
+              onApplyToSimilar && (similarCount > 0 || applied > 0) ? (
+                <div className="mt-3 flex items-center justify-end gap-2 text-xs">
+                  {applied > 0 && (
+                    <span className="text-[var(--text-muted)]" role="status">
+                      {t('job.appliedToSimilar').replace('{n}', String(applied))}
+                    </span>
+                  )}
+                  <button
+                    onClick={() => {
+                      setApplied(similarCount);
+                      onApplyToSimilar();
+                      setTimeout(() => setApplied(0), 2500);
+                    }}
+                    disabled={similarCount === 0}
+                    className="px-3 py-1.5 rounded-lg border border-[var(--border-secondary)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] disabled:opacity-40 transition-colors"
+                  >
+                    {t('job.applyToSimilar')
+                      .replace('{n}', String(similarCount))
+                      .replace('{ext}', job.targetExt.toUpperCase())}
+                  </button>
+                </div>
+              ) : undefined
+            }
           />
         )}
       </AnimatePresence>
@@ -563,6 +621,7 @@ export function JobCard({
         {showPreview && canPreview && (
           <PreviewPanel
             blob={job.resultBlob}
+            source={job.file}
             targetExt={job.targetExt}
             open={showPreview}
             onClose={() => setShowPreview(false)}
@@ -570,6 +629,14 @@ export function JobCard({
           />
         )}
       </AnimatePresence>
+
+      {job.identified && job.status !== 'error' && (
+        <p className="mt-2 text-xs text-[var(--text-muted)]" data-testid="identified">
+          {t(job.identified.reason === 'alias' ? 'job.readAsAlias' : 'job.readAsContent')
+            .replaceAll('{to}', job.sourceExt.toUpperCase())
+            .replaceAll('{from}', job.identified.from.toUpperCase())}
+        </p>
+      )}
 
       {job.status === 'error' && job.error && (
         <div role="alert" className="mt-2 text-xs">

@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   convertFile,
   getFileExtension,
   getTargetFormats,
   DEFAULT_SETTINGS,
   getFormatInfo,
+  sharedSettings,
 } from '@/lib/converters';
 import type { ConversionSettings } from '@/lib/types';
 import { FILE_SIZE_LIMITS } from '@/lib/types';
@@ -17,6 +18,7 @@ import { classifyError, type ConversionFailure } from './errors';
 import { canMerge } from './pdf-options';
 import { DEFAULT_NAME_TEMPLATE, applyNameTemplate, safeFileStem, uniqueName } from './filenames';
 import type { PickedFile } from './drop-files';
+import { extensionOf, identify, NEAREST, needsIdentifying, renamed } from './identify';
 import { addHistoryEntry, getHistory, type HistoryEntry } from '@/lib/history';
 
 /**
@@ -89,12 +91,18 @@ interface UseJobManagerReturn {
   addFiles: (files: FileList | File[] | PickedFile[]) => void;
   updateJob: (id: string, patch: Partial<FileJob>) => void;
   updateJobSettings: (id: string, patch: Partial<ConversionSettings>) => void;
+  /** Copies a job's settings to the other jobs with the same target (see sharedSettings). */
+  applySettingsToSimilar: (id: string) => void;
   convertJob: (job: FileJob) => Promise<void>;
   cancelJob: (id: string) => void;
   downloadJob: (job: FileJob) => void;
   downloadAllAsZip: () => Promise<void>;
   applyBatchFormat: (format: string) => void;
   removeJob: (id: string) => void;
+  /** What the last remove/Clear took out (for the Undo toast), and putting it back. */
+  removed: FileJob[];
+  undoRemove: () => void;
+  dismissUndo: () => void;
   convertAll: () => void;
   clearAll: () => void;
   doneCount: number;
@@ -177,6 +185,39 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
         });
       }
       setJobs((prev) => [...prev, ...newJobs]);
+
+      // No route from the name: look at the bytes, then either read it as
+      // what it really is or say why it can't be converted.
+      for (const job of newJobs) {
+        if (job.status !== 'idle' || !needsIdentifying(job.file.name)) continue;
+        void identify(job.file).then(
+          (found) => {
+            const from = extensionOf(job.file.name);
+            const patch: Partial<FileJob> =
+              'ext' in found
+                ? {
+                    file: renamed(job.file, found.ext),
+                    sourceExt: found.ext,
+                    targetExt: pickTarget(found.ext),
+                    identified: { from, reason: found.reason },
+                  }
+                : {
+                    status: 'error',
+                    error: {
+                      code: 'unsupported',
+                      detail: `No converter reads ${from ? `.${from}` : 'files without an extension'}`,
+                      params: {
+                        kind: found.kind,
+                        label: found.label,
+                        formats: NEAREST[found.kind],
+                      },
+                    },
+                  };
+            setJobs((prev) => prev.map((j) => (j.id === job.id ? { ...j, ...patch } : j)));
+          },
+          () => {},
+        );
+      }
     },
     [preferredTarget],
   );
@@ -196,6 +237,25 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
             : j,
         ),
       ),
+    [],
+  );
+
+  const applySettingsToSimilar = useCallback(
+    (id: string) =>
+      setJobs((prev) => {
+        const from = prev.find((j) => j.id === id);
+        if (!from) return prev;
+        return prev.map((j) => {
+          if (j.id === id || j.status === 'converting') return j;
+          const patch = sharedSettings(from, j);
+          const changed = Object.entries(patch).some(
+            ([key, value]) => j.settings[key as keyof ConversionSettings] !== value,
+          );
+          return changed
+            ? { ...j, settings: { ...j.settings, ...patch }, status: 'idle', resultBlob: undefined }
+            : j;
+        });
+      }),
     [],
   );
 
@@ -396,30 +456,68 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
     }
   }, [jobs]);
 
-  const removeJob = useCallback(
-    (id: string) => setJobs((prev) => prev.filter((j) => j.id !== id)),
-    [],
+  // The last removal (one card or Clear), kept so it can be undone, with each
+  // job's place in the list. A new removal replaces it; dismissing frees the
+  // blobs it holds.
+  const [removed, setRemoved] = useState<{ job: FileJob; index: number }[] | null>(null);
+
+  const removeWhere = useCallback(
+    (pick: (job: FileJob) => boolean) => {
+      const taken = jobs.flatMap((job, index) => (pick(job) ? [{ job, index }] : []));
+      if (!taken.length) return;
+      for (const { job } of taken) if (job.status === 'converting') cancelJob(job.id);
+      const ids = new Set(taken.map(({ job }) => job.id));
+      setJobs((prev) => prev.filter((j) => !ids.has(j.id)));
+      setRemoved(
+        taken.map(({ job, index }) => ({
+          index,
+          // A cancelled conversion comes back ready to run again.
+          job: job.status === 'converting' ? { ...job, status: 'idle', progress: 0 } : job,
+        })),
+      );
+    },
+    [jobs, cancelJob],
   );
+
+  const removeJob = useCallback((id: string) => removeWhere((j) => j.id === id), [removeWhere]);
+
+  const undoRemove = useCallback(() => {
+    if (!removed) return;
+    setJobs((prev) => {
+      const out = [...prev];
+      // Ascending original positions put every job back where it was.
+      for (const { job, index } of removed) out.splice(Math.min(index, out.length), 0, job);
+      return out;
+    });
+    setRemoved(null);
+  }, [removed]);
+
+  const dismissUndo = useCallback(() => setRemoved(null), []);
 
   const convertAll = useCallback(() => {
     jobs.filter((j) => j.status === 'idle' && j.targetExt).forEach(convertJob);
   }, [jobs, convertJob]);
 
-  const clearAll = useCallback(() => setJobs([]), []);
+  const clearAll = useCallback(() => removeWhere(() => true), [removeWhere]);
 
   const doneCount = jobs.filter((j) => j.status === 'done').length;
+  const removedJobs = useMemo(() => removed?.map((r) => r.job) ?? [], [removed]);
 
   return {
     jobs,
     addFiles,
     updateJob,
     updateJobSettings,
+    applySettingsToSimilar,
     convertJob,
     cancelJob,
     downloadJob,
     downloadAllAsZip,
     applyBatchFormat,
     removeJob,
+    removed: removedJobs,
+    undoRemove,
+    dismissUndo,
     convertAll,
     clearAll,
     doneCount,

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { SettingsPanel } from '@/app/components/SettingsPanel';
 import { DEFAULT_SETTINGS } from '@/lib/types';
 
@@ -22,7 +22,8 @@ const groups = (source: string, target: string) => {
     resize: has('job.resize'),
     maxSize: has('job.maxSize'),
     bitrate: has('job.bitrate'),
-    preset: has('job.preset'),
+    // job.preset, not job.presetBalanced and friends
+    preset: /job\.preset(?![A-Z])/.test(text),
     delimiter: has('job.delimiter'),
     indent: has('job.indent'),
     pdfPages: has('job.pdfPages'),
@@ -38,6 +39,9 @@ const groups = (source: string, target: string) => {
     ocr: has('job.ocrLanguage'),
     burn: has('job.burnSubtitles'),
     cut: has('job.cutOut'),
+    videoPresets: has('job.presetBalanced'),
+    lossless: has('job.presetLossless'),
+    imagePresets: has('job.presetWeb'),
   };
 };
 
@@ -128,5 +132,51 @@ describe('SettingsPanel shows what the route reads', () => {
 
   it('PDF → image: pages plus the image toolbox', () => {
     expect(groups('pdf', 'png')).toMatchObject({ pdfPages: true, resize: true, quality: false });
+  });
+
+  it('presets: video everywhere CRF applies, lossless only for x264; images for lossy targets', () => {
+    expect(groups('mov', 'mp4')).toMatchObject({ videoPresets: true, lossless: true });
+    expect(groups('mp4', 'webm')).toMatchObject({ videoPresets: true, lossless: false });
+    expect(groups('mp4', 'gif')).toMatchObject({ videoPresets: false });
+    expect(groups('png', 'jpg')).toMatchObject({ imagePresets: true, videoPresets: false });
+    expect(groups('jpg', 'png').imagePresets).toBe(false);
+  });
+
+  it('a preset sends its whole patch; AVI/FLV (no speed preset) get the CRF alone', () => {
+    const press = (target: string, label: string) => {
+      cleanup();
+      const onChange = vi.fn();
+      render(
+        <SettingsPanel
+          sourceExt="mp4"
+          targetExt={target}
+          settings={DEFAULT_SETTINGS}
+          onChange={onChange}
+          t={t}
+        />,
+      );
+      fireEvent.click(screen.getByRole('button', { name: label }));
+      return onChange.mock.calls[0][0];
+    };
+    expect(press('mkv', 'job.presetBest')).toEqual({ videoQuality: 18, videoPreset: 'slow' });
+    expect(press('avi', 'job.presetBest')).toEqual({ videoQuality: 18 });
+  });
+
+  it('marks the preset the settings match', () => {
+    cleanup();
+    render(
+      <SettingsPanel
+        sourceExt="png"
+        targetExt="webp"
+        settings={{ ...DEFAULT_SETTINGS, quality: 0.82, imageMaxSide: 2048 }}
+        onChange={vi.fn()}
+        t={t}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'job.presetWeb' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(document.body.textContent).toContain('job.maxSideNote');
   });
 });

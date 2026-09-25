@@ -15,7 +15,8 @@
     "audio": "AUDIO",
     "document": "DOCUMENTO",
     "data": "DATOS",
-    "folder": "o elige una carpeta"
+    "folder": "o elige una carpeta",
+    "paste": "o pega (Ctrl/⌘+V): archivos, capturas o un rango de una hoja de cálculo"
   },
   "toolbar": {
     "addFiles": "AÑADIR ARCHIVOS",
@@ -33,7 +34,11 @@
     "moveDown": "Bajar",
     "addFolder": "AÑADIR CARPETA",
     "nameAs": "Nombrar como",
-    "nameHint": "{name} {ext} {source} {n} {date} {w}x{h}"
+    "nameHint": "{name} {ext} {source} {n} {date} {w}x{h}",
+    "removedOne": "Se quitó {name}",
+    "removedMany": "Se quitaron {n} archivos",
+    "undo": "Deshacer",
+    "dismiss": "Cerrar"
   },
   "warning": {
     "largeFile": "Archivo grande detectado",
@@ -137,7 +142,30 @@
     "burnSubtitles": "Incrustar subtítulos",
     "burnChoose": "Elige .srt o .vtt",
     "burnRemove": "Quitar",
-    "burnHint": "Se dibujan en la imagen, así que cualquier reproductor los muestra."
+    "burnHint": "Se dibujan en la imagen, así que cualquier reproductor los muestra.",
+    "presetSmallest": "Mínimo",
+    "presetBalanced": "Equilibrado",
+    "presetBest": "Máxima",
+    "presetLossless": "Sin pérdida",
+    "losslessHint": "Fotogramas exactos, archivo muy grande. Pensado para edición: muchos navegadores y móviles no lo reproducen.",
+    "advanced": "Avanzado",
+    "crfHint": "CRF: menor = más calidad y archivo más grande",
+    "presetFull": "Completa",
+    "presetWeb": "Web",
+    "presetEmail": "Correo",
+    "maxSideNote": "Lado mayor ≤ {n} px",
+    "maxSideClear": "Quitar",
+    "applyToSimilar": "Aplicar a los demás archivos .{ext} ({n})",
+    "appliedToSimilar": "Aplicado a {n}",
+    "readAsAlias": ".{from} es otro nombre de .{to}: se lee como .{to}.",
+    "readAsContent": "Se lee como .{to}: es lo que contiene, diga lo que diga el nombre.",
+    "before": "Antes",
+    "after": "Después",
+    "compare": "Comparar antes y después",
+    "heicImages": "Imágenes del archivo",
+    "heicPrimary": "Foto principal",
+    "heicAll": "Todas (zip)",
+    "heicHint": "Para ráfagas y secuencias; una sola foto no cambia."
   },
   "howItWorks": {
     "heading": "CÓMO FUNCIONA",
@@ -157,7 +185,9 @@
   "history": {
     "heading": "RECIENTE",
     "clear": "LIMPIAR",
-    "empty": "Sin conversiones aún — arrastra un archivo arriba para comenzar"
+    "empty": "Sin conversiones aún — arrastra un archivo arriba para comenzar",
+    "keep": "Guardar historial en este dispositivo",
+    "off": "El historial está desactivado: no se guarda nada sobre tus archivos en este dispositivo."
   },
   "footer": {
     "copyright": "© 2026 Convert-it — Todas las conversiones ocurren en tu navegador",
@@ -188,7 +218,7 @@
     "formatsHeading": "FORMATOS COMPATIBLES",
     "privacyHeading": "PRIVACIDAD",
     "privacy1": "Tus archivos nunca salen de tu navegador. Toda la conversión ocurre localmente usando WebAssembly y la API Canvas. No subimos, almacenamos ni tenemos acceso a tus datos.",
-    "privacy2": "No ejecutamos ningún script de analítica ni de seguimiento — sin cookies, sin huella digital y sin nada vinculado a tus archivos. Lo único que se guarda en tu dispositivo son tus preferencias de tema e idioma. La conversión de video y audio descarga un motor FFmpeg de ~31MB desde nuestro propio CDN la primera vez que la usas; tus archivos nunca forman parte de esa petición. Los límites de tamaño de archivo (100MB imágenes, 500MB video, 200MB audio) evitan el agotamiento de la memoria del navegador.",
+    "privacy2": "No ejecutamos ningún script de analítica ni de seguimiento — sin cookies, sin huellas digitales y nada vinculado a tus archivos. La conversión de vídeo y audio descarga un motor FFmpeg de ~31 MB desde nuestra propia CDN la primera vez que la usas; tus archivos nunca forman parte de esa petición. La barra sobre la zona de soltar muestra en directo cuánto ha enviado y recibido la app por la red en este navegador, según su service worker: «enviado» se queda en 0 B. Los límites de tamaño (100 MB imágenes, 500 MB vídeo, 200 MB audio) evitan agotar la memoria del navegador.",
     "improvementsHeading": "MEJORAS RECIENTES",
     "improvement1": "Decodificación HEIC y AVIF — convierte fotos de iPhone y web modernas (WASM de carga diferida)",
     "improvement2": "Exportación ePub — convierte TXT, Markdown y HTML a e-books",
@@ -259,7 +289,23 @@
     "improvement46": "Lee el texto de imágenes y PDF escaneados (OCR) en ocho idiomas, en tu dispositivo",
     "improvement47": "Subtítulos: SRT ⇄ WebVTT, corrige su sincronía o extrae una transcripción",
     "improvement48": "Suelta carpetas enteras (su estructura se mantiene en el zip), nombra los resultados con plantillas como {name}-{w}x{h}, y los archivos soltados ya no se añaden dos veces",
-    "improvement49": "Quita un tramo del medio de un clip e incrusta subtítulos (.srt o .vtt, en cualquiera de los alfabetos admitidos) en un vídeo"
+    "improvement49": "Quita un tramo del medio de un clip e incrusta subtítulos (.srt o .vtt, en cualquiera de los alfabetos admitidos) en un vídeo",
+    "improvement50": "Ajustes predefinidos: Mínimo, Equilibrado, Máxima o Sin pérdida para vídeo; Completa, Web o Correo para fotos, con los ajustes detallados en «Avanzado»",
+    "improvement51": "Aplica los ajustes de un archivo a todos los que van al mismo formato",
+    "improvement52": "Los archivos que no podemos convertir dicen qué son y cómo exportarlos; los mal nombrados (un PDF sin extensión, un .jfif) se reconocen por su contenido",
+    "improvement53": "Deshaz Limpiar, o quitar un archivo, durante diez segundos (o con Ctrl/⌘+Z)",
+    "improvement54": "Compara antes y después con un deslizador y el tamaño de cada lado; reproduce resultados de vídeo y audio en la página",
+    "improvement55": "Pega archivos, capturas o un rango de una hoja de cálculo; copia imágenes resultantes al portapapeles",
+    "improvement56": "Instalada como app: comparte archivos con ella desde otras apps o ábrelos con ella",
+    "improvement57": "Mira lo que la app ha enviado (nada) y recibido por la red; desactiva el historial para no guardar nombres de archivo",
+    "improvement58": "HEIC: se convierte la foto principal, no solo la primera imagen del archivo, o todas en un zip",
+    "storedHeading": "Guardado en este dispositivo, y en ningún otro sitio",
+    "stored1": "Conversiones recientes: nombre del archivo, formatos, tamaños y hora, 30 como máximo. Desmarca «Guardar historial en este dispositivo» en Recientes y no se guarda nada (desmarcarlo también borra la lista).",
+    "stored2": "Tu tema, idioma y plantilla de nombres de salida.",
+    "stored3": "Archivos de la app en caché para uso sin conexión: código, códecs, fuentes, datos de OCR y el motor FFmpeg. Nunca tus archivos ni resultados.",
+    "stored4": "Un recuento de bytes enviados y recibidos, para el indicador de red.",
+    "stored5": "Los archivos compartidos con la app instalada, solo hasta que la página los recoge un momento después.",
+    "stored6": "Borrar los datos de este sitio en los ajustes del navegador lo elimina todo."
   },
   "errors": {
     "tooLarge": {
@@ -290,12 +336,32 @@
       "title": "Este ajuste no encaja con el archivo",
       "hint": "Un ajuste de esta tarea no funciona con este archivo; los detalles indican cuál. Cámbialo y pulsa Reintentar."
     },
-    "details": "Detalles técnicos"
+    "details": "Detalles técnicos",
+    "unsupportedFile": {
+      "title": "No se pueden convertir archivos .{label}",
+      "titleNoExt": "No se sabe qué archivo es",
+      "image": "{label} no es un formato de imagen que esta app lea. Expórtalo como {formats} desde la app que lo creó y añade ese.",
+      "raw": "Los RAW de cámara necesitan un revelador RAW. Expórtalo antes como {formats} desde tu app de fotos.",
+      "word": "Guárdalo como {formats} desde tu procesador de textos y convierte ese.",
+      "sheet": "Guárdalo como {formats} desde tu hoja de cálculo y convierte ese.",
+      "slides": "Exporta las diapositivas como {formats} desde tu app de presentaciones; aquí un PDF se convierte en imágenes o texto.",
+      "archive": "Es un archivo comprimido. Descomprímelo primero y añade los archivos (o la carpeta).",
+      "program": "Es un programa o instalador, no un documento: no hay nada que convertir.",
+      "video": "Este formato de vídeo aún no se lee aquí. Expórtalo como {formats} desde la app que lo creó.",
+      "audio": "Este formato de audio aún no se lee aquí. Expórtalo como {formats} desde la app que lo creó.",
+      "unknown": "Su contenido no coincide con ningún formato que esta app lea. Si sabes qué es, renómbralo con la extensión correcta y añádelo de nuevo."
+    }
   },
   "offline": {
     "save": "Guardar para usar sin conexión ({size} MB)",
     "saving": "Guardando para usar sin conexión… {pct}%",
     "saved": "Disponible sin conexión",
     "failed": "No se pudo guardar para usar sin conexión. Inténtalo de nuevo con conexión."
+  },
+  "network": {
+    "sent": "Enviado",
+    "received": "· recibido",
+    "offline": "Sin conexión, sigue funcionando ·",
+    "hint": "Lo cuenta el service worker de la app, por el que pasa cada petición: lo enviado (tus archivos nunca) y lo descargado (la app y sus motores) por la red en este navegador. Lo que sale de la caché no cuenta."
   }
 }

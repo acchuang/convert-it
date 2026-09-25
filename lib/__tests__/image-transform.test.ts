@@ -8,6 +8,27 @@ function settings(patch: Partial<ConversionSettings> = {}): ConversionSettings {
 }
 
 describe('planImageTransform', () => {
+  it('caps the longest side, never enlarging', () => {
+    expect(planImageTransform(4000, 3000, settings({ imageMaxSide: 2048 }))).toMatchObject({
+      width: 2048,
+      height: 1536,
+    });
+    expect(planImageTransform(3000, 4000, settings({ imageMaxSide: 1280 }))).toMatchObject({
+      width: 960,
+      height: 1280,
+    });
+    expect(planImageTransform(800, 600, settings({ imageMaxSide: 2048 }))).toBeNull();
+  });
+
+  it('applies the cap after the other resizes and the crop', () => {
+    expect(
+      planImageTransform(4000, 3000, settings({ imageResizePercent: 50, imageMaxSide: 1280 })),
+    ).toMatchObject({ width: 1280, height: 960 });
+    expect(
+      planImageTransform(4000, 3000, settings({ imageCropAspect: '1:1', imageMaxSide: 1000 })),
+    ).toMatchObject({ crop: { width: 3000, height: 3000 }, width: 1000, height: 1000 });
+  });
+
   it('returns null when nothing is configured', () => {
     expect(planImageTransform(800, 600, settings())).toBeNull();
   });

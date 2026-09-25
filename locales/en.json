@@ -15,7 +15,8 @@
     "audio": "AUDIO",
     "document": "DOCUMENT",
     "data": "DATA",
-    "folder": "or choose a folder"
+    "folder": "or choose a folder",
+    "paste": "or paste (Ctrl/⌘+V): files, screenshots, a range from a spreadsheet"
   },
   "toolbar": {
     "addFiles": "ADD FILES",
@@ -33,7 +34,11 @@
     "moveDown": "Move down",
     "addFolder": "ADD FOLDER",
     "nameAs": "Name as",
-    "nameHint": "{name} {ext} {source} {n} {date} {w}x{h}"
+    "nameHint": "{name} {ext} {source} {n} {date} {w}x{h}",
+    "removedOne": "Removed {name}",
+    "removedMany": "Removed {n} files",
+    "undo": "Undo",
+    "dismiss": "Dismiss"
   },
   "warning": {
     "largeFile": "Large file detected",
@@ -137,7 +142,30 @@
     "burnSubtitles": "Burn in subtitles",
     "burnChoose": "Choose .srt or .vtt",
     "burnRemove": "Remove",
-    "burnHint": "Drawn into the picture, so every player shows them."
+    "burnHint": "Drawn into the picture, so every player shows them.",
+    "presetSmallest": "Smallest",
+    "presetBalanced": "Balanced",
+    "presetBest": "Best",
+    "presetLossless": "Lossless",
+    "losslessHint": "Exact frames, very large file. Meant for editing: many browsers and phones won’t play it.",
+    "advanced": "Advanced",
+    "crfHint": "CRF: lower = higher quality & larger file",
+    "presetFull": "Full",
+    "presetWeb": "Web",
+    "presetEmail": "Email",
+    "maxSideNote": "Longest side ≤ {n} px",
+    "maxSideClear": "Remove",
+    "applyToSimilar": "Apply to other .{ext} files ({n})",
+    "appliedToSimilar": "Applied to {n}",
+    "readAsAlias": ".{from} is another name for .{to}: read as .{to}.",
+    "readAsContent": "Read as .{to}: that is what its contents are, whatever the name says.",
+    "before": "Before",
+    "after": "After",
+    "compare": "Compare before and after",
+    "heicImages": "Images in the file",
+    "heicPrimary": "Main photo",
+    "heicAll": "All (zip)",
+    "heicHint": "For bursts and image sequences; a single photo is unaffected."
   },
   "howItWorks": {
     "heading": "HOW IT WORKS",
@@ -157,7 +185,9 @@
   "history": {
     "heading": "RECENT",
     "clear": "CLEAR",
-    "empty": "No conversions yet — drop a file above to get started."
+    "empty": "No conversions yet — drop a file above to get started.",
+    "keep": "Keep history on this device",
+    "off": "History is off: nothing about your files is saved on this device."
   },
   "footer": {
     "copyright": "© 2026 Convert-it — All conversions happen in your browser",
@@ -188,7 +218,7 @@
     "formatsHeading": "SUPPORTED FORMATS",
     "privacyHeading": "PRIVACY",
     "privacy1": "Your files never leave your browser. All conversion happens locally using WebAssembly and the Canvas API. We don't upload, store, or have any access to your data.",
-    "privacy2": "We run no analytics or tracking scripts — no cookies, no fingerprinting, and nothing tied to your files. The only things stored on your device are your theme and language preferences. Video and audio conversion downloads a ~31MB FFmpeg engine from our own CDN the first time you use it; your files are never part of that request. File size limits (100MB images, 500MB video, 200MB audio) prevent browser memory exhaustion.",
+    "privacy2": "We run no analytics or tracking scripts — no cookies, no fingerprinting, and nothing tied to your files. Video and audio conversion downloads a ~31MB FFmpeg engine from our own CDN the first time you use it; your files are never part of that request. The bar above the drop zone shows, live, how much the app has sent and received over the network in this browser, as counted by its service worker: “sent” stays at 0 B. File size limits (100MB images, 500MB video, 200MB audio) prevent browser memory exhaustion.",
     "improvementsHeading": "RECENT IMPROVEMENTS",
     "improvement1": "HEIC and AVIF decode — convert iPhone and modern web photos (lazy-loaded WASM)",
     "improvement2": "ePub export — convert TXT, Markdown, and HTML to e-books",
@@ -259,7 +289,23 @@
     "improvement46": "Read text from images and scanned PDFs (OCR) in eight languages, on your device",
     "improvement47": "Subtitles: SRT ⇄ WebVTT, fix their timing, or pull out a transcript",
     "improvement48": "Drop whole folders (their structure is kept in the zip), name outputs with templates like {name}-{w}x{h}, and dropped files are no longer added twice",
-    "improvement49": "Cut a section out of the middle of a clip, and burn subtitles (.srt or .vtt, in any of the supported scripts) into a video"
+    "improvement49": "Cut a section out of the middle of a clip, and burn subtitles (.srt or .vtt, in any of the supported scripts) into a video",
+    "improvement50": "Quality presets: Smallest, Balanced, Best or Lossless for video, Full, Web or Email for photos, with the raw settings under “Advanced”",
+    "improvement51": "Apply one file’s settings to every other file going to the same format",
+    "improvement52": "Files we can’t convert say what they are and what to export them as; misnamed ones (a PDF with no extension, a .jfif) are recognised by their contents",
+    "improvement53": "Undo Clear, or removing a file, for ten seconds (or with Ctrl/⌘+Z)",
+    "improvement54": "Compare before and after with a slider, with each side’s size; play video and audio results in place",
+    "improvement55": "Paste files, screenshots or a range from a spreadsheet; copy image results to the clipboard",
+    "improvement56": "Installed as an app: share files to it from other apps, or open them with it",
+    "improvement57": "See what the app has sent (nothing) and received over the network; turn off history so no file names are kept",
+    "improvement58": "HEIC: the main photo is converted, not just the first image in the file, or every image as a zip",
+    "storedHeading": "Stored on this device, and nowhere else",
+    "stored1": "Recent conversions: file name, formats, sizes and time, at most 30. Untick “Keep history on this device” under Recent and nothing is written (unticking also deletes the list).",
+    "stored2": "Your theme, language and output-name template.",
+    "stored3": "App files cached for offline use: code, codecs, fonts, OCR data and the FFmpeg engine. Never your files or results.",
+    "stored4": "A running count of bytes sent and received, for the network badge.",
+    "stored5": "Files shared to the installed app, only until the page picks them up a moment later.",
+    "stored6": "Clearing this site’s data in your browser settings removes all of it."
   },
   "errors": {
     "tooLarge": {
@@ -290,12 +336,32 @@
       "title": "This setting doesn’t fit the file",
       "hint": "A setting on this job doesn’t work for this file; the details say which. Change it and press Retry."
     },
-    "details": "Technical details"
+    "details": "Technical details",
+    "unsupportedFile": {
+      "title": "Can’t convert .{label} files",
+      "titleNoExt": "Can’t tell what this file is",
+      "image": "{label} isn’t an image format this app reads. Export it as {formats} from the app that made it, then add that.",
+      "raw": "Camera RAW needs a RAW developer. Export it as {formats} from your photo app first.",
+      "word": "Save it as {formats} from your word processor, then convert that.",
+      "sheet": "Save it as {formats} from your spreadsheet app, then convert that.",
+      "slides": "Export the slides as {formats} from your presentation app; a PDF converts to images or text here.",
+      "archive": "This is an archive. Unpack it first, then add the files (or the folder).",
+      "program": "This is a program or installer, not a document: there is nothing to convert.",
+      "video": "This video format isn’t read here yet. Export it as {formats} from the app that made it.",
+      "audio": "This audio format isn’t read here yet. Export it as {formats} from the app that made it.",
+      "unknown": "Its contents don’t match any format this app reads. If you know what it is, rename it with the right extension and add it again."
+    }
   },
   "offline": {
     "save": "Save for offline use ({size} MB)",
     "saving": "Saving for offline use… {pct}%",
     "saved": "Available offline",
     "failed": "Couldn’t save for offline use. Try again when online."
+  },
+  "network": {
+    "sent": "Sent",
+    "received": "· received",
+    "offline": "Offline, still working ·",
+    "hint": "Counted by this app’s service worker, which every request passes through: what it has sent (your files never are) and downloaded (the app and its engines) over the network in this browser. Cached files aren’t counted."
   }
 }

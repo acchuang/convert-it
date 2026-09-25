@@ -2,7 +2,13 @@
 
 import { useState, useRef, useMemo, useEffect, useCallback, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getFileExtension, getTargetFormats, FORMATS, getFormatInfo } from '@/lib/converters';
+import {
+  getFileExtension,
+  getTargetFormats,
+  FORMATS,
+  getFormatInfo,
+  sharedSettings,
+} from '@/lib/converters';
 import { JobCard, describeError, type FileJob } from './JobCard';
 import { HistoryPanel } from './HistoryPanel';
 import { getHistory, type HistoryEntry } from '@/lib/history';
@@ -11,8 +17,11 @@ import { useJobManager } from '@/lib/useJobManager';
 import ErrorBoundary from './ErrorBoundary';
 import Footer from './Footer';
 import { AppHeader } from './AppHeader';
+import NetworkBadge from './NetworkBadge';
 import { DragOverlay, DropZone } from './DropZone';
 import { filesFromDrop, filesFromInput } from '@/lib/drop-files';
+import { filesFromClipboard } from '@/lib/paste';
+import { onLaunchFiles, takeSharedFiles } from '@/lib/launch';
 import { DEFAULT_NAME_TEMPLATE } from '@/lib/filenames';
 
 const LARGE_FILE_THRESHOLD_MB = 100;
@@ -30,18 +39,25 @@ interface ConverterAppProps {
   intro?: ReactNode;
 }
 
+// How long the Undo toast stays after a remove or Clear.
+const UNDO_MS = 10_000;
+
 export default function ConverterApp({ preferredTarget, intro }: ConverterAppProps = {}) {
   const {
     jobs,
     addFiles,
     updateJob,
     updateJobSettings,
+    applySettingsToSimilar,
     convertJob,
     cancelJob,
     downloadJob,
     downloadAllAsZip,
     applyBatchFormat: applyBatch,
     removeJob,
+    removed,
+    undoRemove,
+    dismissUndo,
     convertAll,
     clearAll,
     doneCount,
@@ -86,6 +102,16 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
     }
     return groups;
   }, []);
+
+  // The other jobs "apply to similar files" would change: same target, some
+  // setting in common, not mid-conversion.
+  const similarCount = (job: FileJob) =>
+    jobs.filter(
+      (other) =>
+        other.id !== job.id &&
+        other.status !== 'converting' &&
+        Object.keys(sharedSettings(job, other)).length > 0,
+    ).length;
 
   const applyBatchFormat = () => {
     if (!batchFormat) return;
@@ -161,17 +187,66 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
     };
   }, [addFiles, detectDragCategory]);
 
-  // Keyboard shortcut: Cmd/Ctrl + Enter converts all queued jobs
+  // Keyboard shortcuts: Cmd/Ctrl + Enter converts all queued jobs; Cmd/Ctrl + Z
+  // undoes the last remove or Clear (outside text fields, which keep their own undo).
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
         e.preventDefault();
         convertAll();
       }
+      const typing = e.target instanceof HTMLElement && e.target.closest('input, textarea, select');
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key === 'z' && removed.length && !typing) {
+        e.preventDefault();
+        undoRemove();
+      }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [convertAll]);
+  }, [convertAll, removed.length, undoRemove]);
+
+  // Paste anywhere outside a text field: files and screenshots as they are,
+  // text as a file named for what it looks like (lib/paste).
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const target = e.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.closest('input, textarea, select') || target.isContentEditable)
+      ) {
+        return;
+      }
+      const files = filesFromClipboard(e.clipboardData);
+      if (!files.length) return;
+      e.preventDefault();
+      addFiles(files);
+    };
+    window.addEventListener('paste', onPaste);
+    return () => window.removeEventListener('paste', onPaste);
+  }, [addFiles]);
+
+  // Installed app: files from "Open with" and from the share sheet.
+  const tookShared = useRef(false);
+  useEffect(() => {
+    onLaunchFiles(addFiles);
+    if (tookShared.current) return;
+    tookShared.current = true;
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has('shared')) return;
+    params.delete('shared');
+    const rest = params.toString();
+    window.history.replaceState(null, '', window.location.pathname + (rest ? `?${rest}` : ''));
+    void takeSharedFiles()
+      .then((files) => files.length && addFiles(files))
+      .catch(() => {});
+  }, [addFiles]);
+
+  // The Undo toast goes away on its own; the removed files are then let go.
+  useEffect(() => {
+    if (!removed.length) return;
+    const timer = setTimeout(dismissUndo, UNDO_MS);
+    return () => clearTimeout(timer);
+  }, [removed, dismissUndo]);
 
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
@@ -230,12 +305,8 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                 · 100% In-Browser WebAssembly
               </span>
             </div>
-            <div className="flex items-center gap-2.5 text-xs">
-              <span className="text-[var(--success)] font-semibold">0 KB UPLOADED</span>
-              <span className="hidden md:inline text-[var(--text-muted)]">
-                · ZERO SERVER CONTACT
-              </span>
-            </div>
+            {/* Measured, not asserted: the service worker's count (NetworkBadge). */}
+            <NetworkBadge />
           </div>
 
           {/* Drop zone */}
@@ -573,6 +644,8 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                         onDownload={() => downloadJob(job)}
                         onRemove={() => removeJob(job.id)}
                         onSettingsChange={(patch) => updateJobSettings(job.id, patch)}
+                        similarCount={similarCount(job)}
+                        onApplyToSimilar={() => applySettingsToSimilar(job.id)}
                         onMoveUp={index > 0 ? () => moveJob(job.id, -1) : undefined}
                         onMoveDown={index < jobs.length - 1 ? () => moveJob(job.id, 1) : undefined}
                         t={t}
@@ -624,6 +697,45 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
           {/* History is always accessible */}
           <HistoryPanel entries={history} onClear={() => setHistory([])} t={t} />
         </div>
+
+        <AnimatePresence>
+          {removed.length > 0 && (
+            // Centred by the flex wrapper: framer-motion's transform would
+            // override a translate-x centring on the toast itself.
+            <motion.div
+              key="undo"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 16 }}
+              className="fixed bottom-4 inset-x-4 z-50 flex justify-center pointer-events-none"
+            >
+              <div
+                role="status"
+                className="pointer-events-auto flex items-center gap-3 px-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-secondary)] shadow-lg text-xs max-w-full"
+                style={{ fontFamily: 'var(--font-mono)' }}
+              >
+                <span className="text-[var(--text-secondary)] truncate">
+                  {removed.length === 1
+                    ? t('toolbar.removedOne').replace('{name}', removed[0].file.name)
+                    : t('toolbar.removedMany').replace('{n}', String(removed.length))}
+                </span>
+                <button
+                  onClick={undoRemove}
+                  className="font-semibold text-[var(--accent)] hover:underline flex-shrink-0"
+                >
+                  {t('toolbar.undo')}
+                </button>
+                <button
+                  onClick={dismissUndo}
+                  aria-label={t('toolbar.dismiss')}
+                  className="text-[var(--text-muted)] hover:text-[var(--text-primary)] flex-shrink-0"
+                >
+                  ×
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Footer */}
         <Footer navLabel={t('footer.images')}>

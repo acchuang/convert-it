@@ -26,7 +26,7 @@ Independent Next.js project deployed via Cloudflare Pages.
 - Type-check: `npx tsc --noEmit`
 - Serve the export as Pages would (applies `out/_headers`): `npm run serve`
 - Browser smoke suite (real codecs, CSP violations fail it): `npm run fixtures`, `npm run serve`, then `npm run smoke`; offline behaviour: `node scripts/offline-smoke.mjs`. Set `SMOKE_CHROMIUM_PATH` if Google Chrome isn't installed.
-- Sync wasm assets: `npm run copy-wasm` (run after install or upgrading `@jsquash/*`, `@resvg/resvg-wasm`, or `@hyzyla/pdfium`; copies all codec/library `.wasm` files from `node_modules` into `public/wasm/`). Files are committed, not gitignored.
+- Sync wasm assets: `npm run copy-wasm` (CI runs `npm run copy-wasm -- --check`, which fails on any file under `public/wasm` or `public/ocr` that differs from, or doesn't come from, `node_modules`) (run after install or upgrading `@jsquash/*`, `@resvg/resvg-wasm`, or `@hyzyla/pdfium`; copies all codec/library `.wasm` files from `node_modules` into `public/wasm/`). Files are committed, not gitignored.
 
 ## Converter Registry
 
@@ -41,6 +41,12 @@ Independent Next.js project deployed via Cloudflare Pages.
 - **Every drop is handled by the window listener in ConverterApp.** The drop zone only manages its visual state. It used to call `addFiles` as well, and since the event bubbles to the window, every dropped file was added twice.
 - Output names come from a template (`applyNameTemplate` in `lib/filenames.ts`; toolbar "Name as"; saved per viewer in localStorage). Placeholders: `{name} {ext} {source} {n} {date} {w}x{h}`. `{w}x{h}` is the output image size measured after conversion, and is dropped along with its separator when unknown. The extension is always ensured, and unsafe characters become `_`, so a template can't make a path.
 - The page has two file inputs (files, and a `webkitdirectory` one); tests and suites target `input[type="file"]:not([webkitdirectory])`.
+- Paste (`lib/paste.ts`, window listener in ConverterApp, ignored inside text fields): files as they are; text becomes `pasted.tsv` (equal tab counts on ≥2 lines), `.json` (parses), `.html` (rich text) or `.txt`. Copy puts image results on the clipboard as PNG (`asClipboardPng`; hand ClipboardItem the promise, as Safari requires the write inside the click).
+- Files no route reads go through `lib/identify.ts` before they become a card: aliases (`.jfif`, `.htm`, `.yml`…) and magic bytes rename them to a format we read (the card says so); otherwise the job is an `unsupported` error with `params.kind` (image, raw, word, sheet, slides, archive, program, video, audio, unknown) and `describeError` explains it. Signatures text can start with (BM, MZ, FLV, ID3) are checked past the first bytes.
+- History (`lib/history.ts`) is on by default and can be turned off in the Recent panel; off means `addHistoryEntry` writes nothing and the list is deleted. The About page lists everything kept in the browser: keep it true when adding storage.
+- Remove and Clear keep the last removal for undo (`removed`/`undoRemove` in `useJobManager`, 10 s toast, Ctrl/⌘+Z); running conversions are cancelled and come back idle.
+- "Apply to other .EXT files" copies `sharedSettings(from, to)` (registry): the fields both routes read, never the per-file ones (trim/cut points, subtitle file, PDF page range).
+- Installed app: "Open with" comes through `launchQueue` (`lib/launch.ts`); the share sheet POSTs to `/share-target`, which only the service worker answers (files into the `share-inbox` cache, redirect to `/?shared=1`, the page takes and deletes them). `lib/__tests__/manifest.test.ts` keeps the manifest's `file_handlers` and `share_target` accept lists equal to the registry's sources.
 
 ## Image Encode (WASM)
 
@@ -51,6 +57,8 @@ Independent Next.js project deployed via Cloudflare Pages.
 - Metadata (`lib/image-metadata.ts`): outputs carry none by default (pixels are re-encoded). `metadata: 'keep' | 'keep-no-gps'` writes a **fresh** EXIF block built from parsed fields (camera, lens, exposure, date, author, optional GPS; Orientation always 1; no maker notes or thumbnails). It is offered only from sources exifr reads (jpg/png/webp/heic/avif) to targets we can write (JPEG APP1, PNG eXIf before IDAT, WebP VP8X + EXIF chunk). `MetadataReport` shows what a file carries and what will be removed. Image → PDF strips APP1/APP13/COM from embedded JPEGs (keeps JFIF, ICC, Adobe) so a photo's location doesn't travel into the PDF. The smoke suite's `geo.jpg` pair checks the default.
 - BMP output is a hand-rolled 24-bit encoder (`encodeBmp`; no jSquash codec, and `canvas.toBlob` would silently write PNG). ICO output uses `ico-codec` over PNG bytes from `@jsquash/png`.
 - Decode stays native: `createImageBitmap` (AVIF), `HTMLImageElement` (raster), `libheif-js` (HEIC).
+- HEIC converts the **primary** image (not necessarily the first in the file; libheif-js's `is_primary()` throws, so `heif_image_handle_is_primary_image` is called on the module). `heicAllImages` zips every image, primary first. `lib/__tests__/heic-real.test.ts` runs the real libheif on a pillow-heif fixture.
+- Presets (`lib/presets.ts`) are settings patches; the panel marks whichever one the settings match. Image presets set `quality` and `imageMaxSide` (a longest-side cap applied after any other resize, never enlarging). Video "Lossless" (CRF 0) is offered only for x264 targets, and WebCodecs declines it.
 - Codec `.wasm` files live under `public/wasm/` and are lazy-fetched at runtime via `NEXT_PUBLIC_ASSET_BASE` (default `/wasm`), mirroring the `NEXT_PUBLIC_FFMPEG_BASE_URL` + R2 pattern used for FFmpeg core. They are small enough to ship from the static export, not R2.
 
 ## PDF
@@ -129,6 +137,7 @@ Independent Next.js project deployed via Cloudflare Pages.
 - `postbuild` also runs `scripts/build-sw.mjs`, which fills `scripts/sw-template.js` into `out/sw.js` (versioned by a hash of everything it can serve) and writes `out/offline-pack.json`. Both are served `Cache-Control: no-cache`.
 - Install precaches only the shell (home + About HTML and what they reference). `/_next/static` is cache-first; `/wasm`, `/fonts`, `/icons` are cached on first use; the FFmpeg core (versioned CDN URL) is cache-first and still hash-checked by the app. Offline navigations to never-visited pages redirect to `/`. "Save for offline use" in the footer (`app/components/OfflineSupport.tsx`) caches the whole pack. New workers wait for old tabs to close (no `skipWaiting`).
 - `node scripts/offline-smoke.mjs` proves it in Chromium by stopping the server. Don't test offline with Playwright's `setOffline()`: it doesn't apply to a service worker's own fetches.
+- Network badge (`app/components/NetworkBadge.tsx`, in the status bar above the drop zone): the worker counts bytes sent (request bodies) and received (Content-Length, else the body) for everything that reaches the network, from pages and their workers; requests it has no rule for pass straight through `net()`, counted. Any new fetch path in the worker must go through `net()`, or the badge stops being the proof behind "0 B sent". The count persists in the `network-log` cache and is pushed over a `BroadcastChannel`.
 - Icons: `npm run icons` renders `public/icons/*.png` (192, 512, maskable 512, apple-touch 180) from `favicon.svg` with resvg.
 
 ## Spreadsheets

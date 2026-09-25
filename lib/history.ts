@@ -3,6 +3,9 @@ import { readStored, writeStored, removeStored } from './storage';
 
 const HISTORY_KEY = 'convert-it-history';
 const MAX_ENTRIES = 30;
+// Set when the visitor turns history off: then nothing about their files is
+// written at all (file names can be sensitive).
+const HISTORY_OFF_KEY = 'convert-it-history-off';
 
 export type { HistoryEntry } from './types';
 
@@ -15,7 +18,22 @@ export function getHistory(): HistoryEntry[] {
   }
 }
 
+export function historyEnabled(): boolean {
+  return typeof window === 'undefined' || readStored(HISTORY_OFF_KEY) !== '1';
+}
+
+/** Turning history off also deletes what was kept. */
+export function setHistoryEnabled(on: boolean): void {
+  if (on) {
+    removeStored(HISTORY_OFF_KEY);
+  } else {
+    writeStored(HISTORY_OFF_KEY, '1');
+    clearHistory();
+  }
+}
+
 export function addHistoryEntry(entry: Omit<HistoryEntry, 'id'>): void {
+  if (!historyEnabled()) return;
   const history = getHistory();
   history.unshift({ ...entry, id: crypto.randomUUID() });
   if (history.length > MAX_ENTRIES) history.splice(MAX_ENTRIES);

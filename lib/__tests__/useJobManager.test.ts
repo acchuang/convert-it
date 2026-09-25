@@ -452,3 +452,108 @@ describe('download names and folders', () => {
     ).toEqual(['2-two.json', 'Data/2026/1-one.json']);
   });
 });
+
+describe('apply settings to similar files', () => {
+  it('copies what both routes read to jobs with the same target, and resets them', () => {
+    const { result } = renderHook(() => useJobManager());
+    act(() =>
+      result.current.addFiles([
+        new File(['p'], 'a.png'),
+        new File(['h'], 'b.heic'),
+        new File(['v'], 'c.mp4'),
+        new File(['x'], 'd.csv'),
+      ]),
+    );
+    const [a, b, c] = result.current.jobs;
+    act(() => {
+      for (const job of [a, b, c]) result.current.updateJob(job.id, { targetExt: 'webp' });
+      result.current.updateJob(c.id, { status: 'done', resultBlob: new Blob(['x']) });
+      result.current.updateJobSettings(a.id, { quality: 0.5, imageMaxSide: 1280 });
+    });
+    act(() => result.current.applySettingsToSimilar(a.id));
+    const [, b2, c2, d2] = result.current.jobs;
+    expect(b2.settings).toMatchObject({ quality: 0.5, imageMaxSide: 1280 });
+    // mp4 → webp is an animation: it reads neither, so it keeps its result.
+    expect(c2.settings.quality).toBe(DEFAULT_SETTINGS.quality);
+    expect(c2.status).toBe('done');
+    expect(d2.settings.quality).toBe(DEFAULT_SETTINGS.quality);
+  });
+});
+
+describe('files no route reads', () => {
+  it('reads a misnamed file as what it is, and explains one it can’t read', async () => {
+    const { result } = renderHook(() => useJobManager());
+    act(() =>
+      result.current.addFiles([
+        new File(['%PDF-1.4'], 'scan'),
+        new File(['II*\0'], 'photo.tiff'),
+        new File(['a,b'], 'ok.csv'),
+      ]),
+    );
+    await waitFor(() => expect(result.current.jobs[1].status).toBe('error'));
+    const [scan, tiff, csv] = result.current.jobs;
+    await waitFor(() => expect(result.current.jobs[0].sourceExt).toBe('pdf'));
+    expect(result.current.jobs[0]).toMatchObject({
+      targetExt: expect.any(String),
+      identified: { from: '', reason: 'content' },
+    });
+    expect(result.current.jobs[0].file.name).toBe('scan.pdf');
+    expect(scan.id).toBe(result.current.jobs[0].id);
+    expect(tiff.error).toMatchObject({
+      code: 'unsupported',
+      params: { kind: 'image', label: 'TIFF' },
+    });
+    expect(csv.identified).toBeUndefined();
+  });
+});
+
+describe('undo remove / Clear', () => {
+  const names = (jobs: FileJob[]) => jobs.map((j) => j.file.name);
+  const three = () => [
+    new File(['1'], 'a.csv'),
+    new File(['2'], 'b.csv'),
+    new File(['3'], 'c.csv'),
+  ];
+
+  it('puts a removed card back where it was', () => {
+    const { result } = renderHook(() => useJobManager());
+    act(() => result.current.addFiles(three()));
+    act(() => result.current.removeJob(result.current.jobs[1].id));
+    expect(names(result.current.jobs)).toEqual(['a.csv', 'c.csv']);
+    expect(names(result.current.removed)).toEqual(['b.csv']);
+    act(() => result.current.undoRemove());
+    expect(names(result.current.jobs)).toEqual(['a.csv', 'b.csv', 'c.csv']);
+    expect(result.current.removed).toEqual([]);
+  });
+
+  it('Clear is undone in one go; files added since stay, after the restored ones', () => {
+    const { result } = renderHook(() => useJobManager());
+    act(() => result.current.addFiles(three()));
+    act(() => result.current.clearAll());
+    expect(result.current.jobs).toEqual([]);
+    act(() => result.current.addFiles([new File(['4'], 'd.csv')]));
+    act(() => result.current.undoRemove());
+    expect(names(result.current.jobs)).toEqual(['a.csv', 'b.csv', 'c.csv', 'd.csv']);
+  });
+
+  it('a conversion running when cleared is cancelled and comes back idle', async () => {
+    mockConvertFile.mockImplementation(() => new Promise(() => {}));
+    const { result } = renderHook(() => useJobManager());
+    act(() => result.current.addFiles([new File(['1'], 'a.csv')]));
+    act(() => void result.current.convertJob(result.current.jobs[0]));
+    await waitFor(() => expect(result.current.jobs[0].status).toBe('converting'));
+    act(() => result.current.clearAll());
+    expect(mockCancelInWorker).toHaveBeenCalled();
+    act(() => result.current.undoRemove());
+    expect(result.current.jobs[0]).toMatchObject({ status: 'idle', progress: 0 });
+  });
+
+  it('dismissing lets the removed files go', () => {
+    const { result } = renderHook(() => useJobManager());
+    act(() => result.current.addFiles(three()));
+    act(() => result.current.clearAll());
+    act(() => result.current.dismissUndo());
+    act(() => result.current.undoRemove());
+    expect(result.current.jobs).toEqual([]);
+  });
+});

@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { getFormatInfo, settingsFor } from '@/lib/converters';
 import { TrimScrubber } from './TrimScrubber';
 import { MetadataReport } from './MetadataReport';
 import { formatTimecode, parseTimecode } from '@/lib/timecode';
 import { isPageRangeSyntax } from '@/lib/pdf-options';
+import { activePreset, IMAGE_PRESETS, LOSSLESS_VIDEO_TARGETS, VIDEO_PRESETS } from '@/lib/presets';
 import type { ConversionSettings } from '@/lib/types';
 
 // The per-job settings panel. Which groups appear comes from the converter
@@ -72,6 +73,17 @@ function TimeField({
 }
 
 const VIDEO_WIDTHS = [0, 1920, 1280, 854];
+const X264_PRESETS = [
+  'ultrafast',
+  'superfast',
+  'veryfast',
+  'faster',
+  'fast',
+  'medium',
+  'slow',
+  'slower',
+  'veryslow',
+] as const;
 // OCR languages by their own names, so each is findable by its readers.
 const OCR_LANGUAGE_NAMES: Record<string, string> = {
   eng: 'English',
@@ -91,6 +103,7 @@ export function SettingsPanel({
   onChange,
   t,
   file,
+  footer,
 }: {
   targetExt: string;
   sourceExt: string;
@@ -99,6 +112,8 @@ export function SettingsPanel({
   settings: ConversionSettings;
   onChange: (patch: Partial<ConversionSettings>) => void;
   t: (key: string) => string;
+  /** Under the controls: the job card's "apply to similar files". */
+  footer?: ReactNode;
 }) {
   const shown = new Set(settingsFor(sourceExt, targetExt));
   const showQuality = shown.has('quality');
@@ -128,6 +143,14 @@ export function SettingsPanel({
 
   const qualityPct = Math.round(settings.quality * 100);
   const usingExactSize = settings.imageResizeWidth > 0 || settings.imageResizeHeight > 0;
+  // Where the preset (encoder speed) isn't read (avi/flv), CRF alone decides.
+  const videoPreset = activePreset(
+    showVideoPreset
+      ? VIDEO_PRESETS
+      : VIDEO_PRESETS.map((p) => ({ ...p, patch: { videoQuality: p.patch.videoQuality } })),
+    settings,
+  );
+  const imagePreset = activePreset(IMAGE_PRESETS, settings);
 
   return (
     <motion.div
@@ -161,6 +184,25 @@ export function SettingsPanel({
               <span>Low (Compact)</span>
               <span>High (Sharp)</span>
             </div>
+            {showImageTools && (
+              <div className="flex gap-1">
+                {IMAGE_PRESETS.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => onChange(p.patch)}
+                    aria-pressed={imagePreset === p.id}
+                    title={
+                      p.patch.imageMaxSide
+                        ? t('job.maxSideNote').replace('{n}', String(p.patch.imageMaxSide))
+                        : undefined
+                    }
+                    className={choice(imagePreset === p.id)}
+                  >
+                    {t(`job.preset${p.id[0].toUpperCase()}${p.id.slice(1)}`)}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -278,6 +320,24 @@ export function SettingsPanel({
           </div>
         )}
 
+        {shown.has('heicImages') && (
+          <div className={CARD}>
+            <span className={LABEL}>{t('job.heicImages')}</span>
+            <div className="flex gap-1">
+              {([false, true] as const).map((all) => (
+                <button
+                  key={String(all)}
+                  onClick={() => onChange({ heicAllImages: all })}
+                  className={choice(settings.heicAllImages === all)}
+                >
+                  {all ? t('job.heicAll') : t('job.heicPrimary')}
+                </button>
+              ))}
+            </div>
+            <span className="text-xs text-[var(--text-muted)]">{t('job.heicHint')}</span>
+          </div>
+        )}
+
         {showPdfPages && (
           <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
             <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
@@ -325,77 +385,80 @@ export function SettingsPanel({
         )}
 
         {showVideoQuality && (
-          <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
+          <div className={CARD}>
             <div className="flex items-center justify-between">
-              <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
-                {t('job.quality')}
-              </span>
+              <span className={LABEL}>{t('job.quality')}</span>
               <span className="text-primary text-xs font-semibold">
-                CRF {settings.videoQuality} ·{' '}
-                {settings.videoQuality <= 20
-                  ? 'High'
-                  : settings.videoQuality <= 28
-                    ? 'Balanced'
-                    : 'Compact'}
+                CRF {settings.videoQuality}
               </span>
             </div>
-            <input
-              type="range"
-              min={18}
-              max={51}
-              value={settings.videoQuality}
-              onChange={(e) => onChange({ videoQuality: Number(e.target.value) })}
-              className="w-full"
-              style={{ accentColor: 'var(--video-color)' }}
-            />
-            <span className="text-xs text-[var(--text-muted)]">
-              Lower CRF = higher quality & larger file
-            </span>
-          </div>
-        )}
-
-        {showVideoPreset && (
-          <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
-            <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
-              {t('job.preset')}
-            </span>
-            <div className="relative inline-flex items-center">
-              <select
-                value={settings.videoPreset}
-                onChange={(e) => onChange({ videoPreset: e.target.value })}
-                className="w-full bg-[var(--bg-secondary)] border border-[var(--border-secondary)] text-primary text-xs rounded-lg pl-2.5 pr-7 py-1.5 appearance-none cursor-pointer hover:border-[var(--border-hover)] focus:outline-none focus:border-[var(--accent)] transition-colors"
-              >
-                {(
-                  [
-                    'ultrafast',
-                    'superfast',
-                    'veryfast',
-                    'faster',
-                    'fast',
-                    'medium',
-                    'slow',
-                    'slower',
-                    'veryslow',
-                  ] as const
-                ).map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
-              <svg
-                className="absolute right-2 pointer-events-none text-[var(--text-muted)]"
-                width="10"
-                height="10"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                aria-hidden="true"
-              >
-                <path d="M6 9l6 6 6-6" />
-              </svg>
+            <div className="flex gap-1">
+              {VIDEO_PRESETS.filter(
+                (p) => p.id !== 'lossless' || LOSSLESS_VIDEO_TARGETS.has(targetExt),
+              ).map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() =>
+                    onChange(showVideoPreset ? p.patch : { videoQuality: p.patch.videoQuality })
+                  }
+                  aria-pressed={videoPreset === p.id}
+                  className={choice(videoPreset === p.id)}
+                >
+                  {t(`job.preset${p.id[0].toUpperCase()}${p.id.slice(1)}`)}
+                </button>
+              ))}
             </div>
+            {videoPreset === 'lossless' && (
+              <span className="text-xs text-[var(--text-muted)]">{t('job.losslessHint')}</span>
+            )}
+            <details className="text-xs">
+              <summary className="cursor-pointer text-[var(--text-muted)]">
+                {t('job.advanced')}
+              </summary>
+              <div className="mt-2 flex flex-col gap-2">
+                <input
+                  type="range"
+                  min={0}
+                  max={51}
+                  value={settings.videoQuality}
+                  onChange={(e) => onChange({ videoQuality: Number(e.target.value) })}
+                  aria-label="CRF"
+                  className="w-full"
+                  style={{ accentColor: 'var(--video-color)' }}
+                />
+                <span className="text-xs text-[var(--text-muted)]">{t('job.crfHint')}</span>
+                {showVideoPreset && (
+                  <label className="flex flex-col gap-1">
+                    <span className={LABEL}>{t('job.preset')}</span>
+                    <span className="relative inline-flex items-center">
+                      <select
+                        value={settings.videoPreset}
+                        onChange={(e) => onChange({ videoPreset: e.target.value })}
+                        className="w-full bg-[var(--bg-secondary)] border border-[var(--border-secondary)] text-primary text-xs rounded-lg pl-2.5 pr-7 py-1.5 appearance-none cursor-pointer hover:border-[var(--border-hover)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+                      >
+                        {X264_PRESETS.map((p) => (
+                          <option key={p} value={p}>
+                            {p}
+                          </option>
+                        ))}
+                      </select>
+                      <svg
+                        className="absolute right-2 pointer-events-none text-[var(--text-muted)]"
+                        width="10"
+                        height="10"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        aria-hidden="true"
+                      >
+                        <path d="M6 9l6 6 6-6" />
+                      </svg>
+                    </span>
+                  </label>
+                )}
+              </div>
+            </details>
           </div>
         )}
 
@@ -751,6 +814,17 @@ export function SettingsPanel({
                   aria-label={t('job.height')}
                 />
               </div>
+              {settings.imageMaxSide > 0 && (
+                <span className="flex items-center justify-between text-xs text-[var(--text-muted)]">
+                  {t('job.maxSideNote').replace('{n}', String(settings.imageMaxSide))}
+                  <button
+                    onClick={() => onChange({ imageMaxSide: 0 })}
+                    className="underline hover:text-[var(--text-secondary)]"
+                  >
+                    {t('job.maxSideClear')}
+                  </button>
+                </span>
+              )}
             </div>
 
             <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
@@ -798,6 +872,7 @@ export function SettingsPanel({
           </>
         )}
       </div>
+      {footer}
     </motion.div>
   );
 }

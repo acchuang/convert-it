@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { JobCard } from '@/app/components/JobCard';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { JobCard, describeError } from '@/app/components/JobCard';
 import type { FileJob } from '@/app/components/JobCard';
+import { DEFAULT_SETTINGS } from '@/lib/types';
 
 const t = (key: string) => key;
 
@@ -138,5 +139,102 @@ describe('JobCard errors', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(
       'File too large (612 MB; the limit is 500 MB)',
     );
+  });
+
+  it('offers to copy its settings to similar files, and says how many it changed', () => {
+    const onApply = vi.fn();
+    render(
+      <JobCard
+        job={{ ...idleJob, settings: DEFAULT_SETTINGS }}
+        onTargetChange={vi.fn()}
+        onConvert={vi.fn()}
+        onDownload={vi.fn()}
+        onRemove={vi.fn()}
+        onSettingsChange={vi.fn()}
+        similarCount={3}
+        onApplyToSimilar={onApply}
+        t={t}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'job.settings' }));
+    fireEvent.click(screen.getByRole('button', { name: 'job.applyToSimilar' }));
+    expect(onApply).toHaveBeenCalledOnce();
+    expect(screen.getByRole('status')).toHaveTextContent('job.appliedToSimilar');
+  });
+
+  it('explains an unreadable file by kind', () => {
+    const tr = (key: string) =>
+      ({
+        'errors.unsupportedFile.title': 'Can’t convert .{label} files',
+        'errors.unsupportedFile.image': 'Export it as {formats}.',
+      })[key] ?? key;
+    expect(
+      describeError(
+        {
+          code: 'unsupported',
+          detail: '',
+          params: { kind: 'image', label: 'TIFF', formats: 'PNG' },
+        },
+        'tiff',
+        tr,
+      ),
+    ).toEqual({ title: 'Can’t convert .TIFF files', hint: 'Export it as PNG.' });
+  });
+
+  it('an unreadable file offers no retry; a renamed one says what it was read as', () => {
+    const props = {
+      onTargetChange: vi.fn(),
+      onConvert: vi.fn(),
+      onDownload: vi.fn(),
+      onRemove: vi.fn(),
+      onSettingsChange: vi.fn(),
+      t: (key: string) => (key === 'job.readAsAlias' ? '.{from} is .{to}; read as .{to}.' : key),
+    };
+    const { unmount } = render(
+      <JobCard
+        job={{
+          ...idleJob,
+          targetExt: null,
+          status: 'error',
+          error: { code: 'unsupported', detail: '', params: { kind: 'unknown', label: '' } },
+        }}
+        {...props}
+      />,
+    );
+    expect(screen.queryByRole('button', { name: 'job.retry' })).toBeNull();
+    unmount();
+    render(
+      <JobCard
+        job={{ ...idleJob, sourceExt: 'yaml', identified: { from: 'yml', reason: 'alias' } }}
+        {...props}
+      />,
+    );
+    expect(screen.getByTestId('identified')).toHaveTextContent('.YML is .YAML; read as .YAML.');
+  });
+
+  it('copies an image result to the clipboard as PNG', async () => {
+    const write = vi.fn().mockResolvedValue(undefined);
+    class FakeItem {
+      constructor(readonly items: Record<string, Promise<Blob>>) {}
+    }
+    vi.stubGlobal('ClipboardItem', FakeItem);
+    Object.defineProperty(navigator, 'clipboard', { value: { write }, configurable: true });
+    const png = new Blob(['png'], { type: 'image/png' });
+    render(
+      <JobCard
+        job={{ ...doneJob, sourceExt: 'jpg', targetExt: 'png', resultBlob: png }}
+        onTargetChange={vi.fn()}
+        onConvert={vi.fn()}
+        onDownload={vi.fn()}
+        onRemove={vi.fn()}
+        onSettingsChange={vi.fn()}
+        t={t}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'job.copy' }));
+    await waitFor(() => expect(write).toHaveBeenCalledOnce());
+    const [item] = write.mock.calls[0][0] as FakeItem[];
+    expect(await item.items['image/png']).toBe(png);
+    vi.unstubAllGlobals();
   });
 });

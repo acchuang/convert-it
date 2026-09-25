@@ -311,7 +311,8 @@ export function planImageTransform(
   const percent = settings.imageResizePercent ?? 100;
   const wantW = Math.max(0, Math.round(settings.imageResizeWidth ?? 0));
   const wantH = Math.max(0, Math.round(settings.imageResizeHeight ?? 0));
-  const resizing = wantW > 0 || wantH > 0 || percent !== 100;
+  const maxSide = Math.max(0, Math.round(settings.imageMaxSide ?? 0));
+  const resizing = wantW > 0 || wantH > 0 || percent !== 100 || maxSide > 0;
   if (!crop && !resizing) return null;
 
   let outW = w;
@@ -325,6 +326,14 @@ export function planImageTransform(
     const scale = percent / 100;
     outW = Math.round(w * scale);
     outH = Math.round(h * scale);
+  }
+
+  // A cap on the longest side (the presets use it): only ever shrinks, and
+  // applies after any other resize.
+  if (maxSide > 0 && Math.max(outW, outH) > maxSide) {
+    const scale = maxSide / Math.max(outW, outH);
+    outW = Math.round(outW * scale);
+    outH = Math.round(outH * scale);
   }
 
   outW = Math.max(1, outW);

@@ -1,9 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useReducer, useState, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatFileSize } from '@/lib/converters';
-import { timeAgo, clearHistory, type HistoryEntry } from '@/lib/history';
+import {
+  timeAgo,
+  clearHistory,
+  historyEnabled,
+  setHistoryEnabled,
+  type HistoryEntry,
+} from '@/lib/history';
 
 const CATEGORY_COLORS: Record<string, string> = {
   jpg: '#FF4D00',
@@ -38,6 +44,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   xlsx: '#AAFF44',
 };
 
+const subscribeNever = () => () => {};
+
 function getColor(ext: string) {
   return CATEGORY_COLORS[ext.toLowerCase()] ?? '#666';
 }
@@ -53,6 +61,29 @@ export function HistoryPanel({
 }) {
   const [open, setOpen] = useState(true);
   const [confirmClear, setConfirmClear] = useState(false);
+  // The static page renders "on"; the stored choice is read on hydration
+  // (and on every render, so the re-render after a toggle picks it up).
+  const [, rerender] = useReducer((n: number) => n + 1, 0);
+  const keep = useSyncExternalStore(subscribeNever, historyEnabled, () => true);
+
+  const toggle = (
+    <label
+      className="flex items-center gap-2 text-xs text-[var(--text-muted)] cursor-pointer"
+      style={{ fontFamily: 'var(--font-mono)' }}
+    >
+      <input
+        type="checkbox"
+        checked={keep}
+        onChange={(e) => {
+          setHistoryEnabled(e.target.checked);
+          rerender();
+          if (!e.target.checked) onClear();
+        }}
+        className="accent-[var(--accent)]"
+      />
+      {t('history.keep')}
+    </label>
+  );
 
   const handleClear = () => {
     if (!confirmClear) {
@@ -78,8 +109,9 @@ export function HistoryPanel({
             className="text-[var(--text-muted)] text-sm"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
-            {t('history.empty')}
+            {keep ? t('history.empty') : t('history.off')}
           </p>
+          <div className="mt-3 flex justify-center">{toggle}</div>
         </div>
       </motion.section>
     );
@@ -119,18 +151,21 @@ export function HistoryPanel({
           </svg>
         </button>
 
-        <button
-          onClick={handleClear}
-          className={`text-xs px-2.5 py-1 rounded transition-colors ${
-            confirmClear
-              ? 'text-[var(--error)] bg-[var(--error)]/10 border border-[var(--error)]/30 font-semibold'
-              : 'text-[var(--text-muted)] hover:text-[var(--error)]'
-          }`}
-          style={{ fontFamily: 'var(--font-mono)' }}
-          aria-label={confirmClear ? 'Confirm clear all history' : t('history.clear')}
-        >
-          {confirmClear ? 'CONFIRM CLEAR?' : t('history.clear')}
-        </button>
+        <div className="flex items-center gap-3">
+          {toggle}
+          <button
+            onClick={handleClear}
+            className={`text-xs px-2.5 py-1 rounded transition-colors ${
+              confirmClear
+                ? 'text-[var(--error)] bg-[var(--error)]/10 border border-[var(--error)]/30 font-semibold'
+                : 'text-[var(--text-muted)] hover:text-[var(--error)]'
+            }`}
+            style={{ fontFamily: 'var(--font-mono)' }}
+            aria-label={confirmClear ? 'Confirm clear all history' : t('history.clear')}
+          >
+            {confirmClear ? 'CONFIRM CLEAR?' : t('history.clear')}
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>

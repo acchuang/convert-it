@@ -15,7 +15,8 @@
     "audio": "音频",
     "document": "文档",
     "data": "数据",
-    "folder": "或选择一个文件夹"
+    "folder": "或选择一个文件夹",
+    "paste": "或粘贴（Ctrl/⌘+V）：文件、截图、电子表格中的区域"
   },
   "toolbar": {
     "addFiles": "添加文件",
@@ -33,7 +34,11 @@
     "moveDown": "下移",
     "addFolder": "添加文件夹",
     "nameAs": "命名为",
-    "nameHint": "{name} {ext} {source} {n} {date} {w}x{h}"
+    "nameHint": "{name} {ext} {source} {n} {date} {w}x{h}",
+    "removedOne": "已移除 {name}",
+    "removedMany": "已移除 {n} 个文件",
+    "undo": "撤销",
+    "dismiss": "关闭"
   },
   "warning": {
     "largeFile": "检测到大文件",
@@ -137,7 +142,30 @@
     "burnSubtitles": "烧录字幕",
     "burnChoose": "选择 .srt 或 .vtt",
     "burnRemove": "移除",
-    "burnHint": "字幕会画进画面，任何播放器都能显示。"
+    "burnHint": "字幕会画进画面，任何播放器都能显示。",
+    "presetSmallest": "最小",
+    "presetBalanced": "均衡",
+    "presetBest": "最佳",
+    "presetLossless": "无损",
+    "losslessHint": "逐帧无损，文件非常大。适合剪辑：许多浏览器和手机无法播放。",
+    "advanced": "高级",
+    "crfHint": "CRF：越低画质越高、文件越大",
+    "presetFull": "原图",
+    "presetWeb": "网页",
+    "presetEmail": "邮件",
+    "maxSideNote": "长边 ≤ {n} px",
+    "maxSideClear": "移除",
+    "applyToSimilar": "应用到其他 {n} 个 .{ext} 文件",
+    "appliedToSimilar": "已应用到 {n} 个文件",
+    "readAsAlias": ".{from} 是 .{to} 的另一个名称，按 .{to} 读取。",
+    "readAsContent": "按 .{to} 读取：无论文件名如何，它的内容就是 .{to}。",
+    "before": "转换前",
+    "after": "转换后",
+    "compare": "对比转换前后",
+    "heicImages": "文件中的图片",
+    "heicPrimary": "主照片",
+    "heicAll": "全部 (zip)",
+    "heicHint": "用于连拍和图片序列；单张照片不受影响。"
   },
   "howItWorks": {
     "heading": "使用方式",
@@ -157,7 +185,9 @@
   "history": {
     "heading": "最近记录",
     "clear": "清除",
-    "empty": "尚无转换记录 — 将文件拖拽至上方即可开始"
+    "empty": "尚无转换记录 — 将文件拖拽至上方即可开始",
+    "keep": "在此设备上保留历史记录",
+    "off": "历史记录已关闭：不会在此设备上保存任何关于你文件的信息。"
   },
   "footer": {
     "copyright": "© 2026 Convert-it — 所有转换均在您的浏览器中完成",
@@ -188,7 +218,7 @@
     "formatsHeading": "支持的格式",
     "privacyHeading": "隐私保护",
     "privacy1": "您的文件永远不会离开浏览器。所有转换均使用 WebAssembly 和 Canvas API 在本地进行。我们不会上传、存储或访问您的任何数据。",
-    "privacy2": "我们不运行任何分析或追踪脚本 — 不使用 Cookie、无指纹追踪，也不会关联到您的文件。设备上仅存储您的主题和语言偏好。首次使用视频或音频转换时，会从我们自己的 CDN 下载约 31MB 的 FFmpeg 引擎；您的文件绝不会包含在该请求中。文件大小限制（图片 100MB、视频 500MB、音频 200MB）可防止浏览器内存耗尽。",
+    "privacy2": "我们不运行任何分析或追踪脚本 — 不使用 Cookie、无指纹追踪，也不会关联到您的文件。首次使用视频或音频转换时，会从我们自己的 CDN 下载约 31MB 的 FFmpeg 引擎；您的文件绝不会包含在该请求中。拖放区上方的状态栏实时显示本应用在此浏览器中通过网络发送和接收的数据量（由其 Service Worker 统计）：“已发送”始终为 0 B。文件大小限制（图片 100MB、视频 500MB、音频 200MB）可防止浏览器内存耗尽。",
     "improvementsHeading": "近期更新",
     "improvement1": "HEIC 和 AVIF 解码 — 转换 iPhone 和现代网页照片（延迟加载 WASM）",
     "improvement2": "ePub 导出 — 将 TXT、Markdown 和 HTML 转换为电子书",
@@ -259,7 +289,23 @@
     "improvement46": "识别图片和扫描版 PDF 中的文字（OCR），支持八种语言，全程在本机完成",
     "improvement47": "字幕：SRT ⇄ WebVTT 互转、调整时间轴，或导出文字稿",
     "improvement48": "可拖入整个文件夹（压缩包中保留目录结构），用 {name}-{w}x{h} 这样的模板命名输出文件，拖入的文件也不会再被重复添加",
-    "improvement49": "可删除片段中间的一段，并把字幕（.srt 或 .vtt，支持的任一文字）烧录进视频"
+    "improvement49": "可删除片段中间的一段，并把字幕（.srt 或 .vtt，支持的任一文字）烧录进视频",
+    "improvement50": "质量预设：视频有最小、均衡、最佳和无损，照片有原图、网页和邮件；详细参数在“高级”中",
+    "improvement51": "将一个文件的设置应用到所有转换为同一格式的文件",
+    "improvement52": "无法转换的文件会说明它是什么、应导出为什么格式；名称不符的文件（无扩展名的 PDF、.jfif）按内容识别",
+    "improvement53": "“清空”或移除文件可在十秒内撤销（也可按 Ctrl/⌘+Z）",
+    "improvement54": "用滑块对比转换前后，并显示两边的大小；视频和音频结果可直接播放",
+    "improvement55": "粘贴文件、截图或电子表格中的区域；将图片结果复制到剪贴板",
+    "improvement56": "安装为应用后，可从其他应用分享文件给它，或用它打开文件",
+    "improvement57": "查看应用通过网络发送（为零）和接收的数据量；关闭历史记录后不保存任何文件名",
+    "improvement58": "HEIC：转换主照片，而不只是文件中的第一张图片；也可将所有图片打包为 zip",
+    "storedHeading": "只保存在此设备上的内容",
+    "stored1": "最近的转换：文件名、格式、大小和时间，最多 30 条。在“最近”中取消勾选“在此设备上保留历史记录”后不会写入任何内容（取消勾选也会删除列表）。",
+    "stored2": "你的主题、语言和输出文件名模板。",
+    "stored3": "为离线使用缓存的应用文件：代码、编解码器、字体、OCR 数据和 FFmpeg 引擎。绝不包括你的文件或结果。",
+    "stored4": "发送和接收字节数的累计，用于网络标识。",
+    "stored5": "分享给已安装应用的文件，只保留到页面片刻后取走为止。",
+    "stored6": "在浏览器设置中清除本网站数据即可全部删除。"
   },
   "errors": {
     "tooLarge": {
@@ -290,12 +336,32 @@
       "title": "此设置不适用于该文件",
       "hint": "此任务的某项设置不适用于该文件，详情中写明了是哪一项。修改后点击重试。"
     },
-    "details": "技术细节"
+    "details": "技术细节",
+    "unsupportedFile": {
+      "title": "无法转换 .{label} 文件",
+      "titleNoExt": "无法识别这个文件",
+      "image": "本应用不支持读取 {label} 图片格式。请在创建它的应用中导出为 {formats}，再添加导出的文件。",
+      "raw": "相机 RAW 需要 RAW 显影软件。请先在照片应用中导出为 {formats}。",
+      "word": "请在文字处理软件中另存为 {formats}，再转换。",
+      "sheet": "请在电子表格应用中另存为 {formats}，再转换。",
+      "slides": "请在演示文稿应用中将幻灯片导出为 {formats}；PDF 可在这里转换为图片或文本。",
+      "archive": "这是压缩包。请先解压，再添加其中的文件（或文件夹）。",
+      "program": "这是程序或安装包，不是文档，没有可转换的内容。",
+      "video": "暂不支持读取这种视频格式。请在创建它的应用中导出为 {formats}。",
+      "audio": "暂不支持读取这种音频格式。请在创建它的应用中导出为 {formats}。",
+      "unknown": "它的内容与本应用支持的任何格式都不匹配。如果你知道它是什么，请改成正确的扩展名后重新添加。"
+    }
   },
   "offline": {
     "save": "保存以供离线使用（{size} MB）",
     "saving": "正在保存以供离线使用… {pct}%",
     "saved": "可离线使用",
     "failed": "无法保存以供离线使用。请在联网时重试。"
+  },
+  "network": {
+    "sent": "已发送",
+    "received": "· 已接收",
+    "offline": "离线，仍可使用 ·",
+    "hint": "由本应用的 Service Worker 统计，所有请求都经过它：在此浏览器中通过网络发送的数据（你的文件从不发送）和下载的数据（应用和转换引擎）。缓存读取不计入。"
   }
 }
