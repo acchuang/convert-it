@@ -33,7 +33,11 @@
     "moveDown": "下へ",
     "addFolder": "フォルダーを追加",
     "nameAs": "ファイル名",
-    "nameHint": "{name} {ext} {source} {n} {date} {w}x{h}"
+    "nameHint": "{name} {ext} {source} {n} {date} {w}x{h}",
+    "removedOne": "{name} を削除しました",
+    "removedMany": "{n} 件を削除しました",
+    "undo": "元に戻す",
+    "dismiss": "閉じる"
   },
   "warning": {
     "largeFile": "大きなファイルを検出",

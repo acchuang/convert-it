@@ -33,7 +33,11 @@
     "moveDown": "Bajar",
     "addFolder": "AÑADIR CARPETA",
     "nameAs": "Nombrar como",
-    "nameHint": "{name} {ext} {source} {n} {date} {w}x{h}"
+    "nameHint": "{name} {ext} {source} {n} {date} {w}x{h}",
+    "removedOne": "Se quitó {name}",
+    "removedMany": "Se quitaron {n} archivos",
+    "undo": "Deshacer",
+    "dismiss": "Cerrar"
   },
   "warning": {
     "largeFile": "Archivo grande detectado",

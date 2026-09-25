@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   convertFile,
   getFileExtension,
@@ -99,6 +99,10 @@ interface UseJobManagerReturn {
   downloadAllAsZip: () => Promise<void>;
   applyBatchFormat: (format: string) => void;
   removeJob: (id: string) => void;
+  /** What the last remove/Clear took out (for the Undo toast), and putting it back. */
+  removed: FileJob[];
+  undoRemove: () => void;
+  dismissUndo: () => void;
   convertAll: () => void;
   clearAll: () => void;
   doneCount: number;
@@ -452,18 +456,52 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
     }
   }, [jobs]);
 
-  const removeJob = useCallback(
-    (id: string) => setJobs((prev) => prev.filter((j) => j.id !== id)),
-    [],
+  // The last removal (one card or Clear), kept so it can be undone, with each
+  // job's place in the list. A new removal replaces it; dismissing frees the
+  // blobs it holds.
+  const [removed, setRemoved] = useState<{ job: FileJob; index: number }[] | null>(null);
+
+  const removeWhere = useCallback(
+    (pick: (job: FileJob) => boolean) => {
+      const taken = jobs.flatMap((job, index) => (pick(job) ? [{ job, index }] : []));
+      if (!taken.length) return;
+      for (const { job } of taken) if (job.status === 'converting') cancelJob(job.id);
+      const ids = new Set(taken.map(({ job }) => job.id));
+      setJobs((prev) => prev.filter((j) => !ids.has(j.id)));
+      setRemoved(
+        taken.map(({ job, index }) => ({
+          index,
+          // A cancelled conversion comes back ready to run again.
+          job: job.status === 'converting' ? { ...job, status: 'idle', progress: 0 } : job,
+        })),
+      );
+    },
+    [jobs, cancelJob],
   );
+
+  const removeJob = useCallback((id: string) => removeWhere((j) => j.id === id), [removeWhere]);
+
+  const undoRemove = useCallback(() => {
+    if (!removed) return;
+    setJobs((prev) => {
+      const out = [...prev];
+      // Ascending original positions put every job back where it was.
+      for (const { job, index } of removed) out.splice(Math.min(index, out.length), 0, job);
+      return out;
+    });
+    setRemoved(null);
+  }, [removed]);
+
+  const dismissUndo = useCallback(() => setRemoved(null), []);
 
   const convertAll = useCallback(() => {
     jobs.filter((j) => j.status === 'idle' && j.targetExt).forEach(convertJob);
   }, [jobs, convertJob]);
 
-  const clearAll = useCallback(() => setJobs([]), []);
+  const clearAll = useCallback(() => removeWhere(() => true), [removeWhere]);
 
   const doneCount = jobs.filter((j) => j.status === 'done').length;
+  const removedJobs = useMemo(() => removed?.map((r) => r.job) ?? [], [removed]);
 
   return {
     jobs,
@@ -477,6 +515,9 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
     downloadAllAsZip,
     applyBatchFormat,
     removeJob,
+    removed: removedJobs,
+    undoRemove,
+    dismissUndo,
     convertAll,
     clearAll,
     doneCount,

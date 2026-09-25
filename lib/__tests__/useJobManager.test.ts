@@ -506,3 +506,54 @@ describe('files no route reads', () => {
     expect(csv.identified).toBeUndefined();
   });
 });
+
+describe('undo remove / Clear', () => {
+  const names = (jobs: FileJob[]) => jobs.map((j) => j.file.name);
+  const three = () => [
+    new File(['1'], 'a.csv'),
+    new File(['2'], 'b.csv'),
+    new File(['3'], 'c.csv'),
+  ];
+
+  it('puts a removed card back where it was', () => {
+    const { result } = renderHook(() => useJobManager());
+    act(() => result.current.addFiles(three()));
+    act(() => result.current.removeJob(result.current.jobs[1].id));
+    expect(names(result.current.jobs)).toEqual(['a.csv', 'c.csv']);
+    expect(names(result.current.removed)).toEqual(['b.csv']);
+    act(() => result.current.undoRemove());
+    expect(names(result.current.jobs)).toEqual(['a.csv', 'b.csv', 'c.csv']);
+    expect(result.current.removed).toEqual([]);
+  });
+
+  it('Clear is undone in one go; files added since stay, after the restored ones', () => {
+    const { result } = renderHook(() => useJobManager());
+    act(() => result.current.addFiles(three()));
+    act(() => result.current.clearAll());
+    expect(result.current.jobs).toEqual([]);
+    act(() => result.current.addFiles([new File(['4'], 'd.csv')]));
+    act(() => result.current.undoRemove());
+    expect(names(result.current.jobs)).toEqual(['a.csv', 'b.csv', 'c.csv', 'd.csv']);
+  });
+
+  it('a conversion running when cleared is cancelled and comes back idle', async () => {
+    mockConvertFile.mockImplementation(() => new Promise(() => {}));
+    const { result } = renderHook(() => useJobManager());
+    act(() => result.current.addFiles([new File(['1'], 'a.csv')]));
+    act(() => void result.current.convertJob(result.current.jobs[0]));
+    await waitFor(() => expect(result.current.jobs[0].status).toBe('converting'));
+    act(() => result.current.clearAll());
+    expect(mockCancelInWorker).toHaveBeenCalled();
+    act(() => result.current.undoRemove());
+    expect(result.current.jobs[0]).toMatchObject({ status: 'idle', progress: 0 });
+  });
+
+  it('dismissing lets the removed files go', () => {
+    const { result } = renderHook(() => useJobManager());
+    act(() => result.current.addFiles(three()));
+    act(() => result.current.clearAll());
+    act(() => result.current.dismissUndo());
+    act(() => result.current.undoRemove());
+    expect(result.current.jobs).toEqual([]);
+  });
+});

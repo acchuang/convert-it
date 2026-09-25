@@ -32,4 +32,23 @@ describe('ConverterApp', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'ADD FILES' })[0]);
     expect(click).toHaveBeenCalledOnce();
   });
+
+  it('Clear can be undone from the toast or with Ctrl+Z', async () => {
+    const { container } = renderApp();
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]')!;
+    fireEvent.change(input, {
+      target: { files: [new File(['a'], 'a.csv'), new File(['b'], 'b.csv')] },
+    });
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
+    fireEvent.click(screen.getByRole('button', { name: 'CLEAR' }));
+    await waitFor(() => expect(screen.queryAllByRole('listitem')).toHaveLength(0));
+    expect(screen.getByText('Removed 2 files')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    await waitFor(() => expect(screen.getAllByRole('listitem')).toHaveLength(2));
+
+    fireEvent.click(screen.getAllByRole('button', { name: /remove/i })[0]);
+    await waitFor(() => expect(screen.getAllByRole('listitem')).toHaveLength(1));
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+    await waitFor(() => expect(screen.getAllByRole('listitem')).toHaveLength(2));
+  });
 });

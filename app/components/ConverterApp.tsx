@@ -36,6 +36,9 @@ interface ConverterAppProps {
   intro?: ReactNode;
 }
 
+// How long the Undo toast stays after a remove or Clear.
+const UNDO_MS = 10_000;
+
 export default function ConverterApp({ preferredTarget, intro }: ConverterAppProps = {}) {
   const {
     jobs,
@@ -49,6 +52,9 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
     downloadAllAsZip,
     applyBatchFormat: applyBatch,
     removeJob,
+    removed,
+    undoRemove,
+    dismissUndo,
     convertAll,
     clearAll,
     doneCount,
@@ -178,17 +184,30 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
     };
   }, [addFiles, detectDragCategory]);
 
-  // Keyboard shortcut: Cmd/Ctrl + Enter converts all queued jobs
+  // Keyboard shortcuts: Cmd/Ctrl + Enter converts all queued jobs; Cmd/Ctrl + Z
+  // undoes the last remove or Clear (outside text fields, which keep their own undo).
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
         e.preventDefault();
         convertAll();
       }
+      const typing = e.target instanceof HTMLElement && e.target.closest('input, textarea, select');
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key === 'z' && removed.length && !typing) {
+        e.preventDefault();
+        undoRemove();
+      }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [convertAll]);
+  }, [convertAll, removed.length, undoRemove]);
+
+  // The Undo toast goes away on its own; the removed files are then let go.
+  useEffect(() => {
+    if (!removed.length) return;
+    const timer = setTimeout(dismissUndo, UNDO_MS);
+    return () => clearTimeout(timer);
+  }, [removed, dismissUndo]);
 
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
@@ -643,6 +662,39 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
           {/* History is always accessible */}
           <HistoryPanel entries={history} onClear={() => setHistory([])} t={t} />
         </div>
+
+        <AnimatePresence>
+          {removed.length > 0 && (
+            <motion.div
+              key="undo"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 16 }}
+              role="status"
+              className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-secondary)] shadow-lg text-xs max-w-[calc(100vw-2rem)]"
+              style={{ fontFamily: 'var(--font-mono)' }}
+            >
+              <span className="text-[var(--text-secondary)] truncate">
+                {removed.length === 1
+                  ? t('toolbar.removedOne').replace('{name}', removed[0].file.name)
+                  : t('toolbar.removedMany').replace('{n}', String(removed.length))}
+              </span>
+              <button
+                onClick={undoRemove}
+                className="font-semibold text-[var(--accent)] hover:underline flex-shrink-0"
+              >
+                {t('toolbar.undo')}
+              </button>
+              <button
+                onClick={dismissUndo}
+                aria-label={t('toolbar.dismiss')}
+                className="text-[var(--text-muted)] hover:text-[var(--text-primary)] flex-shrink-0"
+              >
+                ×
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Footer */}
         <Footer navLabel={t('footer.images')}>

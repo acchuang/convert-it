@@ -33,7 +33,11 @@
     "moveDown": "Move down",
     "addFolder": "ADD FOLDER",
     "nameAs": "Name as",
-    "nameHint": "{name} {ext} {source} {n} {date} {w}x{h}"
+    "nameHint": "{name} {ext} {source} {n} {date} {w}x{h}",
+    "removedOne": "Removed {name}",
+    "removedMany": "Removed {n} files",
+    "undo": "Undo",
+    "dismiss": "Dismiss"
   },
   "warning": {
     "largeFile": "Large file detected",

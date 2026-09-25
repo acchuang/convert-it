@@ -33,7 +33,11 @@
     "moveDown": "下移",
     "addFolder": "添加文件夹",
     "nameAs": "命名为",
-    "nameHint": "{name} {ext} {source} {n} {date} {w}x{h}"
+    "nameHint": "{name} {ext} {source} {n} {date} {w}x{h}",
+    "removedOne": "已移除 {name}",
+    "removedMany": "已移除 {n} 个文件",
+    "undo": "撤销",
+    "dismiss": "关闭"
   },
   "warning": {
     "largeFile": "检测到大文件",

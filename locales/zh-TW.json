@@ -33,7 +33,11 @@
     "moveDown": "下移",
     "addFolder": "新增資料夾",
     "nameAs": "命名為",
-    "nameHint": "{name} {ext} {source} {n} {date} {w}x{h}"
+    "nameHint": "{name} {ext} {source} {n} {date} {w}x{h}",
+    "removedOne": "已移除 {name}",
+    "removedMany": "已移除 {n} 個檔案",
+    "undo": "復原",
+    "dismiss": "關閉"
   },
   "warning": {
     "largeFile": "偵測到大檔案",
