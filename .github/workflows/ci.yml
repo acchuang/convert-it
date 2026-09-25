@@ -30,6 +30,10 @@ jobs:
 
       - run: npx prettier --check .
 
+      # The codec, PDFium, resvg and OCR files under public/ are committed
+      # copies of node_modules files: fail if an upgrade left them stale.
+      - run: npm run copy-wasm -- --check
+
       # W3C epubcheck (Java, preinstalled on the runner) validates every EPUB
       # the converters produce; the test runs only when EPUBCHECK_JAR is set.
       # Pinned by hash like any other executable we download.

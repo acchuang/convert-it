@@ -161,7 +161,11 @@
     "readAsContent": "以 .{to} 讀取：不論檔名為何，它的內容就是 .{to}。",
     "before": "轉換前",
     "after": "轉換後",
-    "compare": "比較轉換前後"
+    "compare": "比較轉換前後",
+    "heicImages": "檔案中的圖片",
+    "heicPrimary": "主要照片",
+    "heicAll": "全部 (zip)",
+    "heicHint": "用於連拍和圖片序列；單張照片不受影響。"
   },
   "howItWorks": {
     "heading": "使用方式",

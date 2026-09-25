@@ -86,6 +86,7 @@ export type SettingKey =
   | 'metadata' // metadata
   | 'ocr' // ocrLanguage
   | 'subtitleOffset' // subtitleOffset
+  | 'heicImages' // heicAllImages
   | 'pdfPages' // pdfAllPages
   | 'pdfScale' // pdfScale
   | 'pdfEdit' // pdfPageRange, pdfRotate, pdfSplit
@@ -117,6 +118,7 @@ export const SETTING_FIELDS: Record<SettingKey, (keyof ConversionSettings)[]> = 
   metadata: ['metadata'],
   ocr: ['ocrLanguage'],
   subtitleOffset: ['subtitleOffset'],
+  heicImages: ['heicAllImages'],
   pdfPages: ['pdfAllPages'],
   pdfScale: ['pdfScale'],
   pdfEdit: ['pdfPageRange', 'pdfRotate', 'pdfSplit'],
@@ -184,7 +186,10 @@ const IMAGE_TARGETS: Record<string, string[]> = {
 };
 for (const [from, targets] of Object.entries(IMAGE_TARGETS)) {
   const run = from === 'heic' ? heic : from === 'avif' ? avif : convertImage;
-  for (const to of targets) add(from, to, run, imageSettings(to, from));
+  for (const to of targets) {
+    const keys = imageSettings(to, from);
+    add(from, to, run, from === 'heic' ? ['heicImages', ...keys] : keys);
+  }
 }
 
 // Image → text by OCR (tesseract.js, loaded on first use).

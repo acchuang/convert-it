@@ -26,6 +26,7 @@ export interface ConversionSettings {
   animFps: number; // video → GIF / animated WebP frame rate
   animWidth: number; // video → GIF / animated WebP max width in px; 0 = source width
   // PDF input settings
+  heicAllImages: boolean; // heic→image: every image in the file (zip, primary first) vs the primary one
   pdfAllPages: boolean; // pdf→image: render all pages (zip) vs page 1 (single image)
   pdfScale: number; // pdf→image render scale (1 | 2 | 3)
   // PDF tools
@@ -65,6 +66,7 @@ export const DEFAULT_SETTINGS: ConversionSettings = {
   subtitleFile: null,
   animFps: 12,
   animWidth: 480,
+  heicAllImages: false,
   pdfAllPages: false,
   pdfScale: 1,
   pdfPageRange: '',

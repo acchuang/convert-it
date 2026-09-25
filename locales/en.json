@@ -161,7 +161,11 @@
     "readAsContent": "Read as .{to}: that is what its contents are, whatever the name says.",
     "before": "Before",
     "after": "After",
-    "compare": "Compare before and after"
+    "compare": "Compare before and after",
+    "heicImages": "Images in the file",
+    "heicPrimary": "Main photo",
+    "heicAll": "All (zip)",
+    "heicHint": "For bursts and image sequences; a single photo is unaffected."
   },
   "howItWorks": {
     "heading": "HOW IT WORKS",

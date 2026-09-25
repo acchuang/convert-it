@@ -161,7 +161,11 @@
     "readAsContent": "Se lee como .{to}: es lo que contiene, diga lo que diga el nombre.",
     "before": "Antes",
     "after": "Después",
-    "compare": "Comparar antes y después"
+    "compare": "Comparar antes y después",
+    "heicImages": "Imágenes del archivo",
+    "heicPrimary": "Foto principal",
+    "heicAll": "Todas (zip)",
+    "heicHint": "Para ráfagas y secuencias; una sola foto no cambia."
   },
   "howItWorks": {
     "heading": "CÓMO FUNCIONA",

@@ -161,7 +161,11 @@
     "readAsContent": "名前に関係なく、中身が .{to} なので .{to} として読み込みます。",
     "before": "変換前",
     "after": "変換後",
-    "compare": "変換前後を比較"
+    "compare": "変換前後を比較",
+    "heicImages": "ファイル内の画像",
+    "heicPrimary": "メインの写真",
+    "heicAll": "すべて (zip)",
+    "heicHint": "連写や画像シーケンス用。1枚だけの写真には影響しません。"
   },
   "howItWorks": {
     "heading": "使い方",

@@ -320,6 +320,24 @@ export function SettingsPanel({
           </div>
         )}
 
+        {shown.has('heicImages') && (
+          <div className={CARD}>
+            <span className={LABEL}>{t('job.heicImages')}</span>
+            <div className="flex gap-1">
+              {([false, true] as const).map((all) => (
+                <button
+                  key={String(all)}
+                  onClick={() => onChange({ heicAllImages: all })}
+                  className={choice(settings.heicAllImages === all)}
+                >
+                  {all ? t('job.heicAll') : t('job.heicPrimary')}
+                </button>
+              ))}
+            </div>
+            <span className="text-xs text-[var(--text-muted)]">{t('job.heicHint')}</span>
+          </div>
+        )}
+
         {showPdfPages && (
           <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
             <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">

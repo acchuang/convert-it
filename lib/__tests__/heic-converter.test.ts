@@ -42,9 +42,12 @@ describe('convertHeic', () => {
       {
         get_width: () => 100,
         get_height: () => 100,
-        display: vi.fn().mockImplementation((imageData: ImageData) => {
-          imageData.data.set(new Uint8Array(40000).fill(128));
-        }),
+        display: vi
+          .fn()
+          .mockImplementation((imageData: ImageData, done: (d: ImageData) => void) => {
+            imageData.data.set(new Uint8Array(40000).fill(128));
+            done(imageData);
+          }),
       },
     ]);
 
@@ -60,9 +63,12 @@ describe('convertHeic', () => {
       {
         get_width: () => 64,
         get_height: () => 64,
-        display: vi.fn().mockImplementation((imageData: ImageData) => {
-          imageData.data.set(new Uint8Array(16384).fill(128));
-        }),
+        display: vi
+          .fn()
+          .mockImplementation((imageData: ImageData, done: (d: ImageData) => void) => {
+            imageData.data.set(new Uint8Array(16384).fill(128));
+            done(imageData);
+          }),
       },
     ]);
 
