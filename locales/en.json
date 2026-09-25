@@ -181,7 +181,9 @@
   "history": {
     "heading": "RECENT",
     "clear": "CLEAR",
-    "empty": "No conversions yet — drop a file above to get started."
+    "empty": "No conversions yet — drop a file above to get started.",
+    "keep": "Keep history on this device",
+    "off": "History is off: nothing about your files is saved on this device."
   },
   "footer": {
     "copyright": "© 2026 Convert-it — All conversions happen in your browser",
@@ -212,7 +214,7 @@
     "formatsHeading": "SUPPORTED FORMATS",
     "privacyHeading": "PRIVACY",
     "privacy1": "Your files never leave your browser. All conversion happens locally using WebAssembly and the Canvas API. We don't upload, store, or have any access to your data.",
-    "privacy2": "We run no analytics or tracking scripts — no cookies, no fingerprinting, and nothing tied to your files. The only things stored on your device are your theme and language preferences. Video and audio conversion downloads a ~31MB FFmpeg engine from our own CDN the first time you use it; your files are never part of that request. File size limits (100MB images, 500MB video, 200MB audio) prevent browser memory exhaustion.",
+    "privacy2": "We run no analytics or tracking scripts — no cookies, no fingerprinting, and nothing tied to your files. Video and audio conversion downloads a ~31MB FFmpeg engine from our own CDN the first time you use it; your files are never part of that request. The footer shows, live, how much the app has sent and received over the network in this browser, as counted by its service worker: “sent” stays at 0 B. File size limits (100MB images, 500MB video, 200MB audio) prevent browser memory exhaustion.",
     "improvementsHeading": "RECENT IMPROVEMENTS",
     "improvement1": "HEIC and AVIF decode — convert iPhone and modern web photos (lazy-loaded WASM)",
     "improvement2": "ePub export — convert TXT, Markdown, and HTML to e-books",
@@ -283,7 +285,14 @@
     "improvement46": "Read text from images and scanned PDFs (OCR) in eight languages, on your device",
     "improvement47": "Subtitles: SRT ⇄ WebVTT, fix their timing, or pull out a transcript",
     "improvement48": "Drop whole folders (their structure is kept in the zip), name outputs with templates like {name}-{w}x{h}, and dropped files are no longer added twice",
-    "improvement49": "Cut a section out of the middle of a clip, and burn subtitles (.srt or .vtt, in any of the supported scripts) into a video"
+    "improvement49": "Cut a section out of the middle of a clip, and burn subtitles (.srt or .vtt, in any of the supported scripts) into a video",
+    "storedHeading": "Stored on this device, and nowhere else",
+    "stored1": "Recent conversions: file name, formats, sizes and time, at most 30. Untick “Keep history on this device” under Recent and nothing is written (unticking also deletes the list).",
+    "stored2": "Your theme, language and output-name template.",
+    "stored3": "App files cached for offline use: code, codecs, fonts, OCR data and the FFmpeg engine. Never your files or results.",
+    "stored4": "A running count of bytes sent and received, for the network badge.",
+    "stored5": "Files shared to the installed app, only until the page picks them up a moment later.",
+    "stored6": "Clearing this site’s data in your browser settings removes all of it."
   },
   "errors": {
     "tooLarge": {
@@ -335,5 +344,11 @@
     "saving": "Saving for offline use… {pct}%",
     "saved": "Available offline",
     "failed": "Couldn’t save for offline use. Try again when online."
+  },
+  "network": {
+    "sent": "Sent",
+    "received": "· received",
+    "offline": "Offline, still working ·",
+    "hint": "Counted by this app’s service worker, which every request passes through: what it has sent (your files never are) and downloaded (the app and its engines) over the network in this browser. Cached files aren’t counted."
   }
 }

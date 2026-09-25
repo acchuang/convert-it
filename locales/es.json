@@ -181,7 +181,9 @@
   "history": {
     "heading": "RECIENTE",
     "clear": "LIMPIAR",
-    "empty": "Sin conversiones aún — arrastra un archivo arriba para comenzar"
+    "empty": "Sin conversiones aún — arrastra un archivo arriba para comenzar",
+    "keep": "Guardar historial en este dispositivo",
+    "off": "El historial está desactivado: no se guarda nada sobre tus archivos en este dispositivo."
   },
   "footer": {
     "copyright": "© 2026 Convert-it — Todas las conversiones ocurren en tu navegador",
@@ -212,7 +214,7 @@
     "formatsHeading": "FORMATOS COMPATIBLES",
     "privacyHeading": "PRIVACIDAD",
     "privacy1": "Tus archivos nunca salen de tu navegador. Toda la conversión ocurre localmente usando WebAssembly y la API Canvas. No subimos, almacenamos ni tenemos acceso a tus datos.",
-    "privacy2": "No ejecutamos ningún script de analítica ni de seguimiento — sin cookies, sin huella digital y sin nada vinculado a tus archivos. Lo único que se guarda en tu dispositivo son tus preferencias de tema e idioma. La conversión de video y audio descarga un motor FFmpeg de ~31MB desde nuestro propio CDN la primera vez que la usas; tus archivos nunca forman parte de esa petición. Los límites de tamaño de archivo (100MB imágenes, 500MB video, 200MB audio) evitan el agotamiento de la memoria del navegador.",
+    "privacy2": "No ejecutamos ningún script de analítica ni de seguimiento — sin cookies, sin huellas digitales y nada vinculado a tus archivos. La conversión de vídeo y audio descarga un motor FFmpeg de ~31 MB desde nuestra propia CDN la primera vez que la usas; tus archivos nunca forman parte de esa petición. El pie de página muestra en directo cuánto ha enviado y recibido la app por la red en este navegador, según su service worker: «enviado» se queda en 0 B. Los límites de tamaño (100 MB imágenes, 500 MB vídeo, 200 MB audio) evitan agotar la memoria del navegador.",
     "improvementsHeading": "MEJORAS RECIENTES",
     "improvement1": "Decodificación HEIC y AVIF — convierte fotos de iPhone y web modernas (WASM de carga diferida)",
     "improvement2": "Exportación ePub — convierte TXT, Markdown y HTML a e-books",
@@ -283,7 +285,14 @@
     "improvement46": "Lee el texto de imágenes y PDF escaneados (OCR) en ocho idiomas, en tu dispositivo",
     "improvement47": "Subtítulos: SRT ⇄ WebVTT, corrige su sincronía o extrae una transcripción",
     "improvement48": "Suelta carpetas enteras (su estructura se mantiene en el zip), nombra los resultados con plantillas como {name}-{w}x{h}, y los archivos soltados ya no se añaden dos veces",
-    "improvement49": "Quita un tramo del medio de un clip e incrusta subtítulos (.srt o .vtt, en cualquiera de los alfabetos admitidos) en un vídeo"
+    "improvement49": "Quita un tramo del medio de un clip e incrusta subtítulos (.srt o .vtt, en cualquiera de los alfabetos admitidos) en un vídeo",
+    "storedHeading": "Guardado en este dispositivo, y en ningún otro sitio",
+    "stored1": "Conversiones recientes: nombre del archivo, formatos, tamaños y hora, 30 como máximo. Desmarca «Guardar historial en este dispositivo» en Recientes y no se guarda nada (desmarcarlo también borra la lista).",
+    "stored2": "Tu tema, idioma y plantilla de nombres de salida.",
+    "stored3": "Archivos de la app en caché para uso sin conexión: código, códecs, fuentes, datos de OCR y el motor FFmpeg. Nunca tus archivos ni resultados.",
+    "stored4": "Un recuento de bytes enviados y recibidos, para el indicador de red.",
+    "stored5": "Los archivos compartidos con la app instalada, solo hasta que la página los recoge un momento después.",
+    "stored6": "Borrar los datos de este sitio en los ajustes del navegador lo elimina todo."
   },
   "errors": {
     "tooLarge": {
@@ -335,5 +344,11 @@
     "saving": "Guardando para usar sin conexión… {pct}%",
     "saved": "Disponible sin conexión",
     "failed": "No se pudo guardar para usar sin conexión. Inténtalo de nuevo con conexión."
+  },
+  "network": {
+    "sent": "Enviado",
+    "received": "· recibido",
+    "offline": "Sin conexión, sigue funcionando ·",
+    "hint": "Lo cuenta el service worker de la app, por el que pasa cada petición: lo enviado (tus archivos nunca) y lo descargado (la app y sus motores) por la red en este navegador. Lo que sale de la caché no cuenta."
   }
 }

@@ -70,7 +70,33 @@ try {
     String(await page.evaluate(() => !!navigator.serviceWorker.controller)),
     'true',
   );
+  const netLog = () =>
+    page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const channel = new MessageChannel();
+          channel.port1.onmessage = ({ data }) => resolve(data);
+          navigator.serviceWorker.controller.postMessage('network-log', [channel.port2]);
+        }),
+    );
+  const before = await netLog();
   check('online png → webp', await convert(page, 'img.png', 'webp'), 'converted');
+  // The network badge is the worker's count. The WebP codec is fetched by the
+  // conversion worker, not the page, so seeing it in "received" shows worker
+  // traffic is counted too; nothing is sent.
+  const after = await netLog();
+  const codec = await page.evaluate(async () => {
+    const cached = await caches.match('/wasm/webp_enc_simd.wasm');
+    return cached ? (await cached.arrayBuffer()).byteLength : 0;
+  });
+  const badge = page.locator('[data-testid="network-badge"]');
+  await badge.waitFor({ timeout: 10000 });
+  check('network badge: 0 B sent', `${after.sent} / ${await badge.innerText()}`, /^0 \/ Sent 0 B/);
+  check(
+    'network badge: counts the codec the worker fetched',
+    String(codec > 0 && after.received - before.received >= codec),
+    'true',
+  );
 
   await down();
   check(

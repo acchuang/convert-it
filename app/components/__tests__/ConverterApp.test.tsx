@@ -67,4 +67,15 @@ describe('ConverterApp', () => {
     paste(container.querySelector('#name-template')!, 'x\ty\n3\t4');
     expect(screen.getAllByRole('listitem')).toHaveLength(1);
   });
+
+  it('history can be turned off from the Recent panel', () => {
+    localStorage.clear();
+    renderApp();
+    const toggle = screen.getByRole('checkbox', { name: 'Keep history on this device' });
+    expect(toggle).toBeChecked();
+    fireEvent.click(toggle);
+    expect(screen.getByRole('checkbox', { name: 'Keep history on this device' })).not.toBeChecked();
+    expect(localStorage.getItem('convert-it-history-off')).toBe('1');
+    expect(screen.getByText(/History is off/)).toBeTruthy();
+  });
 });

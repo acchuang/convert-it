@@ -225,6 +225,14 @@ export default function AboutPage() {
             <p className="text-sm text-[var(--text-muted)] leading-relaxed">
               {t('about.privacy2')}
             </p>
+            <h3 className="text-sm font-semibold text-[var(--text-primary)] mt-6 mb-2">
+              {t('about.storedHeading')}
+            </h3>
+            <ul className="list-disc pl-5 space-y-1 text-sm text-[var(--text-muted)] leading-relaxed">
+              {Array.from({ length: 6 }, (_, i) => (
+                <li key={i}>{t(`about.stored${i + 1}`)}</li>
+              ))}
+            </ul>
           </div>
         </section>
 
