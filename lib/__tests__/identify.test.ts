@@ -117,5 +117,14 @@ describe('helpers', () => {
     expect(needsIdentifying('a.png')).toBe(false);
     expect(needsIdentifying('a.jfif')).toBe(true);
     expect(needsIdentifying('README')).toBe(true);
+    // Read through FFmpeg, aliases included.
+    for (const name of ['a.mpg', 'a.mpeg', 'a.vob', 'a.mts', 'a.wmv', 'a.aif', 'a.amr', 'a.dts']) {
+      expect(needsIdentifying(name)).toBe(false);
+    }
+  });
+
+  it('containers we still turn away are explained as media', async () => {
+    expect(await identify(file('clip.ogv', [0, 0, 0, 0]))).toEqual({ kind: 'video', label: 'OGV' });
+    expect(await identify(file('song.ape', [0, 0, 0, 0]))).toEqual({ kind: 'audio', label: 'APE' });
   });
 });

@@ -16,12 +16,12 @@ const formats = [
   {
     catKey: 'video',
     color: CATEGORY_COLORS.video,
-    exts: 'MP4, WebM, AVI, MOV, MKV, FLV, M4V, 3GP, GIF, Animated WebP',
+    exts: 'MP4, WebM, AVI, MOV, MKV, FLV, M4V, 3GP, GIF, Animated WebP, MPEG, VOB, MPEG-TS, WMV, ASF, F4V',
   },
   {
     catKey: 'audio',
     color: CATEGORY_COLORS.audio,
-    exts: 'MP3, WAV, AAC, OGG, FLAC, M4A, WMA, OPUS',
+    exts: 'MP3, WAV, AAC, OGG, FLAC, M4A, WMA, OPUS, AIFF, AC3, WavPack, CAF, DTS, AMR',
   },
   {
     catKey: 'document',
@@ -281,7 +281,7 @@ export default function AboutPage() {
             {t('about.improvementsHeading')}
           </h2>
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6 space-y-3">
-            {Array.from({ length: 59 }, (_, i) => i + 1).map((n) => (
+            {Array.from({ length: 60 }, (_, i) => i + 1).map((n) => (
               <div key={n} className="flex items-start gap-3">
                 <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] flex-shrink-0 mt-2" />
                 <p className="text-sm text-[var(--text-secondary)] leading-relaxed">

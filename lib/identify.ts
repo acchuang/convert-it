@@ -46,8 +46,10 @@ const KNOWN: [UnsupportedKind, string[]][] = [
   ['slides', ['ppt', 'pptx', 'odp', 'key']],
   ['archive', ['zip', 'rar', '7z', 'tar', 'gz', 'tgz', 'bz2', 'xz', 'iso']],
   ['program', ['exe', 'msi', 'dmg', 'pkg', 'app', 'apk', 'deb', 'rpm', 'bat', 'sh', 'dll']],
-  ['video', ['mpg', 'mpeg', 'wmv', 'ts', 'mts', 'm2ts', 'vob', 'ogv', 'rm', 'rmvb', 'asf', 'f4v']],
-  ['audio', ['aif', 'aiff', 'amr', 'ape', 'mid', 'midi', 'ac3', 'dts', 'caf', 'wv']],
+  // Containers FFmpeg reads are routes; these need decoders the core lacks
+  // or can't be verified (no encoder to make a test file).
+  ['video', ['ogv', 'rm', 'rmvb', 'mxf', 'm2v']],
+  ['audio', ['ape', 'mid', 'midi']],
 ];
 const KIND_BY_EXT = new Map(KNOWN.flatMap(([kind, exts]) => exts.map((e) => [e, kind] as const)));
 

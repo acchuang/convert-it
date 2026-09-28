@@ -114,6 +114,7 @@ Independent Next.js project deployed via Cloudflare Pages.
 
 ## Media (FFmpeg)
 
+- FFmpeg-only inputs: MPEG-PS, VOB, MPEG-TS/M2TS, WMV/ASF, F4V video and AIFF, AC3, WavPack, CAF, DTS, AMR audio. `getCategory` reads the category from `FORMATS`, so a new one needs a `FORMATS` entry plus the registry line. Other spellings (`mpeg`, `mts`, `m2ts`, `aif`) are `FormatInfo.aliasOf`: routes and manifest entries, but no `/convert/*` page. Each has a fixture in `lib/__tests__/fixtures/media/` (its README gives the command that made it). OGV stays unsupported: the core's Theora encoder crashes, so there's no way to make a test file.
 - Command lines come from the pure `buildFfmpegArgs` in `lib/audio-video-converters.ts` — one entry per container in `VIDEO_CONTAINERS` pairing a video codec with an audio codec that muxer accepts. Unit-test args there; don't build them inline.
 - `buildFfmpegArgs` reads settings lazily (`knobsFrom` getters), and `registry.test.ts` records which fields each route's command line reads against what the route declares. So AVI/FLV (fixed quantiser) declare `videoQuality` but not `videoPreset`, and lossless audio declares no bitrate.
 - Trim (`trimStart`/`trimEnd`, seconds) applies to every media route: `-ss`/`-t` as input options in ffmpeg (`trimArgs`), mediabunny's `trim` on the WebCodecs path (`trimRange`, same rules). An end at or before the start means "to the end". The panel takes `1:30.5` or `90` via `lib/timecode.ts`.

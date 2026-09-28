@@ -319,6 +319,7 @@
     "improvement57": "See what the app has sent (nothing) and received over the network; turn off history so no file names are kept",
     "improvement58": "HEIC: the main photo is converted, not just the first image in the file, or every image as a zip",
     "improvement59": "Your own conversion stats, per format pair, kept on your device; copy them into a bug report if you like",
+    "improvement60": "Old and broadcast formats read directly: MPEG, VOB, MPEG-TS/M2TS, WMV, F4V video and AIFF, AC3, DTS, WavPack, CAF, AMR audio",
     "storedHeading": "Stored on this device, and nowhere else",
     "stored1": "Recent conversions: file name, formats, sizes and time, at most 30. Untick “Keep history on this device” under Recent and nothing is written (unticking also deletes the list).",
     "stored2": "Your theme, language and output-name template.",

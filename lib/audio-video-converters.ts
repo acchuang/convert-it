@@ -1,7 +1,7 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
 import type { ConversionSettings } from './types';
-import { mimeFor } from './formats';
+import { getFormatInfo, mimeFor } from './formats';
 import { ConversionError } from './errors';
 import { isCjk, isHangul } from './scripts';
 import { cancelWebCodecs, convertWithWebCodecs } from './webcodecs-converter';
@@ -200,14 +200,9 @@ export function terminateFFmpeg(): void {
   ffmpegQueue = Promise.resolve();
 }
 
-const VIDEO_EXTS = ['mp4', 'webm', 'avi', 'mov', 'mkv', 'flv', 'm4v', '3gp'];
-const AUDIO_EXTS = ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'wma', 'opus'];
-
 function getCategory(sourceExt: string): 'video' | 'audio' | null {
-  const ext = sourceExt.toLowerCase();
-  if (VIDEO_EXTS.includes(ext)) return 'video';
-  if (AUDIO_EXTS.includes(ext)) return 'audio';
-  return null;
+  const category = getFormatInfo(sourceExt)?.category;
+  return category === 'video' || category === 'audio' ? category : null;
 }
 
 // Audio-only outputs. `bitrate: false` marks the lossless codecs, which take no

@@ -183,3 +183,12 @@ writeFileSync(
 }
 
 console.log('fixtures written to', DIR);
+
+// The FFmpeg-only inputs (MPEG-PS/TS, WMV, AIFF, AMR…) can't be made without
+// an encoder we don't ship; they're committed, with how each was made.
+{
+  const media = join(process.cwd(), 'lib/__tests__/fixtures/media');
+  for (const ext of ['mpg', 'vob', 'm2ts', 'wmv', 'aiff', 'amr', 'dts']) {
+    copyFileSync(join(media, `sample.${ext}`), join(DIR, `sample.${ext}`));
+  }
+}

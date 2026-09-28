@@ -110,6 +110,11 @@ _Reviewed at `7a92641` (2026-09-24). Scope: every file in `lib/`, the app shell,
   - "Your conversion stats" under Recent shows the counts. "Copy report" copies a Markdown table plus the browser's name and major version, for someone who chooses to paste it into an issue.
   - Nothing is sent, so the badge stays at 0 B sent.
   - No file names are kept. The history switch covers the stats too: turning it off stops the counting and deletes them.
+- **Phase 7: formats we used to turn away.**
+  - **Media read through FFmpeg:** MPEG-PS (`.mpg`/`.mpeg`), VOB, MPEG-TS (`.ts`/`.mts`/`.m2ts`), WMV/ASF and F4V video; AIFF, AC3, WavPack, CAF, DTS and AMR audio. They convert to every video or audio target, never through WebCodecs.
+  - Other spellings are `aliasOf` entries in `FORMATS`: they get routes and file handlers but no landing page of their own.
+  - Each has a small fixture under `lib/__tests__/fixtures/media/` (how it was made is in its README), and the smoke suite converts seven of them in the browser.
+  - Still explained as unsupported: OGV (the core's Theora encoder crashes, so no test file can be made to prove the decoder), RealMedia, MXF, raw M2V, APE and MIDI.
 
 ## 1. Executive summary
 

@@ -319,6 +319,7 @@
     "improvement57": "Mira lo que la app ha enviado (nada) y recibido por la red; desactiva el historial para no guardar nombres de archivo",
     "improvement58": "HEIC: se convierte la foto principal, no solo la primera imagen del archivo, o todas en un zip",
     "improvement59": "Tus propias estadísticas de conversión por par de formatos, guardadas en tu dispositivo; cópialas en un aviso de error si quieres",
+    "improvement60": "Formatos antiguos y de emisión leídos directamente: vídeo MPEG, VOB, MPEG-TS/M2TS, WMV, F4V y audio AIFF, AC3, DTS, WavPack, CAF, AMR",
     "storedHeading": "Guardado en este dispositivo, y en ningún otro sitio",
     "stored1": "Conversiones recientes: nombre del archivo, formatos, tamaños y hora, 30 como máximo. Desmarca «Guardar historial en este dispositivo» en Recientes y no se guarda nada (desmarcarlo también borra la lista).",
     "stored2": "Tu tema, idioma y plantilla de nombres de salida.",

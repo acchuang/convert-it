@@ -246,6 +246,16 @@ const VIDEO_SOURCES: Record<string, string[]> = {
   flv: VIDEO_TARGETS.filter((t) => t !== 'flv'),
   m4v: VIDEO_TARGETS,
   '3gp': VIDEO_TARGETS.filter((t) => t !== 'flv' && t !== 'ogg'),
+  // FFmpeg-only sources: MPEG program/transport streams, Windows Media, Flash
+  // MP4. Every target, since none of them is one. (Not OGV: the core's
+  // Theora encoder crashes, so there's no way to make a test file, and a
+  // format isn't offered untested.)
+  ...Object.fromEntries(
+    ['mpg', 'mpeg', 'vob', 'ts', 'mts', 'm2ts', 'wmv', 'asf', 'f4v'].map((ext) => [
+      ext,
+      VIDEO_TARGETS,
+    ]),
+  ),
 };
 for (const [from, targets] of Object.entries(VIDEO_SOURCES)) {
   for (const to of targets) {
@@ -255,7 +265,11 @@ for (const [from, targets] of Object.entries(VIDEO_SOURCES)) {
 }
 
 const AUDIO_TARGETS = ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a'];
-for (const from of ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'wma', 'opus']) {
+for (const from of [
+  ...['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'wma', 'opus'],
+  // FFmpeg-only sources.
+  ...['aiff', 'aif', 'ac3', 'wv', 'caf', 'dts', 'amr'],
+]) {
   const targets =
     from === 'wma' || from === 'opus'
       ? ['mp3', 'wav', 'aac', 'ogg', 'm4a']
