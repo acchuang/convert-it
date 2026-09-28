@@ -46,6 +46,7 @@ const techStack = [
   { labelKey: 'about.techOcr', val: 'tesseract.js' },
   { labelKey: 'about.techMetadata', val: 'exifr' },
   { labelKey: 'about.techHeif', val: 'libheif-js' },
+  { labelKey: 'about.techTiff', val: 'UTIF (utif2)' },
   { labelKey: 'about.techSheets', val: 'jszip + fast-xml-parser' },
   { labelKey: 'about.techHosting', val: 'Cloudflare Pages + R2' },
 ];
