@@ -53,9 +53,9 @@ try {
     ]);
     // A file nothing reads, for the error card.
     await page.setInputFiles('input[type="file"]:not([webkitdirectory])', {
-      name: 'scan.tiff',
-      mimeType: 'image/tiff',
-      buffer: Buffer.from('II*\0rest'),
+      name: 'layers.psd',
+      mimeType: 'image/vnd.adobe.photoshop',
+      buffer: Buffer.from('8BPSrest'),
     });
     await settle(page);
     const cards = page.locator('[role="listitem"]');

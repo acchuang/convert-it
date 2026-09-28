@@ -38,6 +38,20 @@ const PAIRS = [
   ],
   ['img.png', 'jxl', 'libjxl encode', (b) => b[0] === 0xff && b[1] === 0x0a],
   ['img.jxl', 'png', 'libjxl decode', magic('\x89PNG')],
+  [
+    'cmyk-packbits.tiff',
+    'png',
+    'utif cmyk (worker)',
+    async (b) => {
+      // Quadrants red, green / blue, white: check the top-left is red.
+      const img = await loadImage(b);
+      const ctx = createCanvas(img.width, img.height).getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const [r, g, bl] = ctx.getImageData(2, 2, 1, 1).data;
+      return r > 250 && g < 5 && bl < 5;
+    },
+  ],
+  ['bilevel-g4.tiff', 'pdf', 'utif g4 → pdf', magic('%PDF')],
   ['doc.pdf', 'png', 'pdfium', magic('\x89PNG')],
   [
     'blue.pdf',

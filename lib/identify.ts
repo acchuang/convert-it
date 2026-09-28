@@ -39,7 +39,7 @@ export type UnsupportedKind =
   | 'unknown';
 
 const KNOWN: [UnsupportedKind, string[]][] = [
-  ['image', ['tif', 'tiff', 'psd', 'xcf', 'ai', 'eps', 'jp2', 'tga', 'dds', 'exr', 'hdr', 'pcx']],
+  ['image', ['psd', 'xcf', 'ai', 'eps', 'jp2', 'tga', 'dds', 'exr', 'hdr', 'pcx']],
   ['raw', ['cr2', 'cr3', 'nef', 'arw', 'dng', 'raf', 'orf', 'rw2', 'pef', 'srw', 'raw']],
   ['word', ['doc', 'rtf', 'odt', 'pages', 'wpd']],
   ['sheet', ['xls', 'xlsm', 'xlsb', 'ods', 'numbers']],
@@ -94,7 +94,7 @@ export function sniff(
     const head = String.fromCharCode(...b.subarray(0, 64));
     return { ext: head.includes('webm') ? 'webm' : 'mkv' };
   }
-  if (ascii(b, 0, 'II*\0') || ascii(b, 0, 'MM\0*')) return { kind: 'image', label: 'TIFF' };
+  if (ascii(b, 0, 'II*\0') || ascii(b, 0, 'MM\0*')) return { ext: 'tiff' };
   if (ascii(b, 0, '8BPS')) return { kind: 'image', label: 'PSD' };
   if (ascii(b, 0, 'PK\x03\x04') || ascii(b, 0, 'Rar!') || ascii(b, 0, '7z\xbc\xaf')) {
     return { kind: 'archive', label: b[0] === 0x50 ? 'ZIP' : b[0] === 0x52 ? 'RAR' : '7Z' };
@@ -173,7 +173,7 @@ export function needsIdentifying(name: string): boolean {
 
 /** The inputs we do take, per kind, for "try exporting as …" hints. */
 export const NEAREST: Record<UnsupportedKind, string> = {
-  image: 'PNG, JPG, WebP, HEIC',
+  image: 'PNG, JPG, WebP, HEIC, TIFF',
   raw: 'JPG, HEIC',
   word: 'DOCX, Markdown, HTML',
   sheet: 'XLSX, CSV',

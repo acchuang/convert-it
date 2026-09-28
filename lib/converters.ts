@@ -183,6 +183,8 @@ const IMAGE_TARGETS: Record<string, string[]> = {
   heic: ['jpg', 'png', 'webp', 'avif', 'jxl', 'bmp', 'ico'],
   avif: ['jpg', 'png', 'webp', 'jxl', 'bmp', 'ico'],
   jxl: ['png', 'jpg', 'webp', 'avif'],
+  tiff: ['png', 'jpg', 'webp', 'avif', 'jxl', 'bmp'],
+  tif: ['png', 'jpg', 'webp', 'avif', 'jxl', 'bmp'],
 };
 for (const [from, targets] of Object.entries(IMAGE_TARGETS)) {
   const run = from === 'heic' ? heic : from === 'avif' ? avif : convertImage;
@@ -195,7 +197,19 @@ for (const [from, targets] of Object.entries(IMAGE_TARGETS)) {
 // Image → text by OCR (tesseract.js, loaded on first use).
 const imageToText: ConverterFn = async (...args) =>
   (await import('./ocr-converters')).imageToText(...args);
-for (const from of ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'heic', 'avif', 'jxl']) {
+for (const from of [
+  'jpg',
+  'jpeg',
+  'png',
+  'webp',
+  'gif',
+  'bmp',
+  'heic',
+  'avif',
+  'jxl',
+  'tiff',
+  'tif',
+]) {
   add(from, 'txt', imageToText, ['ocr']);
 }
 
@@ -360,7 +374,10 @@ add('pdf', 'html', pdfToHtml, ['ocr']);
 // to render when compressing); every image format onto a page. Merging
 // several files is a batch action (mergePdf), not a route.
 add('pdf', 'pdf', editPdf, ['pdfEdit', 'pdfCompress']);
-for (const from of ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg', 'heic', 'avif', 'jxl']) {
+for (const from of [
+  ...['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg', 'heic', 'avif', 'jxl'],
+  ...['tiff', 'tif'],
+]) {
   add(from, 'pdf', imageToPdf, ['pdfPageSize']);
 }
 

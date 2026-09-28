@@ -114,6 +114,7 @@ _Reviewed at `7a92641` (2026-09-24). Scope: every file in `lib/`, the app shell,
   - **Media read through FFmpeg:** MPEG-PS (`.mpg`/`.mpeg`), VOB, MPEG-TS (`.ts`/`.mts`/`.m2ts`), WMV/ASF and F4V video; AIFF, AC3, WavPack, CAF, DTS and AMR audio. They convert to every video or audio target, never through WebCodecs.
   - Other spellings are `aliasOf` entries in `FORMATS`: they get routes and file handlers but no landing page of their own.
   - Each has a small fixture under `lib/__tests__/fixtures/media/` (how it was made is in its README), and the smoke suite converts seven of them in the browser.
+  - **TIFF** (`lib/tiff.ts`, utif2, lazy, in the worker): LZW, Deflate, JPEG, PackBits and CCITT G3/G4, grey/RGB/palette/CMYK, 1–16 bits, to every raster target, OCR and PDF. A multi-page file converts its first page. CMYK is converted in-house because UTIF's own conversion reads `window`, which throws in a worker.
   - Still explained as unsupported: OGV (the core's Theora encoder crashes, so no test file can be made to prove the decoder), RealMedia, MXF, raw M2V, APE and MIDI.
 
 ## 1. Executive summary

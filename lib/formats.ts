@@ -16,6 +16,9 @@ export const FORMATS: FormatInfo[] = [
   { ext: 'heic', label: 'HEIC', mimeType: 'image/heic', category: 'image' },
   { ext: 'avif', label: 'AVIF', mimeType: 'image/avif', category: 'image' },
   { ext: 'jxl', label: 'JPEG XL', mimeType: 'image/jxl', category: 'image' },
+  // Read only (lib/tiff.ts).
+  { ext: 'tiff', label: 'TIFF', mimeType: 'image/tiff', category: 'image' },
+  { ext: 'tif', label: 'TIFF', mimeType: 'image/tiff', category: 'image', aliasOf: 'tiff' },
   // Video
   { ext: 'mp4', label: 'MP4', mimeType: 'video/mp4', category: 'video' },
   { ext: 'webm', label: 'WebM', mimeType: 'video/webm', category: 'video' },

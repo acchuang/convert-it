@@ -191,4 +191,9 @@ console.log('fixtures written to', DIR);
   for (const ext of ['mpg', 'vob', 'm2ts', 'wmv', 'aiff', 'amr', 'dts']) {
     copyFileSync(join(media, `sample.${ext}`), join(DIR, `sample.${ext}`));
   }
+  // TIFFs written by Pillow (lib/__tests__/fixtures/tiff/README.md).
+  const tiff = join(process.cwd(), 'lib/__tests__/fixtures/tiff');
+  for (const name of ['cmyk-packbits.tiff', 'bilevel-g4.tiff']) {
+    copyFileSync(join(tiff, name), join(DIR, name));
+  }
 }

@@ -11,7 +11,7 @@ const formats = [
   {
     catKey: 'image',
     color: CATEGORY_COLORS.image,
-    exts: 'JPG, PNG, WebP, AVIF, JPEG XL, GIF, BMP, ICO, SVG, HEIC',
+    exts: 'JPG, PNG, WebP, AVIF, JPEG XL, GIF, BMP, ICO, SVG, HEIC, TIFF',
   },
   {
     catKey: 'video',
@@ -281,7 +281,7 @@ export default function AboutPage() {
             {t('about.improvementsHeading')}
           </h2>
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6 space-y-3">
-            {Array.from({ length: 60 }, (_, i) => i + 1).map((n) => (
+            {Array.from({ length: 61 }, (_, i) => i + 1).map((n) => (
               <div key={n} className="flex items-start gap-3">
                 <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] flex-shrink-0 mt-2" />
                 <p className="text-sm text-[var(--text-secondary)] leading-relaxed">

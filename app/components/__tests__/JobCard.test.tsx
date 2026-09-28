@@ -173,12 +173,12 @@ describe('JobCard errors', () => {
         {
           code: 'unsupported',
           detail: '',
-          params: { kind: 'image', label: 'TIFF', formats: 'PNG' },
+          params: { kind: 'image', label: 'PSD', formats: 'PNG' },
         },
-        'tiff',
+        'psd',
         tr,
       ),
-    ).toEqual({ title: 'Can’t convert .TIFF files', hint: 'Export it as PNG.' });
+    ).toEqual({ title: 'Can’t convert .PSD files', hint: 'Export it as PNG.' });
   });
 
   it('an unreadable file offers no retry; a renamed one says what it was read as', () => {
