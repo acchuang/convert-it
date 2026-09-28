@@ -75,13 +75,16 @@ export async function convertImage(
   settings?: ConversionSettings,
   onProgress?: (pct: number) => void,
 ): Promise<Blob> {
-  // No browser decodes JPEG XL natively except Safari, so it goes through jSquash.
+  // No browser decodes JPEG XL natively except Safari, so it goes through
+  // jSquash; TIFF (Safari only, too) through UTIF.
   const imageData =
     sourceExt === 'svg'
       ? await renderSvgToImageData(await file.text())
       : sourceExt === 'jxl'
         ? await decodeJxl(file)
-        : await decodeToImageData(file);
+        : isTiff(sourceExt)
+          ? await decodeTiffLazily(file)
+          : await decodeToImageData(file);
 
   const blob = await finishImage(imageData, targetExt, settings, onProgress);
   return withMetadata(file, sourceExt, blob, targetExt, settings);
@@ -99,9 +102,16 @@ export async function withMetadata(
   return applyMetadata(file, blob, targetExt, settings);
 }
 
+const isTiff = (ext: string) => ext === 'tiff' || ext === 'tif';
+
+async function decodeTiffLazily(file: Blob): Promise<ImageData> {
+  return (await import('./tiff')).decodeTiff(file);
+}
+
 /** Pixels of any image format the app reads (for OCR and image → PDF). */
 export async function decodeAnyImage(file: Blob, ext: string): Promise<ImageData> {
   if (ext === 'jxl') return decodeJxl(file);
+  if (isTiff(ext)) return decodeTiffLazily(file);
   if (ext === 'svg') return renderSvgToImageData(await file.text());
   if (ext === 'heic') {
     const { decodeHeicToImageData } = await import('./heic-converter');

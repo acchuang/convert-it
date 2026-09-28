@@ -486,12 +486,12 @@ describe('files no route reads', () => {
     act(() =>
       result.current.addFiles([
         new File(['%PDF-1.4'], 'scan'),
-        new File(['II*\0'], 'photo.tiff'),
+        new File(['8BPS'], 'layers.psd'),
         new File(['a,b'], 'ok.csv'),
       ]),
     );
     await waitFor(() => expect(result.current.jobs[1].status).toBe('error'));
-    const [scan, tiff, csv] = result.current.jobs;
+    const [scan, psd, csv] = result.current.jobs;
     await waitFor(() => expect(result.current.jobs[0].sourceExt).toBe('pdf'));
     expect(result.current.jobs[0]).toMatchObject({
       targetExt: expect.any(String),
@@ -499,9 +499,9 @@ describe('files no route reads', () => {
     });
     expect(result.current.jobs[0].file.name).toBe('scan.pdf');
     expect(scan.id).toBe(result.current.jobs[0].id);
-    expect(tiff.error).toMatchObject({
+    expect(psd.error).toMatchObject({
       code: 'unsupported',
-      params: { kind: 'image', label: 'TIFF' },
+      params: { kind: 'image', label: 'PSD' },
     });
     expect(csv.identified).toBeUndefined();
   });

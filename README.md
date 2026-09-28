@@ -126,25 +126,26 @@ Finally point `NEXT_PUBLIC_FFMPEG_BASE_URL` at the new domain in [`ci.yml`](.git
 which is where the deployed build gets it. It is inlined at build time, so this needs a redeploy
 to take effect.
 
-### Multi-threaded core (optional)
+### Multi-threaded core
 
 Every page is cross-origin isolated (COOP + COEP in `out/_headers`), so browsers can run
 `@ffmpeg/core-mt`, which encodes video 2–3× faster on a 4-core machine. The app uses it
 when `NEXT_PUBLIC_FFMPEG_MT_BASE_URL` is set and the device qualifies (isolated, 4+ cores,
 4+ GB where the browser reports memory), and falls back to the single-threaded core if it
-fails to load or crashes. The three files go in their own directory, since the names clash:
+fails to load or crashes.
 
-```bash
-npm install --no-save @ffmpeg/core-mt@0.12.10
-for f in ffmpeg-core.js:text/javascript ffmpeg-core.wasm:application/wasm ffmpeg-core.worker.js:text/javascript; do
-  npx wrangler r2 object put convert-it-assets/ffmpeg-core-mt/0.12.10/${f%%:*} \
-    --file node_modules/@ffmpeg/core-mt/dist/umd/${f%%:*} --content-type ${f#*:} --remote
-done
-```
+To put it on the CDN, run the **Upload multi-threaded FFmpeg core** workflow
+([`upload-ffmpeg-mt.yml`](.github/workflows/upload-ffmpeg-mt.yml)) once from the Actions tab.
+It checks the npm package against the hashes the app pins, uploads the three files to
+`convert-it-assets/ffmpeg-core-mt/0.12.10/` (their own directory, since the names clash with
+the single-threaded core's), and checks the CDN serves them. Its API token needs R2 edit
+permission as well as Pages.
 
-Then set `NEXT_PUBLIC_FFMPEG_MT_BASE_URL=https://cdn.oilygold.xyz/ffmpeg-core-mt/0.12.10` in
-[`ci.yml`](.github/workflows/ci.yml)'s build step, and `SMOKE_EXPECT_MT=1` on its smoke step so a
-silent fallback to the single-threaded core fails CI.
+After that, CI turns it on by itself: before the build,
+[`scripts/check-ffmpeg-mt.mjs`](scripts/check-ffmpeg-mt.mjs) checks that the CDN serves the
+files with CORS and the pinned hashes. If it does, the build gets
+`NEXT_PUBLIC_FFMPEG_MT_BASE_URL` and the smoke suite runs with `SMOKE_EXPECT_MT=1`, so a silent
+fallback to the single-threaded core fails CI. If it doesn't, the site builds single-threaded.
 
 Allowed origins live in [`r2-cors.json`](r2-cors.json) — a new deploy origin must be added
 there and reapplied, or the core fetch fails in the browser while still working locally.

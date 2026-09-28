@@ -1,0 +1,54 @@
+name: Upload multi-threaded FFmpeg core
+
+# Run once by hand (Actions → this workflow → Run workflow) to put
+# @ffmpeg/core-mt on the CDN. CI turns the multi-threaded core on by itself
+# once the files are served there with the hashes the app pins
+# (FFMPEG_CORE_MT_SHA256 in lib/audio-video-converters.ts).
+#
+# The API token needs "Workers R2 Storage: Edit" on the account, as well as
+# the Pages permission CI already uses.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  VERSION: 0.12.10
+  BUCKET: convert-it-assets
+  CDN: https://cdn.oilygold.xyz
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Fetch the core and check it against the pinned hashes
+        run: |
+          npm pack "@ffmpeg/core-mt@$VERSION" --pack-destination /tmp
+          mkdir -p /tmp/core-mt
+          tar -xzf "/tmp/ffmpeg-core-mt-$VERSION.tgz" -C /tmp/core-mt
+          node scripts/check-ffmpeg-mt.mjs /tmp/core-mt/package/dist/umd
+
+      - name: Upload to R2
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          for f in ffmpeg-core.js:text/javascript ffmpeg-core.wasm:application/wasm ffmpeg-core.worker.js:text/javascript; do
+            npx --yes wrangler@4 r2 object put "$BUCKET/ffmpeg-core-mt/$VERSION/${f%%:*}" \
+              --file "/tmp/core-mt/package/dist/umd/${f%%:*}" \
+              --content-type "${f#*:}" \
+              --cache-control "public, max-age=31536000, immutable" \
+              --remote
+          done
+
+      # What CI will check before it turns the core on: served, with CORS
+      # for the site, and byte-identical to the pinned files.
+      - name: Check the CDN serves it
+        run: node scripts/check-ffmpeg-mt.mjs "$CDN/ffmpeg-core-mt/$VERSION"

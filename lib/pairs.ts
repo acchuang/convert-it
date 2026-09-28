@@ -19,9 +19,9 @@ export interface Pair {
 export function allPairs(): Pair[] {
   const pairs: Pair[] = [];
   for (const [from, targets] of Object.entries(CONVERSION_MAP)) {
-    if (!getFormatInfo(from)) continue;
+    if (!getFormatInfo(from) || getFormatInfo(from)?.aliasOf) continue;
     for (const to of targets) {
-      if (to === from || !getFormatInfo(to)) continue;
+      if (to === from || !getFormatInfo(to) || getFormatInfo(to)?.aliasOf) continue;
       pairs.push({ from, to, slug: `${from}-to-${to}` });
     }
   }

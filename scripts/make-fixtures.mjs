@@ -183,3 +183,17 @@ writeFileSync(
 }
 
 console.log('fixtures written to', DIR);
+
+// The FFmpeg-only inputs (MPEG-PS/TS, WMV, AIFF, AMR…) can't be made without
+// an encoder we don't ship; they're committed, with how each was made.
+{
+  const media = join(process.cwd(), 'lib/__tests__/fixtures/media');
+  for (const ext of ['mpg', 'vob', 'm2ts', 'wmv', 'aiff', 'amr', 'dts']) {
+    copyFileSync(join(media, `sample.${ext}`), join(DIR, `sample.${ext}`));
+  }
+  // TIFFs written by Pillow (lib/__tests__/fixtures/tiff/README.md).
+  const tiff = join(process.cwd(), 'lib/__tests__/fixtures/tiff');
+  for (const name of ['cmyk-packbits.tiff', 'bilevel-g4.tiff']) {
+    copyFileSync(join(tiff, name), join(DIR, name));
+  }
+}

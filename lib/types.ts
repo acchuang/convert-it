@@ -5,6 +5,8 @@ export interface FormatInfo {
   label: string;
   mimeType: string;
   category: FileCategory;
+  /** Another spelling of a format already listed (mpeg → mpg): routes, but no landing page of its own. */
+  aliasOf?: string;
 }
 
 export interface ConversionSettings {

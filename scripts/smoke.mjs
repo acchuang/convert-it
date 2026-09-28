@@ -38,6 +38,20 @@ const PAIRS = [
   ],
   ['img.png', 'jxl', 'libjxl encode', (b) => b[0] === 0xff && b[1] === 0x0a],
   ['img.jxl', 'png', 'libjxl decode', magic('\x89PNG')],
+  [
+    'cmyk-packbits.tiff',
+    'png',
+    'utif cmyk (worker)',
+    async (b) => {
+      // Quadrants red, green / blue, white: check the top-left is red.
+      const img = await loadImage(b);
+      const ctx = createCanvas(img.width, img.height).getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const [r, g, bl] = ctx.getImageData(2, 2, 1, 1).data;
+      return r > 250 && g < 5 && bl < 5;
+    },
+  ],
+  ['bilevel-g4.tiff', 'pdf', 'utif g4 → pdf', magic('%PDF')],
   ['doc.pdf', 'png', 'pdfium', magic('\x89PNG')],
   [
     'blue.pdf',
@@ -78,6 +92,24 @@ const PAIRS = [
     'ffmpeg extract',
     (b) => magic('ID3')(b) || (b[0] === 0xff && (b[1] & 0xe0) === 0xe0),
   ],
+  // Inputs only FFmpeg reads (committed fixtures, one per demuxer family).
+  ['sample.mpg', 'mp4', 'ffmpeg mpeg-ps', magic('ftyp', 4)],
+  [
+    'sample.vob',
+    'mp3',
+    'ffmpeg vob ac3',
+    (b) => magic('ID3')(b) || (b[0] === 0xff && (b[1] & 0xe0) === 0xe0),
+  ],
+  ['sample.m2ts', 'mp4', 'ffmpeg m2ts', magic('ftyp', 4)],
+  ['sample.wmv', 'webm', 'ffmpeg wmv', (b) => b.readUInt32BE(0) === 0x1a45dfa3],
+  [
+    'sample.aiff',
+    'mp3',
+    'ffmpeg aiff',
+    (b) => magic('ID3')(b) || (b[0] === 0xff && (b[1] & 0xe0) === 0xe0),
+  ],
+  ['sample.amr', 'wav', 'ffmpeg amr', (b) => magic('RIFF')(b) && magic('WAVE', 8)(b)],
+  ['sample.dts', 'flac', 'ffmpeg dts', magic('fLaC')],
   ['data.csv', 'json', 'data', (b) => JSON.parse(b.toString()).length === 2],
   ['data.csv', 'xlsx', 'xlsx writer', magic('PK')],
   ['data.json', 'yaml', 'yaml', (b) => b.toString().includes('name:')],

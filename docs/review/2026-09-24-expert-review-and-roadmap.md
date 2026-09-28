@@ -110,6 +110,13 @@ _Reviewed at `7a92641` (2026-09-24). Scope: every file in `lib/`, the app shell,
   - "Your conversion stats" under Recent shows the counts. "Copy report" copies a Markdown table plus the browser's name and major version, for someone who chooses to paste it into an issue.
   - Nothing is sent, so the badge stays at 0 B sent.
   - No file names are kept. The history switch covers the stats too: turning it off stops the counting and deletes them.
+- **Phase 7: formats we used to turn away.**
+  - **Media read through FFmpeg:** MPEG-PS (`.mpg`/`.mpeg`), VOB, MPEG-TS (`.ts`/`.mts`/`.m2ts`), WMV/ASF and F4V video; AIFF, AC3, WavPack, CAF, DTS and AMR audio. They convert to every video or audio target, never through WebCodecs.
+  - Other spellings are `aliasOf` entries in `FORMATS`: they get routes and file handlers but no landing page of their own.
+  - Each has a small fixture under `lib/__tests__/fixtures/media/` (how it was made is in its README), and the smoke suite converts seven of them in the browser.
+  - **TIFF** (`lib/tiff.ts`, utif2, lazy, in the worker): LZW, Deflate, JPEG, PackBits and CCITT G3/G4, grey/RGB/palette/CMYK, 1–16 bits, to every raster target, OCR and PDF. A multi-page file converts its first page. CMYK is converted in-house because UTIF's own conversion reads `window`, which throws in a worker.
+  - **Multi-threaded FFmpeg in production:** a manual workflow (`upload-ffmpeg-mt.yml`) checks `@ffmpeg/core-mt` against the pinned hashes, uploads it to R2 and checks the CDN. CI then turns it on by itself: `scripts/check-ffmpeg-mt.mjs` finds it served with CORS and the right hashes, the build gets `NEXT_PUBLIC_FFMPEG_MT_BASE_URL`, and the smoke suite runs with `SMOKE_EXPECT_MT=1`. Locally, all 45 smoke pairs pass on the MT core with no fallback, the new formats included.
+  - Still explained as unsupported: OGV (the core's Theora encoder crashes, so no test file can be made to prove the decoder), RealMedia, MXF, raw M2V, APE and MIDI.
 
 ## 1. Executive summary
 

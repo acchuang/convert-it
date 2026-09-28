@@ -51,6 +51,21 @@ jobs:
       # the user's browser. Dev tooling advisories are handled by Dependabot.
       - run: npm audit --omit=dev --audit-level=high
 
+      # The multi-threaded core (2–3x faster video on 4+ cores) is turned on
+      # only once it's on the CDN, with CORS for the site and the pinned hashes
+      # (the "Upload multi-threaded FFmpeg core" workflow puts it there). Then
+      # the smoke suite must run on it: SMOKE_EXPECT_MT fails on any fallback.
+      # Set after the unit tests, which must not see it.
+      - name: Use the multi-threaded FFmpeg core if it's on the CDN
+        run: |
+          MT=https://cdn.oilygold.xyz/ffmpeg-core-mt/0.12.10
+          if node scripts/check-ffmpeg-mt.mjs "$MT"; then
+            echo "NEXT_PUBLIC_FFMPEG_MT_BASE_URL=$MT" >> "$GITHUB_ENV"
+            echo "SMOKE_EXPECT_MT=1" >> "$GITHUB_ENV"
+          else
+            echo "::notice::Multi-threaded FFmpeg core not on the CDN; building single-threaded only"
+          fi
+
       # postbuild adds the CSP (out/_headers + per-page hashes).
       # Public CDN URL, inlined into the bundle at build time — not a secret.
       # Must match the value in the Pages project's env vars; the generated CSP

@@ -31,7 +31,7 @@ describe('sniff', () => {
   });
 
   it('names what it recognises but can’t convert', () => {
-    expect(sniff(bytes('II*\0'))).toEqual({ kind: 'image', label: 'TIFF' });
+    expect(sniff(bytes('8BPS'))).toEqual({ kind: 'image', label: 'PSD' });
     expect(sniff(bytes('PK\x03\x04'))).toEqual({ kind: 'archive', label: 'ZIP' });
     expect(sniff(bytes([0, 0, 0, 0x18], 'ftypcrx '))).toEqual({ kind: 'raw', label: 'CR3' });
     const exe = new Uint8Array(0x48);
@@ -56,7 +56,7 @@ describe('identify', () => {
 
   it('goes by content when the name is missing or wrong', async () => {
     expect(await identify(file('scan', '%PDF-1.4'))).toEqual({ ext: 'pdf', reason: 'content' });
-    expect(await identify(file('shot.tif', [0xff, 0xd8, 0xff, 0xe1]))).toEqual({
+    expect(await identify(file('shot.psd', [0xff, 0xd8, 0xff, 0xe1]))).toEqual({
       ext: 'jpg',
       reason: 'content',
     });
@@ -83,7 +83,10 @@ describe('identify', () => {
   });
 
   it('explains the rest', async () => {
-    expect(await identify(file('scan.tiff', 'II*\0'))).toEqual({ kind: 'image', label: 'TIFF' });
+    expect(await identify(file('layers.psd', '8BPS'))).toEqual({ kind: 'image', label: 'PSD' });
+    // TIFF is read now: a nameless one is recognised.
+    expect(await identify(file('scan', 'II*\0'))).toEqual({ ext: 'tiff', reason: 'content' });
+    expect(await identify(file('scan', 'MM\0*'))).toEqual({ ext: 'tiff', reason: 'content' });
     expect(await identify(file('letter.doc', [0xd0, 0xcf, 0x11, 0xe0]))).toEqual({
       kind: 'word',
       label: 'DOC',
@@ -117,5 +120,14 @@ describe('helpers', () => {
     expect(needsIdentifying('a.png')).toBe(false);
     expect(needsIdentifying('a.jfif')).toBe(true);
     expect(needsIdentifying('README')).toBe(true);
+    // Read through FFmpeg, aliases included.
+    for (const name of ['a.mpg', 'a.mpeg', 'a.vob', 'a.mts', 'a.wmv', 'a.aif', 'a.amr', 'a.dts']) {
+      expect(needsIdentifying(name)).toBe(false);
+    }
+  });
+
+  it('containers we still turn away are explained as media', async () => {
+    expect(await identify(file('clip.ogv', [0, 0, 0, 0]))).toEqual({ kind: 'video', label: 'OGV' });
+    expect(await identify(file('song.ape', [0, 0, 0, 0]))).toEqual({ kind: 'audio', label: 'APE' });
   });
 });

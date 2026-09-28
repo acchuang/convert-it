@@ -319,6 +319,8 @@
     "improvement57": "查看應用程式透過網路傳送（為零）和接收的資料量；關閉歷史記錄後不保存任何檔名",
     "improvement58": "HEIC：轉換主要照片，而不只是檔案中的第一張圖片；也可將所有圖片打包為 zip",
     "improvement59": "依格式組合統計你自己的轉換資料，儲存在你的裝置上；需要時可複製到錯誤回報中",
+    "improvement60": "直接讀取舊格式與廣播格式：影片 MPEG、VOB、MPEG-TS/M2TS、WMV、F4V，音訊 AIFF、AC3、DTS、WavPack、CAF、AMR",
+    "improvement61": "也能開啟 TIFF 掃描檔與匯出檔：支援 LZW、Deflate、JPEG、PackBits 與 CCITT 傳真壓縮，以及 CMYK 與 16 位元（多頁檔案取第一頁）",
     "storedHeading": "只儲存在此裝置上的內容",
     "stored1": "最近的轉換：檔名、格式、大小和時間，最多 30 筆。在「最近」中取消勾選「在此裝置上保留歷史記錄」後不會寫入任何內容（取消勾選也會刪除清單）。",
     "stored2": "你的主題、語言和輸出檔名範本。",

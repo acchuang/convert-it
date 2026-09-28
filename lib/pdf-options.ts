@@ -60,6 +60,8 @@ const MERGE_IMAGES = new Set([
   'heic',
   'avif',
   'jxl',
+  'tiff',
+  'tif',
 ]);
 
 /** Whether mergePdf takes this source: PDFs (every page) or images (a page each). */
