@@ -573,3 +573,23 @@ describe('stages (review §9: the engine download is its own labelled phase)', (
     await act(async () => finish(new Blob(['x'])));
   });
 });
+
+describe('local stats', () => {
+  it('records a finished and a failed conversion, not while history is off', async () => {
+    const { getStats } = await import('@/lib/stats');
+    const { setHistoryEnabled } = await import('@/lib/history');
+    const { result } = renderHook(() => useJobManager());
+    act(() => result.current.addFiles([new File(['a,b'], 'a.csv'), new File(['c,d'], 'b.csv')]));
+    mockConvertFile.mockResolvedValueOnce(new Blob(['[]']));
+    await act(() => result.current.convertJob(result.current.jobs[0]));
+    mockConvertFile.mockRejectedValueOnce(new Error('Invalid JSON'));
+    await act(() => result.current.convertJob(result.current.jobs[1]));
+    expect(getStats()!.pairs['csv → json']).toMatchObject({ ok: 1, failed: 1 });
+
+    setHistoryEnabled(false);
+    mockConvertFile.mockResolvedValueOnce(new Blob(['[]']));
+    await act(() => result.current.convertJob({ ...result.current.jobs[1], status: 'idle' }));
+    expect(getStats()).toBeNull();
+    setHistoryEnabled(true);
+  });
+});

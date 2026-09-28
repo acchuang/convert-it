@@ -318,13 +318,15 @@
     "improvement56": "Installed as an app: share files to it from other apps, or open them with it",
     "improvement57": "See what the app has sent (nothing) and received over the network; turn off history so no file names are kept",
     "improvement58": "HEIC: the main photo is converted, not just the first image in the file, or every image as a zip",
+    "improvement59": "Your own conversion stats, per format pair, kept on your device; copy them into a bug report if you like",
     "storedHeading": "Stored on this device, and nowhere else",
     "stored1": "Recent conversions: file name, formats, sizes and time, at most 30. Untick “Keep history on this device” under Recent and nothing is written (unticking also deletes the list).",
     "stored2": "Your theme, language and output-name template.",
     "stored3": "App files cached for offline use: code, codecs, fonts, OCR data and the FFmpeg engine. Never your files or results.",
     "stored4": "A running count of bytes sent and received, for the network badge.",
     "stored5": "Files shared to the installed app, only until the page picks them up a moment later.",
-    "stored6": "Clearing this site’s data in your browser settings removes all of it."
+    "stored6": "Conversion counts per format pair (done, failed with the error type, average time), for the stats panel. No file names. Turning history off stops and deletes them.",
+    "stored7": "Clearing this site’s data in your browser settings removes all of it."
   },
   "errors": {
     "tooLarge": {
@@ -393,5 +395,17 @@
   "status": {
     "local": "LOCAL WORKSTATION",
     "inBrowser": "100% in-browser WebAssembly"
+  },
+  "stats": {
+    "heading": "Your conversion stats",
+    "note": "Counted on this device only and never sent. Copy the report if you want to share it, for example in a bug report. Turning history off stops the counting and deletes the stats.",
+    "empty": "Nothing counted yet.",
+    "pair": "Conversion",
+    "done": "Done",
+    "failed": "Failed",
+    "topError": "Most common error",
+    "avgTime": "Average time",
+    "copy": "Copy report",
+    "reset": "Reset stats"
   }
 }

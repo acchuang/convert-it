@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import {
   convertFile,
   getFileExtension,
@@ -19,7 +19,9 @@ import { canMerge } from './pdf-options';
 import { DEFAULT_NAME_TEMPLATE, applyNameTemplate, safeFileStem, uniqueName } from './filenames';
 import type { PickedFile } from './drop-files';
 import { extensionOf, identify, NEAREST, needsIdentifying, renamed } from './identify';
-import { addHistoryEntry, getHistory, type HistoryEntry } from '@/lib/history';
+import { addHistoryEntry, getHistory, historyEnabled, type HistoryEntry } from '@/lib/history';
+import { recordConversion } from '@/lib/stats';
+import { readStored, writeStored } from '@/lib/storage';
 
 /**
  * The download name for a finished job. Multi-page PDF → image comes back as a
@@ -44,6 +46,12 @@ export function outputFilename(
 }
 
 const TEMPLATE_KEY = 'convert-it:name-template';
+const templateListeners = new Set<() => void>();
+const subscribeTemplate = (listener: () => void) => {
+  templateListeners.add(listener);
+  return () => templateListeners.delete(listener);
+};
+const readTemplate = () => readStored(TEMPLATE_KEY) ?? DEFAULT_NAME_TEMPLATE;
 
 // Output images the browser can decode, to read their size for {w}x{h}.
 const MEASURABLE = new Set(['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'avif', 'ico']);
@@ -295,6 +303,7 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
         ),
       );
 
+    const startedAt = Date.now();
     try {
       const blob = onMainThread
         ? await convertFile(job.file, job.targetExt, job.settings, onProgress)
@@ -310,6 +319,9 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
         ),
       );
 
+      if (historyEnabled()) {
+        recordConversion(job.sourceExt, job.targetExt, { ok: true, ms: Date.now() - startedAt });
+      }
       addHistoryEntry({
         filename: job.file.name,
         sourceExt: job.sourceExt,
@@ -323,13 +335,17 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
       // A cancelled job already went back to idle, and killing ffmpeg mid-exec
       // surfaces as a generic wasm abort — neither is an error worth showing.
       if (cancelledRef.current.delete(job.id) || err instanceof CancelledError) return;
+      const failure = classifyError(err);
+      if (historyEnabled()) {
+        recordConversion(job.sourceExt, job.targetExt, { ok: false, code: failure.code });
+      }
       setJobs((prev) =>
         prev.map((j) =>
           j.id === job.id
             ? {
                 ...j,
                 status: 'error',
-                error: classifyError(err),
+                error: failure,
                 progress: 0,
               }
             : j,
@@ -358,22 +374,16 @@ export function useJobManager(options?: UseJobManagerOptions): UseJobManagerRetu
   }, []);
 
   // The output-name template, remembered per viewer (a convenience only).
-  const [nameTemplate, setNameTemplateState] = useState(DEFAULT_NAME_TEMPLATE);
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(TEMPLATE_KEY);
-      if (saved) setNameTemplateState(saved);
-    } catch {
-      // storage blocked: keep the default
-    }
-  }, []);
+  // Read through lib/storage (memory if storage is blocked), so it applies
+  // for the visit either way; the static page renders the default.
+  const nameTemplate = useSyncExternalStore(
+    subscribeTemplate,
+    readTemplate,
+    () => DEFAULT_NAME_TEMPLATE,
+  );
   const setNameTemplate = useCallback((template: string) => {
-    setNameTemplateState(template);
-    try {
-      localStorage.setItem(TEMPLATE_KEY, template);
-    } catch {
-      // storage blocked: the template still applies for this visit
-    }
+    writeStored(TEMPLATE_KEY, template);
+    for (const listener of templateListeners) listener();
   }, []);
 
   const nameFor = useCallback(

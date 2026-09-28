@@ -75,6 +75,11 @@ try {
     await settle(page);
     await audit(page, `home, result preview (${theme})`);
 
+    // The conversion above was counted: open the local stats table.
+    await page.locator('details summary', { hasText: /stats/i }).click();
+    await settle(page);
+    await audit(page, `home, stats panel (${theme})`);
+
     await page
       .getByRole('region', { name: 'files' })
       .getByRole('button', { name: 'CLEAR' })
