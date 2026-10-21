@@ -50,9 +50,13 @@ const techStack = [
   { labelKey: 'about.techHosting', val: 'Cloudflare Pages + R2' },
 ];
 
+// Every locale's about.intro opens with the product name; bold just that part.
+const BRAND = 'Convert-it';
+
 export default function AboutPage() {
   const { t, locale } = useLocale();
   const { theme, toggle: toggleTheme } = useTheme();
+  const intro = t('about.intro');
 
   return (
     <main
@@ -131,7 +135,8 @@ export default function AboutPage() {
             {t('about.heading')}
           </div>
           <p className="text-lg text-(--text-secondary) leading-relaxed mb-6">
-            <strong className="text-(--text-primary)">Convert-it</strong> {t('about.intro')}
+            <strong className="text-(--text-primary)">{intro.slice(0, BRAND.length)}</strong>
+            {intro.slice(BRAND.length)}
           </p>
           <p className="text-(--text-muted) leading-relaxed">{t('about.intro2')}</p>
         </section>
