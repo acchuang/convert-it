@@ -1,6 +1,6 @@
 'use client';
 
-import { useReducer, useState, useSyncExternalStore } from 'react';
+import { useEffect, useReducer, useRef, useState, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatFileSize, getFormatInfo } from '@/lib/converters';
 import { CATEGORY_COLORS } from './category-colors';
@@ -31,6 +31,8 @@ export function HistoryPanel({
   const { locale } = useLocale();
   const [open, setOpen] = useState(true);
   const [confirmClear, setConfirmClear] = useState(false);
+  const confirmTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(confirmTimer.current), []);
   // The static page renders "on"; the stored choice is read on hydration
   // (and on every render, so the re-render after a toggle picks it up).
   const [, rerender] = useReducer((n: number) => n + 1, 0);
@@ -56,9 +58,10 @@ export function HistoryPanel({
   );
 
   const handleClear = () => {
+    clearTimeout(confirmTimer.current);
     if (!confirmClear) {
       setConfirmClear(true);
-      setTimeout(() => setConfirmClear(false), 3500);
+      confirmTimer.current = setTimeout(() => setConfirmClear(false), 3500);
       return;
     }
     clearHistory();
