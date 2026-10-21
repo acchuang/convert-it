@@ -120,10 +120,13 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
   };
 
   // Mid-drag the browser hides file names; only the MIME type is readable.
-  const detectDragCategory = useCallback((items: DataTransferItemList) => {
-    const kind = items[0]?.type.split('/')[0];
-    setDragCategory(kind === 'image' || kind === 'video' || kind === 'audio' ? kind : null);
-  }, [setDragCategory]);
+  const detectDragCategory = useCallback(
+    (items: DataTransferItemList) => {
+      const kind = items[0]?.type.split('/')[0];
+      setDragCategory(kind === 'image' || kind === 'video' || kind === 'audio' ? kind : null);
+    },
+    [setDragCategory],
+  );
 
   // Window-level drag event listeners to ensure dragging anywhere on the page
   // activates the drop overlay and prevents the browser from navigating away.
