@@ -46,7 +46,7 @@ export function SettingsPanel({
       className="overflow-hidden"
     >
       <div
-        className="mt-4 pt-3 border-t border-[var(--border-primary)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs"
+        className="mt-4 pt-3 border-t border-(--border-primary) grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs"
         style={{ fontFamily: 'var(--font-mono)' }}
       >
         <DataSettings {...group} />

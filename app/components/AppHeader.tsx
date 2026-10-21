@@ -11,7 +11,7 @@ export function AppHeader() {
   const { t } = useLocale();
   return (
     <header
-      className="border-b border-app px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-40 backdrop-blur-sm"
+      className="border-b border-app px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-40 backdrop-blur-xs"
       style={{ backgroundColor: 'var(--header-bg)' }}
       role="banner"
     >
@@ -22,8 +22,8 @@ export function AppHeader() {
         style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
         className="text-2xl sm:text-3xl tracking-wide whitespace-nowrap"
       >
-        <span className="text-[var(--accent-ink)]">Convert</span>
-        <span className="text-[var(--text-primary)]">-it</span>
+        <span className="text-(--accent-ink)">Convert</span>
+        <span className="text-(--text-primary)">-it</span>
       </motion.div>
 
       <div className="flex items-center gap-1.5 sm:gap-4">
@@ -31,7 +31,7 @@ export function AppHeader() {
 
         <button
           onClick={toggleTheme}
-          className="w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg text-[var(--text-secondary)] hover:text-[var(--accent-ink)] hover:bg-[var(--bg-tertiary)] transition-all"
+          className="w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg text-(--text-secondary) hover:text-(--accent-ink) hover:bg-(--bg-tertiary) transition-all"
           aria-label={theme === 'dark' ? t('header.themeLight') : t('header.themeDark')}
           title={theme === 'dark' ? t('header.themeLight') : t('header.themeDark')}
         >
@@ -64,7 +64,7 @@ export function AppHeader() {
         {/* About */}
         <Link
           href="/about"
-          className="text-xs px-2.5 py-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+          className="text-xs px-2.5 py-1.5 rounded-lg text-(--text-secondary) hover:text-(--text-primary) hover:bg-(--bg-tertiary) transition-colors"
           style={{ fontFamily: 'var(--font-mono)' }}
         >
           {t('header.about')}
@@ -75,7 +75,7 @@ export function AppHeader() {
           href="https://buymeacoffee.com/acchuang"
           target="_blank"
           rel="noopener noreferrer"
-          className="w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg text-[var(--text-secondary)] hover:text-[#FF813F] hover:bg-[var(--bg-tertiary)] transition-all"
+          className="w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg text-(--text-secondary) hover:text-[#FF813F] hover:bg-(--bg-tertiary) transition-all"
           aria-label={t('header.buyCoffee')}
           title={t('header.buyCoffee')}
         >
@@ -89,7 +89,7 @@ export function AppHeader() {
           href="https://github.com/acchuang/convert-it"
           target="_blank"
           rel="noopener noreferrer"
-          className="w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-all"
+          className="w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg text-(--text-secondary) hover:text-(--text-primary) hover:bg-(--bg-tertiary) transition-all"
           aria-label={t('header.github')}
           title={t('header.github')}
         >

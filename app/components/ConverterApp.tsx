@@ -299,15 +299,15 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
 
           {/* Ambient Privacy & Local Telemetry Status */}
           <div
-            className="flex items-center justify-between px-3.5 py-2 mb-6 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] text-xs text-[var(--text-muted)]"
+            className="flex items-center justify-between px-3.5 py-2 mb-6 rounded-xl bg-(--bg-secondary) border border-(--border-primary) text-xs text-(--text-muted)"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             <div className="flex items-center gap-2">
-              <span className="inline-block w-2 h-2 rounded-full bg-[var(--accent)]" />
-              <span className="text-[var(--text-primary)] font-semibold tracking-wider">
+              <span className="inline-block w-2 h-2 rounded-full bg-(--accent)" />
+              <span className="text-(--text-primary) font-semibold tracking-wider">
                 {t('status.local')}
               </span>
-              <span className="hidden sm:inline text-[var(--text-muted)]">
+              <span className="hidden sm:inline text-(--text-muted)">
                 · {t('status.inBrowser')}
               </span>
             </div>
@@ -388,7 +388,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
-                      className="flex-shrink-0 mt-0.5"
+                      className="shrink-0 mt-0.5"
                     >
                       <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                       <line x1="12" y1="9" x2="12" y2="13" />
@@ -423,7 +423,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                   role="button"
                   tabIndex={0}
                   aria-label={t('toolbar.addFiles')}
-                  className="border border-dashed border-[var(--border-secondary)] hover:border-[var(--accent)] rounded-xl py-2.5 px-4 text-center cursor-pointer transition-all bg-[var(--bg-secondary)]/50 hover:bg-[var(--bg-secondary)] flex items-center justify-center gap-2 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] mb-4 group"
+                  className="border border-dashed border-(--border-secondary) hover:border-(--accent) rounded-xl py-2.5 px-4 text-center cursor-pointer transition-all bg-(--bg-secondary)/50 hover:bg-(--bg-secondary) flex items-center justify-center gap-2 text-xs text-(--text-muted) hover:text-(--text-primary) mb-4 group"
                   style={{ fontFamily: 'var(--font-mono)' }}
                 >
                   <svg
@@ -433,7 +433,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2.5"
-                    className="text-[var(--accent-ink)]"
+                    className="text-(--accent-ink)"
                   >
                     <path d="M12 5v14M5 12h14" />
                   </svg>
@@ -447,7 +447,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                       onClick={() => {
                         inputRef.current?.click();
                       }}
-                      className="px-4 py-2 border border-[var(--border-secondary)] rounded-lg text-xs text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] transition-all flex items-center gap-1.5 font-medium"
+                      className="px-4 py-2 border border-(--border-secondary) rounded-lg text-xs text-(--text-muted) hover:border-(--border-hover) hover:text-(--text-primary) transition-all flex items-center gap-1.5 font-medium"
                       style={{ fontFamily: 'var(--font-mono)' }}
                       aria-label={t('toolbar.addFiles')}
                     >
@@ -465,7 +465,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                     </button>
                     <button
                       onClick={() => folderRef.current?.click()}
-                      className="px-4 py-2 border border-[var(--border-secondary)] rounded-lg text-xs text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] transition-all font-medium"
+                      className="px-4 py-2 border border-(--border-secondary) rounded-lg text-xs text-(--text-muted) hover:border-(--border-hover) hover:text-(--text-primary) transition-all font-medium"
                       style={{ fontFamily: 'var(--font-mono)' }}
                       aria-label={t('toolbar.addFolder')}
                     >
@@ -473,7 +473,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                     </button>
 
                     <span
-                      className="text-xs text-[var(--text-muted)]"
+                      className="text-xs text-(--text-muted)"
                       style={{ fontFamily: 'var(--font-mono)' }}
                     >
                       {jobs.length} {t('toolbar.files')}
@@ -486,7 +486,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                       <button
                         onClick={mergeToPdf}
                         disabled={merge.status === 'running'}
-                        className="px-4 py-2 border border-[var(--border-secondary)] rounded-lg text-xs text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] transition-all disabled:opacity-60"
+                        className="px-4 py-2 border border-(--border-secondary) rounded-lg text-xs text-(--text-muted) hover:border-(--border-hover) hover:text-(--text-primary) transition-all disabled:opacity-60"
                         style={{ fontFamily: 'var(--font-mono)' }}
                         aria-label={t('toolbar.mergePdf')}
                       >
@@ -499,7 +499,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                     {doneCount > 0 && (
                       <button
                         onClick={downloadAllAsZip}
-                        className="px-4 py-2 border border-[var(--border-secondary)] rounded-lg text-xs text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] transition-all"
+                        className="px-4 py-2 border border-(--border-secondary) rounded-lg text-xs text-(--text-muted) hover:border-(--border-hover) hover:text-(--text-primary) transition-all"
                         style={{ fontFamily: 'var(--font-mono)' }}
                         aria-label={t('toolbar.zipAll')}
                       >
@@ -510,7 +510,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                     {jobs.some((j) => j.status === 'idle' && j.targetExt) && (
                       <button
                         onClick={convertAll}
-                        className="px-4 py-2 bg-[var(--accent)] text-[var(--accent-text)] text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1.5 shadow-sm"
+                        className="px-4 py-2 bg-(--accent) text-(--accent-text) text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1.5 shadow-xs"
                         style={{ fontFamily: 'var(--font-mono)' }}
                         aria-label={t('toolbar.convertAll')}
                         title={t('toolbar.shortcut')}
@@ -522,7 +522,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
 
                     <button
                       onClick={clearAll}
-                      className="px-3 py-2 text-xs text-[var(--text-muted)] hover:text-[var(--error)] transition-colors"
+                      className="px-3 py-2 text-xs text-(--text-muted) hover:text-(--error) transition-colors"
                       style={{ fontFamily: 'var(--font-mono)' }}
                       aria-label={t('toolbar.clear')}
                     >
@@ -553,14 +553,14 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                     className="flex items-center gap-2 mb-4"
                     style={{ fontFamily: 'var(--font-mono)' }}
                   >
-                    <span className="text-xs text-[var(--text-muted)] uppercase tracking-wider">
+                    <span className="text-xs text-(--text-muted) uppercase tracking-wider">
                       {t('toolbar.setAllTo')}
                     </span>
                     <div className="relative inline-flex items-center">
                       <select
                         value={batchFormat}
                         onChange={(e) => setBatchFormat(e.target.value)}
-                        className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] text-[var(--text-primary)] text-xs rounded-lg pl-3 pr-8 py-1.5 appearance-none cursor-pointer hover:border-[var(--border-hover)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+                        className="bg-(--bg-tertiary) border border-(--border-secondary) text-(--text-primary) text-xs rounded-lg pl-3 pr-8 py-1.5 appearance-none cursor-pointer hover:border-(--border-hover) focus:outline-hidden focus:border-(--accent) transition-colors"
                         aria-label={t('toolbar.setAllTo')}
                       >
                         <option value="">{t('toolbar.pickFormat')}</option>
@@ -575,7 +575,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                         ))}
                       </select>
                       <svg
-                        className="absolute right-2.5 pointer-events-none text-[var(--text-muted)]"
+                        className="absolute right-2.5 pointer-events-none text-(--text-muted)"
                         width="10"
                         height="10"
                         viewBox="0 0 24 24"
@@ -590,7 +590,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                     <button
                       onClick={applyBatchFormat}
                       disabled={!batchFormat}
-                      className="px-3 py-1.5 text-xs border border-[var(--border-secondary)] rounded-lg text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all font-medium"
+                      className="px-3 py-1.5 text-xs border border-(--border-secondary) rounded-lg text-(--text-muted) hover:border-(--border-hover) hover:text-(--text-primary) disabled:opacity-30 disabled:cursor-not-allowed transition-all font-medium"
                       aria-label={t('toolbar.apply')}
                     >
                       {t('toolbar.apply')}
@@ -605,7 +605,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                 >
                   <label
                     htmlFor="name-template"
-                    className="text-xs text-[var(--text-muted)] uppercase tracking-wider"
+                    className="text-xs text-(--text-muted) uppercase tracking-wider"
                   >
                     {t('toolbar.nameAs')}
                   </label>
@@ -616,17 +616,17 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                     onChange={(e) => setNameTemplate(e.target.value)}
                     placeholder={DEFAULT_NAME_TEMPLATE}
                     title={t('toolbar.nameHint')}
-                    className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] text-[var(--text-primary)] text-xs rounded-lg px-3 py-1.5 w-56 focus:outline-none focus:border-[var(--accent)]"
+                    className="bg-(--bg-tertiary) border border-(--border-secondary) text-(--text-primary) text-xs rounded-lg px-3 py-1.5 w-56 focus:outline-hidden focus:border-(--accent)"
                   />
                   {jobs[0]?.targetExt && (
                     <span
-                      className="text-xs text-[var(--text-muted)] truncate"
+                      className="text-xs text-(--text-muted) truncate"
                       data-testid="name-preview"
                     >
                       → {nameFor(jobs[0])}
                     </span>
                   )}
-                  <span className="text-xs text-[var(--text-muted)] w-full sm:w-auto">
+                  <span className="text-xs text-(--text-muted) w-full sm:w-auto">
                     {t('toolbar.nameHint')}
                   </span>
                 </div>
@@ -678,21 +678,21 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ type: 'spring', stiffness: 100, damping: 20, delay: 0.3 + i * 0.1 }}
-                  className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6 hover:border-[var(--border-hover)] transition-colors"
+                  className="bg-(--bg-secondary) border border-(--border-primary) rounded-2xl p-6 hover:border-(--border-hover) transition-colors"
                 >
                   <div
                     style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
-                    className="text-3xl text-[var(--accent-ink)] mb-3"
+                    className="text-3xl text-(--accent-ink) mb-3"
                   >
                     {String(n).padStart(2, '0')}
                   </div>
                   <div
                     style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
-                    className="text-xl text-[var(--text-primary)] mb-2"
+                    className="text-xl text-(--text-primary) mb-2"
                   >
                     {t(`howItWorks.step${n}.title`)}
                   </div>
-                  <p className="text-[var(--text-muted)] text-sm leading-relaxed">
+                  <p className="text-(--text-muted) text-sm leading-relaxed">
                     {t(`howItWorks.step${n}.desc`)}
                   </p>
                 </motion.div>
@@ -718,24 +718,24 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
             >
               <div
                 role="status"
-                className="pointer-events-auto flex items-center gap-3 px-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-secondary)] shadow-lg text-xs max-w-full"
+                className="pointer-events-auto flex items-center gap-3 px-4 py-2.5 rounded-xl bg-(--bg-secondary) border border-(--border-secondary) shadow-lg text-xs max-w-full"
                 style={{ fontFamily: 'var(--font-mono)' }}
               >
-                <span className="text-[var(--text-secondary)] truncate">
+                <span className="text-(--text-secondary) truncate">
                   {removed.length === 1
                     ? t('toolbar.removedOne').replace('{name}', removed[0].file.name)
                     : t('toolbar.removedMany').replace('{n}', String(removed.length))}
                 </span>
                 <button
                   onClick={undoRemove}
-                  className="font-semibold text-[var(--accent-ink)] hover:underline flex-shrink-0"
+                  className="font-semibold text-(--accent-ink) hover:underline shrink-0"
                 >
                   {t('toolbar.undo')}
                 </button>
                 <button
                   onClick={dismissUndo}
                   aria-label={t('toolbar.dismiss')}
-                  className="text-[var(--text-muted)] hover:text-[var(--text-primary)] flex-shrink-0"
+                  className="text-(--text-muted) hover:text-(--text-primary) shrink-0"
                 >
                   ×
                 </button>

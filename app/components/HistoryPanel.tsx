@@ -40,7 +40,7 @@ export function HistoryPanel({
 
   const toggle = (
     <label
-      className="flex items-center gap-2 text-xs text-[var(--text-muted)] cursor-pointer"
+      className="flex items-center gap-2 text-xs text-(--text-muted) cursor-pointer"
       style={{ fontFamily: 'var(--font-mono)' }}
     >
       <input
@@ -51,7 +51,7 @@ export function HistoryPanel({
           rerender();
           if (!e.target.checked) onClear();
         }}
-        className="accent-[var(--accent)]"
+        className="accent-(--accent)"
       />
       {t('history.keep')}
     </label>
@@ -77,11 +77,8 @@ export function HistoryPanel({
         transition={{ type: 'spring', stiffness: 100, damping: 20, delay: 0.8 }}
         className="mt-8"
       >
-        <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-8 text-center">
-          <p
-            className="text-[var(--text-muted)] text-sm"
-            style={{ fontFamily: 'var(--font-mono)' }}
-          >
+        <div className="bg-(--bg-secondary) border border-(--border-primary) rounded-2xl p-8 text-center">
+          <p className="text-(--text-muted) text-sm" style={{ fontFamily: 'var(--font-mono)' }}>
             {keep ? t('history.empty') : t('history.off')}
           </p>
           <div className="mt-3 flex justify-center">{toggle}</div>
@@ -101,14 +98,11 @@ export function HistoryPanel({
         <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-2 group">
           <h2
             style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
-            className="text-lg text-primary group-hover:text-[var(--accent-ink)] transition-colors"
+            className="text-lg text-primary group-hover:text-(--accent-ink) transition-colors"
           >
             {t('history.heading')}
           </h2>
-          <span
-            className="text-[var(--text-muted)] text-xs"
-            style={{ fontFamily: 'var(--font-mono)' }}
-          >
+          <span className="text-(--text-muted) text-xs" style={{ fontFamily: 'var(--font-mono)' }}>
             {entries.length}
           </span>
           <svg
@@ -118,7 +112,7 @@ export function HistoryPanel({
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
-            className={`text-[var(--text-muted)] transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+            className={`text-(--text-muted) transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
           >
             <path d="M6 9l6 6 6-6" />
           </svg>
@@ -128,10 +122,10 @@ export function HistoryPanel({
           {toggle}
           <button
             onClick={handleClear}
-            className={`text-xs px-2.5 py-1 rounded transition-colors ${
+            className={`text-xs px-2.5 py-1 rounded-sm transition-colors ${
               confirmClear
-                ? 'text-[var(--error)] bg-[var(--error)]/10 border border-[var(--error)]/30 font-semibold'
-                : 'text-[var(--text-muted)] hover:text-[var(--error)]'
+                ? 'text-(--error) bg-(--error)/10 border border-(--error)/30 font-semibold'
+                : 'text-(--text-muted) hover:text-(--error)'
             }`}
             style={{ fontFamily: 'var(--font-mono)' }}
             aria-label={confirmClear ? t('history.confirmClearLabel') : t('history.clearLabel')}
@@ -157,31 +151,31 @@ export function HistoryPanel({
                 return (
                   <div
                     key={entry.id}
-                    className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-lg px-4 py-2.5 flex items-center gap-3 hover:border-[var(--border-hover)] transition-colors"
+                    className="bg-(--bg-secondary) border border-(--border-primary) rounded-lg px-4 py-2.5 flex items-center gap-3 hover:border-(--border-hover) transition-colors"
                   >
                     <div
-                      className="flex items-center gap-1.5 flex-shrink-0"
+                      className="flex items-center gap-1.5 shrink-0"
                       style={{ fontFamily: 'var(--font-mono)' }}
                     >
                       <span className="text-xs" style={{ color: srcColor }}>
                         .{entry.sourceExt.toUpperCase()}
                       </span>
-                      <span className="text-[var(--text-muted)] text-xs">→</span>
+                      <span className="text-(--text-muted) text-xs">→</span>
                       <span className="text-xs" style={{ color: tgtColor }}>
                         .{entry.targetExt.toUpperCase()}
                       </span>
                     </div>
-                    <p className="text-[var(--text-secondary)] text-xs truncate flex-1">
+                    <p className="text-(--text-secondary) text-xs truncate flex-1">
                       {entry.filename}
                     </p>
                     <div
-                      className="flex items-center gap-3 flex-shrink-0"
+                      className="flex items-center gap-3 shrink-0"
                       style={{ fontFamily: 'var(--font-mono)' }}
                     >
-                      <span className="text-[var(--text-muted)] text-xs hidden sm:block">
+                      <span className="text-(--text-muted) text-xs hidden sm:block">
                         {formatFileSize(entry.fileSize)} → {formatFileSize(entry.resultSize)}
                       </span>
-                      <span className="text-[var(--text-muted)] text-xs">
+                      <span className="text-(--text-muted) text-xs">
                         {timeAgo(entry.convertedAt, locale)}
                       </span>
                     </div>

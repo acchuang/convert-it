@@ -57,18 +57,17 @@ export default function OfflineSupport() {
   }, [state]);
 
   if (state.kind === 'unavailable') return null;
-  const className =
-    'text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors';
+  const className = 'text-xs text-(--text-muted) hover:text-(--text-primary) transition-colors';
   if (state.kind === 'saved') {
     return (
-      <span className="text-xs text-[var(--text-muted)]" role="status">
+      <span className="text-xs text-(--text-muted)" role="status">
         ✓ {t('offline.saved')}
       </span>
     );
   }
   if (state.kind === 'saving') {
     return (
-      <span className="text-xs text-[var(--text-muted)]" role="status" aria-live="polite">
+      <span className="text-xs text-(--text-muted)" role="status" aria-live="polite">
         {t('offline.saving').replace('{pct}', String(state.pct))}
       </span>
     );
