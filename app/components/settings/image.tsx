@@ -16,9 +16,9 @@ export function ImageSettings({ shown, settings, onChange, t, file }: GroupProps
   return (
     <>
       {shown.has('quality') && (
-        <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
+        <div className="bg-(--bg-tertiary)/60 border border-(--border-secondary) rounded-xl p-3 flex flex-col justify-between gap-2">
           <div className="flex items-center justify-between">
-            <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
+            <span className="text-(--text-muted) text-xs uppercase tracking-wider font-semibold">
               {t('job.quality')}
             </span>
             <span className="text-primary text-xs font-semibold">{qualityPct}%</span>
@@ -30,9 +30,9 @@ export function ImageSettings({ shown, settings, onChange, t, file }: GroupProps
             value={qualityPct}
             onChange={(e) => onChange({ quality: Number(e.target.value) / 100 })}
             aria-label={t('job.quality')}
-            className="w-full accent-[var(--accent)]"
+            className="w-full accent-(--accent)"
           />
-          <div className="flex justify-between text-xs text-[var(--text-muted)]">
+          <div className="flex justify-between text-xs text-(--text-muted)">
             <span>{t('job.qualityLow')}</span>
             <span>{t('job.qualityHigh')}</span>
           </div>
@@ -72,7 +72,7 @@ export function ImageSettings({ shown, settings, onChange, t, file }: GroupProps
               </button>
             ))}
           </div>
-          <span className="text-xs text-[var(--text-muted)]">{t('job.heicHint')}</span>
+          <span className="text-xs text-(--text-muted)">{t('job.heicHint')}</span>
         </div>
       )}
 
@@ -101,8 +101,8 @@ export function ImageSettings({ shown, settings, onChange, t, file }: GroupProps
 
       {shown.has('imageTransform') && (
         <>
-          <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
-            <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
+          <div className="bg-(--bg-tertiary)/60 border border-(--border-secondary) rounded-xl p-3 flex flex-col justify-between gap-2">
+            <span className="text-(--text-muted) text-xs uppercase tracking-wider font-semibold">
               {t('job.resize')}
             </span>
             <div className="flex gap-1">
@@ -112,10 +112,10 @@ export function ImageSettings({ shown, settings, onChange, t, file }: GroupProps
                   onClick={() =>
                     onChange({ imageResizePercent: n, imageResizeWidth: 0, imageResizeHeight: 0 })
                   }
-                  className={`flex-1 py-1 text-xs rounded transition-colors ${
+                  className={`flex-1 py-1 text-xs rounded-sm transition-colors ${
                     !usingExactSize && settings.imageResizePercent === n
-                      ? 'bg-[var(--accent)] text-[var(--accent-text)] font-semibold'
-                      : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
+                      ? 'bg-(--accent) text-(--accent-text) font-semibold'
+                      : 'bg-(--bg-secondary) text-(--text-secondary) border border-(--border-secondary) hover:border-(--border-hover)'
                   }`}
                 >
                   {n}%
@@ -130,11 +130,11 @@ export function ImageSettings({ shown, settings, onChange, t, file }: GroupProps
                 onChange={(e) =>
                   onChange({ imageResizeWidth: Math.max(0, Number(e.target.value)) })
                 }
-                className="w-full bg-[var(--bg-secondary)] border border-[var(--border-secondary)] text-primary text-xs rounded px-2 py-1 focus:outline-none focus:border-[var(--accent)] transition-colors"
+                className="w-full bg-(--bg-secondary) border border-(--border-secondary) text-primary text-xs rounded-sm px-2 py-1 focus:outline-hidden focus:border-(--accent) transition-colors"
                 placeholder={t('job.width')}
                 aria-label={t('job.width')}
               />
-              <span className="text-[var(--text-muted)] text-xs">×</span>
+              <span className="text-(--text-muted) text-xs">×</span>
               <input
                 type="number"
                 min={0}
@@ -142,17 +142,17 @@ export function ImageSettings({ shown, settings, onChange, t, file }: GroupProps
                 onChange={(e) =>
                   onChange({ imageResizeHeight: Math.max(0, Number(e.target.value)) })
                 }
-                className="w-full bg-[var(--bg-secondary)] border border-[var(--border-secondary)] text-primary text-xs rounded px-2 py-1 focus:outline-none focus:border-[var(--accent)] transition-colors"
+                className="w-full bg-(--bg-secondary) border border-(--border-secondary) text-primary text-xs rounded-sm px-2 py-1 focus:outline-hidden focus:border-(--accent) transition-colors"
                 placeholder={t('job.height')}
                 aria-label={t('job.height')}
               />
             </div>
             {settings.imageMaxSide > 0 && (
-              <span className="flex items-center justify-between text-xs text-[var(--text-muted)]">
+              <span className="flex items-center justify-between text-xs text-(--text-muted)">
                 {t('job.maxSideNote').replace('{n}', String(settings.imageMaxSide))}
                 <button
                   onClick={() => onChange({ imageMaxSide: 0 })}
-                  className="underline hover:text-[var(--text-secondary)]"
+                  className="underline hover:text-(--text-secondary)"
                 >
                   {t('job.maxSideClear')}
                 </button>
@@ -160,8 +160,8 @@ export function ImageSettings({ shown, settings, onChange, t, file }: GroupProps
             )}
           </div>
 
-          <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
-            <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
+          <div className="bg-(--bg-tertiary)/60 border border-(--border-secondary) rounded-xl p-3 flex flex-col justify-between gap-2">
+            <span className="text-(--text-muted) text-xs uppercase tracking-wider font-semibold">
               {t('job.crop')}
             </span>
             <div className="flex gap-1">
@@ -169,10 +169,10 @@ export function ImageSettings({ shown, settings, onChange, t, file }: GroupProps
                 <button
                   key={aspect}
                   onClick={() => onChange({ imageCropAspect: aspect })}
-                  className={`flex-1 py-1 text-xs rounded transition-colors ${
+                  className={`flex-1 py-1 text-xs rounded-sm transition-colors ${
                     settings.imageCropAspect === aspect
-                      ? 'bg-[var(--accent)] text-[var(--accent-text)] font-semibold'
-                      : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
+                      ? 'bg-(--accent) text-(--accent-text) font-semibold'
+                      : 'bg-(--bg-secondary) text-(--text-secondary) border border-(--border-secondary) hover:border-(--border-hover)'
                   }`}
                 >
                   {aspect === 'none' ? t('job.cropOff') : aspect}
@@ -182,8 +182,8 @@ export function ImageSettings({ shown, settings, onChange, t, file }: GroupProps
           </div>
 
           {shown.has('targetSize') && (
-            <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
-              <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
+            <div className="bg-(--bg-tertiary)/60 border border-(--border-secondary) rounded-xl p-3 flex flex-col justify-between gap-2">
+              <span className="text-(--text-muted) text-xs uppercase tracking-wider font-semibold">
                 {t('job.maxSize')}
               </span>
               <div className="flex items-center gap-2">
@@ -194,11 +194,11 @@ export function ImageSettings({ shown, settings, onChange, t, file }: GroupProps
                   onChange={(e) =>
                     onChange({ imageTargetSizeKb: Math.max(0, Number(e.target.value)) })
                   }
-                  className="flex-1 bg-[var(--bg-secondary)] border border-[var(--border-secondary)] text-primary text-xs rounded px-2.5 py-1.5 focus:outline-none focus:border-[var(--accent)] transition-colors"
+                  className="flex-1 bg-(--bg-secondary) border border-(--border-secondary) text-primary text-xs rounded-sm px-2.5 py-1.5 focus:outline-hidden focus:border-(--accent) transition-colors"
                   placeholder={t('job.maxSizeOff')}
                   aria-label={t('job.maxSize')}
                 />
-                <span className="text-[var(--text-muted)] text-xs">KB</span>
+                <span className="text-(--text-muted) text-xs">KB</span>
               </div>
             </div>
           )}

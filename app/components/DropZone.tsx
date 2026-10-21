@@ -16,7 +16,7 @@ export function DragOverlay({ dragCategory }: { dragCategory: string | null }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.15 }}
-      className="fixed inset-0 z-50 bg-[var(--bg-primary)]/85 backdrop-blur-md flex flex-col items-center justify-center p-6 border-4 border-dashed border-[var(--accent)] pointer-events-none"
+      className="fixed inset-0 z-50 bg-(--bg-primary)/85 backdrop-blur-md flex flex-col items-center justify-center p-6 border-4 border-dashed border-(--accent) pointer-events-none"
     >
       <div
         className="text-6xl sm:text-7xl font-bold mb-4"
@@ -30,7 +30,7 @@ export function DragOverlay({ dragCategory }: { dragCategory: string | null }) {
       >
         {dragCategory ? t(`dropzone.${dragCategory}`) : t('dropzone.anywhere')}
       </div>
-      <p className="text-sm text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-mono)' }}>
+      <p className="text-sm text-(--text-primary)" style={{ fontFamily: 'var(--font-mono)' }}>
         {t('dropzone.subtitle')} · {t('dropzone.local')}
       </p>
     </motion.div>
@@ -84,8 +84,8 @@ export function DropZone({
                   transition-all duration-300
                   ${
                     dragging
-                      ? 'border-[var(--accent)] bg-[var(--accent)]/5 scale-[1.01]'
-                      : 'border-[var(--border-secondary)] hover:border-[var(--border-hover)] bg-[var(--bg-secondary)]'
+                      ? 'border-(--accent) bg-(--accent)/5 scale-[1.01]'
+                      : 'border-(--border-secondary) hover:border-(--border-hover) bg-(--bg-secondary)'
                   }
                 `}
       >
@@ -110,7 +110,7 @@ export function DropZone({
         <div className={dragging ? 'opacity-0' : 'opacity-100 transition-opacity duration-200'}>
           <div
             style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}
-            className="text-6xl text-[var(--accent-ink)] mb-4"
+            className="text-6xl text-(--accent-ink) mb-4"
           >
             <svg
               width="48"
@@ -130,7 +130,7 @@ export function DropZone({
           </div>
           <div
             style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}
-            className="text-xl text-[var(--text-primary)] mb-2"
+            className="text-xl text-(--text-primary) mb-2"
           >
             {t('dropzone.title')}
           </div>
@@ -140,7 +140,7 @@ export function DropZone({
               e.stopPropagation(); // the zone's own click would open a second picker
               onBrowse();
             }}
-            className="block mx-auto text-[var(--text-muted)] text-sm mb-4 hover:text-[var(--text-primary)]"
+            className="block mx-auto text-(--text-muted) text-sm mb-4 hover:text-(--text-primary)"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             {t('dropzone.subtitle')}
@@ -151,13 +151,13 @@ export function DropZone({
               e.stopPropagation(); // not the file picker the zone itself opens
               onBrowseFolder();
             }}
-            className="text-xs underline text-[var(--text-muted)] hover:text-[var(--text-primary)] mb-4"
+            className="text-xs underline text-(--text-muted) hover:text-(--text-primary) mb-4"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             {t('dropzone.folder')}
           </button>
           <p
-            className="text-xs text-[var(--text-muted)] -mt-2 mb-4"
+            className="text-xs text-(--text-muted) -mt-2 mb-4"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             {t('dropzone.paste')}

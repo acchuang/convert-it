@@ -54,15 +54,15 @@ export default function NetworkBadge() {
   if (!log) return null;
   return (
     <span
-      className="text-xs text-[var(--text-muted)] inline-flex items-center gap-2"
+      className="text-xs text-(--text-muted) inline-flex items-center gap-2"
       style={{ fontFamily: 'var(--font-mono)' }}
       title={t('network.hint')}
       data-testid="network-badge"
     >
-      {!online && <span className="text-[var(--accent-ink)]">{t('network.offline')}</span>}
+      {!online && <span className="text-(--accent-ink)">{t('network.offline')}</span>}
       <span>
         {t('network.sent')}{' '}
-        <strong className={log.sent ? 'text-[var(--error)]' : 'text-[var(--success)]'}>
+        <strong className={log.sent ? 'text-(--error)' : 'text-(--success)'}>
           {formatFileSize(log.sent)}
         </strong>
       </span>

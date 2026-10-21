@@ -80,20 +80,17 @@ export default async function PairPage({ params }: { params: Promise<{ pair: str
       />
 
       <h1
-        className="text-5xl text-[var(--text-primary)] mb-3"
+        className="text-5xl text-(--text-primary) mb-3"
         style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}
       >
         {copy.heading}
       </h1>
 
-      <p className="text-[var(--text-secondary)] text-sm max-w-2xl leading-relaxed">
+      <p className="text-(--text-secondary) text-sm max-w-2xl leading-relaxed">
         {copy.description}
       </p>
 
-      <p
-        className="mt-3 text-xs text-[var(--text-muted)]"
-        style={{ fontFamily: 'var(--font-mono)' }}
-      >
+      <p className="mt-3 text-xs text-(--text-muted)" style={{ fontFamily: 'var(--font-mono)' }}>
         Encoded with {copy.engine}.
       </p>
 
@@ -103,7 +100,7 @@ export default async function PairPage({ params }: { params: Promise<{ pair: str
             <Link
               key={to}
               href={`/convert/${pair.from}-to-${to}`}
-              className="px-3 py-1 text-xs rounded-full border border-[var(--border-secondary)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent-ink)] transition-colors"
+              className="px-3 py-1 text-xs rounded-full border border-(--border-secondary) text-(--text-secondary) hover:border-(--accent) hover:text-(--accent-ink) transition-colors"
               style={{ fontFamily: 'var(--font-mono)' }}
             >
               {pair.from.toUpperCase()} → {to.toUpperCase()}
@@ -120,7 +117,7 @@ export default async function PairPage({ params }: { params: Promise<{ pair: str
 
       <section className="max-w-5xl mx-auto px-4 pb-16">
         <h2
-          className="text-2xl text-[var(--text-primary)] mb-4"
+          className="text-2xl text-(--text-primary) mb-4"
           style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}
         >
           Questions
@@ -128,8 +125,8 @@ export default async function PairPage({ params }: { params: Promise<{ pair: str
         <dl className="space-y-4">
           {copy.faq.map(({ q, a }) => (
             <div key={q}>
-              <dt className="text-sm text-[var(--text-primary)] mb-1">{q}</dt>
-              <dd className="text-sm text-[var(--text-secondary)] leading-relaxed">{a}</dd>
+              <dt className="text-sm text-(--text-primary) mb-1">{q}</dt>
+              <dd className="text-sm text-(--text-secondary) leading-relaxed">{a}</dd>
             </div>
           ))}
         </dl>

@@ -39,23 +39,23 @@ export default class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="flex flex-col items-center justify-center py-24 px-4 text-center">
           <div
-            className="text-5xl mb-4 text-[var(--error)]"
+            className="text-5xl mb-4 text-(--error)"
             style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
           >
             !
           </div>
-          <p className="text-[var(--text-primary)] mb-2 text-lg">
+          <p className="text-(--text-primary) mb-2 text-lg">
             {(this.props.labels ?? FALLBACK).title}
           </p>
           <p
-            className="text-[var(--text-muted)] text-sm mb-6"
+            className="text-(--text-muted) text-sm mb-6"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             {this.state.error.message}
           </p>
           <button
             onClick={() => this.setState({ error: null })}
-            className="px-6 py-2.5 bg-[var(--accent)] text-[var(--accent-text)] text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
+            className="px-6 py-2.5 bg-(--accent) text-(--accent-text) text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             {(this.props.labels ?? FALLBACK).retry}
