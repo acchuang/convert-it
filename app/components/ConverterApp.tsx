@@ -119,12 +119,11 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
     applyBatch(batchFormat);
   };
 
+  // Mid-drag the browser hides file names; only the MIME type is readable.
   const detectDragCategory = useCallback(
-    (files: FileList) => {
-      if (files.length === 0) return;
-      const ext = getFileExtension(files[0].name);
-      const info = getFormatInfo(ext);
-      setDragCategory(info?.category ?? null);
+    (items: DataTransferItemList) => {
+      const kind = items[0]?.type.split('/')[0];
+      setDragCategory(kind === 'image' || kind === 'video' || kind === 'audio' ? kind : null);
     },
     [setDragCategory],
   );
@@ -134,19 +133,19 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
   useEffect(() => {
     let dragCounter = 0;
 
+    // Dragged text (into a settings field, say) is left to the browser.
+    const hasFiles = (e: DragEvent) => !!e.dataTransfer?.types.includes('Files');
+
     const onWindowDragEnter = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
       e.preventDefault();
       dragCounter++;
-      if (e.dataTransfer && e.dataTransfer.types.includes('Files')) {
-        setDragging(true);
-        if (e.dataTransfer.items) {
-          const files = e.dataTransfer.files;
-          if (files && files.length > 0) detectDragCategory(files);
-        }
-      }
+      setDragging(true);
+      detectDragCategory(e.dataTransfer!.items);
     };
 
     const onWindowDragLeave = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
       e.preventDefault();
       dragCounter--;
       if (dragCounter <= 0) {
@@ -157,13 +156,13 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
     };
 
     const onWindowDragOver = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
       e.preventDefault();
-      if (e.dataTransfer) {
-        e.dataTransfer.dropEffect = 'copy';
-      }
+      e.dataTransfer!.dropEffect = 'copy';
     };
 
     const onWindowDrop = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
       e.preventDefault();
       dragCounter = 0;
       setDragging(false);
@@ -190,13 +189,17 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
 
   // Keyboard shortcuts: Cmd/Ctrl + Enter converts all queued jobs; Cmd/Ctrl + Z
   // undoes the last remove or Clear (outside text fields, which keep their own undo).
+  const convertAllRef = useRef(convertAll);
+  useEffect(() => {
+    convertAllRef.current = convertAll;
+  }, [convertAll]);
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-        e.preventDefault();
-        convertAll();
-      }
       const typing = e.target instanceof HTMLElement && e.target.closest('input, textarea, select');
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !typing) {
+        e.preventDefault();
+        convertAllRef.current();
+      }
       if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key === 'z' && removed.length && !typing) {
         e.preventDefault();
         undoRemove();
@@ -204,7 +207,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [convertAll, removed.length, undoRemove]);
+  }, [removed.length, undoRemove]);
 
   // Paste anywhere outside a text field: files and screenshots as they are,
   // text as a file named for what it looks like (lib/paste).
@@ -252,7 +255,7 @@ export default function ConverterApp({ preferredTarget, intro }: ConverterAppPro
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
     setDragging(true);
-    if (e.dataTransfer.files.length) detectDragCategory(e.dataTransfer.files);
+    detectDragCategory(e.dataTransfer.items);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
