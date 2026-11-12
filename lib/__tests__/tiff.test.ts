@@ -14,10 +14,11 @@ class NodeImageData {
 }
 
 let decodeTiff: typeof import('@/lib/tiff').decodeTiff;
+let tiffPages: typeof import('@/lib/tiff').tiffPages;
 
 beforeAll(async () => {
   vi.stubGlobal('ImageData', NodeImageData);
-  ({ decodeTiff } = await import('@/lib/tiff'));
+  ({ decodeTiff, tiffPages } = await import('@/lib/tiff'));
 });
 
 const fixture = (name: string) =>
@@ -78,9 +79,35 @@ describe('decodeTiff', () => {
     expectQuads(await decodeTiff(fixture('two-pages.tiff')));
   });
 
+  it('reads the first page even when a later one is broken', async () => {
+    expectQuads(await decodeTiff(fixture('two-pages-bad.tiff')));
+  });
+
   it('fails as corrupt input on bytes that are not a TIFF', async () => {
     await expect(decodeTiff(new Blob(['II*\0garbage']))).rejects.toMatchObject({
       code: 'corrupt-input',
     });
+  });
+});
+
+describe('tiffPages', () => {
+  it('counts the pages up front and reads each in turn', async () => {
+    const { count, pages } = await tiffPages(fixture('two-pages.tiff'));
+    expect(count).toBe(2);
+    const [first, second] = [...pages];
+    expectQuads(first);
+    expect([second.width, second.height]).toEqual([8, 8]);
+  });
+
+  it('names the page that will not decode', async () => {
+    const { count, pages } = await tiffPages(fixture('two-pages-bad.tiff'));
+    expect(count).toBe(2);
+    expectQuads(pages.next().value as ImageData);
+    expect(() => pages.next()).toThrow(
+      expect.objectContaining({
+        code: 'corrupt-input',
+        message: expect.stringMatching(/page 2 of 2/),
+      }),
+    );
   });
 });

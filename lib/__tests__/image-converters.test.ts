@@ -1,4 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import JSZip from 'jszip';
 import { convertImage } from '@/lib/image-converters';
 
 // The WASM codecs are fetched at runtime (see lib/image-encode); in jsdom there
@@ -63,6 +66,17 @@ describe('convertImage', () => {
     const result = await convertImage(file, 'png', 'ico');
     expect(result.type).toBe('image/x-icon');
     expect(result.size).toBeGreaterThan(0);
+  });
+});
+
+describe('multi-page TIFF to image', () => {
+  it('zips every page, named by page', async () => {
+    const bytes = readFileSync(join(__dirname, 'fixtures', 'tiff', 'two-pages.tiff'));
+    const file = new File([bytes], 'two-pages.tiff', { type: 'image/tiff' });
+    const out = await convertImage(file, 'tiff', 'png');
+    expect(out.type).toBe('application/zip');
+    const names = Object.keys((await JSZip.loadAsync(await out.arrayBuffer())).files).sort();
+    expect(names).toEqual(['two-pages-page-1.png', 'two-pages-page-2.png']);
   });
 });
 

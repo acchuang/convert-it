@@ -75,16 +75,15 @@ export async function convertImage(
   settings?: ConversionSettings,
   onProgress?: (pct: number) => void,
 ): Promise<Blob> {
+  if (isTiff(sourceExt)) return tiffToImage(file, targetExt, settings, onProgress);
   // No browser decodes JPEG XL natively except Safari, so it goes through
-  // jSquash; TIFF (Safari only, too) through UTIF.
+  // jSquash.
   const imageData =
     sourceExt === 'svg'
       ? await renderSvgToImageData(await file.text())
       : sourceExt === 'jxl'
         ? await decodeJxl(file)
-        : isTiff(sourceExt)
-          ? await decodeTiffLazily(file)
-          : await decodeToImageData(file);
+        : await decodeToImageData(file);
 
   const blob = await finishImage(imageData, targetExt, settings, onProgress);
   return withMetadata(file, sourceExt, blob, targetExt, settings);
@@ -103,6 +102,28 @@ export async function withMetadata(
 }
 
 const isTiff = (ext: string) => ext === 'tiff' || ext === 'tif';
+
+// TIFF (only Safari decodes it) through UTIF. A multi-page file's pages are
+// the content, so all of them come out, zipped like PDF pages.
+async function tiffToImage(
+  file: File,
+  targetExt: string,
+  settings?: ConversionSettings,
+  onProgress?: (pct: number) => void,
+): Promise<Blob> {
+  const { count, pages } = await (await import('./tiff')).tiffPages(file);
+  if (count === 1)
+    return finishImage(pages.next().value as ImageData, targetExt, settings, onProgress);
+  const base = file.name.replace(/\.[^.]+$/, '');
+  const JSZip = (await import('jszip')).default;
+  const zip = new JSZip();
+  let n = 0;
+  for (const page of pages) {
+    zip.file(`${base}-page-${++n}.${targetExt}`, await finishImage(page, targetExt, settings));
+    onProgress?.(Math.round((n / count) * 100));
+  }
+  return zip.generateAsync({ type: 'blob', mimeType: 'application/zip' });
+}
 
 async function decodeTiffLazily(file: Blob): Promise<ImageData> {
   return (await import('./tiff')).decodeTiff(file);

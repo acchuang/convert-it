@@ -46,14 +46,21 @@ const MARGIN = 36; // half an inch
 const PX_TO_PT = 72 / 96; // images are taken as 96 dpi
 
 /** Bytes pdf-lib can embed as they are (JPEG, PNG), or re-encoded to one of them. */
-async function embeddable(file: File): Promise<{ bytes: Uint8Array; kind: 'jpg' | 'png' }> {
-  const ext = getFileExtension(file.name);
-  // JPEGs go in as they are, minus EXIF/XMP/IPTC: a photo's location
-  // shouldn't ride along into the PDF.
-  if (ext === 'jpg' || ext === 'jpeg')
-    return { bytes: stripJpegMetadata(new Uint8Array(await file.arrayBuffer())), kind: 'jpg' };
-  if (ext === 'png') return { bytes: new Uint8Array(await file.arrayBuffer()), kind: 'png' };
-  const image = await decodeAnyImage(file, ext);
+async function embeddable(
+  source: File | ImageData,
+): Promise<{ bytes: Uint8Array; kind: 'jpg' | 'png' }> {
+  let image: ImageData;
+  if (source instanceof File) {
+    const ext = getFileExtension(source.name);
+    // JPEGs go in as they are, minus EXIF/XMP/IPTC: a photo's location
+    // shouldn't ride along into the PDF.
+    if (ext === 'jpg' || ext === 'jpeg')
+      return { bytes: stripJpegMetadata(new Uint8Array(await source.arrayBuffer())), kind: 'jpg' };
+    if (ext === 'png') return { bytes: new Uint8Array(await source.arrayBuffer()), kind: 'png' };
+    image = await decodeAnyImage(source, ext);
+  } else {
+    image = source;
+  }
   // Opaque images as JPEG (a photo as PNG is several times larger); anything
   // with transparency as PNG, which keeps it.
   let opaque = true;
@@ -69,8 +76,8 @@ async function embeddable(file: File): Promise<{ bytes: Uint8Array; kind: 'jpg' 
 }
 
 /** Adds one page holding the image: its own size, or fitted onto A4/Letter. */
-async function addImagePage(doc: PDFDocument, file: File, pageSize: string) {
-  const { bytes, kind } = await embeddable(file);
+async function addImagePage(doc: PDFDocument, source: File | ImageData, pageSize: string) {
+  const { bytes, kind } = await embeddable(source);
   const image = kind === 'jpg' ? await doc.embedJpg(bytes) : await doc.embedPng(bytes);
   const natural = { width: image.width * PX_TO_PT, height: image.height * PX_TO_PT };
   const paper = PAGE_SIZES[pageSize];
@@ -86,9 +93,30 @@ async function addImagePage(doc: PDFDocument, file: File, pageSize: string) {
   doc.addPage([w, h]).drawImage(image, { x: (w - width) / 2, y: (h - height) / 2, width, height });
 }
 
+/** One page per image; a multi-page TIFF gets every page, decoded one at a time. */
+async function addImagePages(
+  doc: PDFDocument,
+  file: File,
+  pageSize: string,
+  onPage?: (done: number, count: number) => void,
+) {
+  const ext = getFileExtension(file.name);
+  if (ext !== 'tiff' && ext !== 'tif') {
+    await addImagePage(doc, file, pageSize);
+    return;
+  }
+  const { tiffPages } = await import('./tiff');
+  const { count, pages } = await tiffPages(file);
+  let done = 0;
+  for (const page of pages) {
+    await addImagePage(doc, page, pageSize);
+    onPage?.(++done, count);
+  }
+}
+
 // --- Converters ----------------------------------------------------------------------
 
-/** image → PDF: one page. */
+/** image → PDF: one page, or one per page of a TIFF. */
 export async function imageToPdf(
   file: File,
   _sourceExt: string,
@@ -98,7 +126,9 @@ export async function imageToPdf(
 ): Promise<Blob> {
   const doc = await PDFDocument.create();
   try {
-    await addImagePage(doc, file, settings?.pdfPageSize ?? 'a4');
+    await addImagePages(doc, file, settings?.pdfPageSize ?? 'a4', (done, count) =>
+      onProgress?.(Math.round((done / count) * 90)),
+    );
   } catch (err) {
     if (err instanceof ConversionError) throw err;
     throw new ConversionError('corrupt-input', err instanceof Error ? err.message : String(err));
@@ -215,7 +245,7 @@ export async function mergePdf(
         const src = await loadPdf(file);
         for (const page of await out.copyPages(src, src.getPageIndices())) out.addPage(page);
       } else {
-        await addImagePage(out, file, settings?.pdfPageSize ?? 'a4');
+        await addImagePages(out, file, settings?.pdfPageSize ?? 'a4');
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
