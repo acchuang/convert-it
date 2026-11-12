@@ -20,8 +20,8 @@ export function DocumentSettings({ shown, settings, onChange, t }: GroupProps) {
   return (
     <>
       {shown.has('pdfPages') && (
-        <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
-          <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
+        <div className="bg-(--bg-tertiary)/60 border border-(--border-secondary) rounded-xl p-3 flex flex-col justify-between gap-2">
+          <span className="text-(--text-muted) text-xs uppercase tracking-wider font-semibold">
             {t('job.pdfPages')}
           </span>
           <div className="flex gap-1">
@@ -29,10 +29,10 @@ export function DocumentSettings({ shown, settings, onChange, t }: GroupProps) {
               <button
                 key={String(all)}
                 onClick={() => onChange({ pdfAllPages: all })}
-                className={`flex-1 py-1 text-xs rounded transition-colors ${
+                className={`flex-1 py-1 text-xs rounded-sm transition-colors ${
                   settings.pdfAllPages === all
-                    ? 'bg-[var(--accent)] text-[var(--accent-text)] font-semibold'
-                    : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
+                    ? 'bg-(--accent) text-(--accent-text) font-semibold'
+                    : 'bg-(--bg-secondary) text-(--text-secondary) border border-(--border-secondary) hover:border-(--border-hover)'
                 }`}
               >
                 {all ? t('job.pdfAllPages') : t('job.pdfFirstPage')}
@@ -43,8 +43,8 @@ export function DocumentSettings({ shown, settings, onChange, t }: GroupProps) {
       )}
 
       {shown.has('pdfScale') && (
-        <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
-          <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
+        <div className="bg-(--bg-tertiary)/60 border border-(--border-secondary) rounded-xl p-3 flex flex-col justify-between gap-2">
+          <span className="text-(--text-muted) text-xs uppercase tracking-wider font-semibold">
             {t('job.pdfScale')}
           </span>
           <div className="flex gap-1">
@@ -52,10 +52,10 @@ export function DocumentSettings({ shown, settings, onChange, t }: GroupProps) {
               <button
                 key={n}
                 onClick={() => onChange({ pdfScale: n })}
-                className={`flex-1 py-1 text-xs rounded transition-colors ${
+                className={`flex-1 py-1 text-xs rounded-sm transition-colors ${
                   settings.pdfScale === n
-                    ? 'bg-[var(--accent)] text-[var(--accent-text)] font-semibold'
-                    : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
+                    ? 'bg-(--accent) text-(--accent-text) font-semibold'
+                    : 'bg-(--bg-secondary) text-(--text-secondary) border border-(--border-secondary) hover:border-(--border-hover)'
                 }`}
               >
                 {n}x
@@ -76,11 +76,11 @@ export function DocumentSettings({ shown, settings, onChange, t }: GroupProps) {
               onChange={(e) => onChange({ subtitleOffset: Number(e.target.value) || 0 })}
               placeholder="0"
               aria-label={t('job.subtitleOffset')}
-              className="flex-1 bg-[var(--bg-secondary)] border border-[var(--border-secondary)] text-primary text-xs rounded px-2.5 py-1.5 focus:outline-none focus:border-[var(--accent)]"
+              className="flex-1 bg-(--bg-secondary) border border-(--border-secondary) text-primary text-xs rounded-sm px-2.5 py-1.5 focus:outline-hidden focus:border-(--accent)"
             />
-            <span className="text-[var(--text-muted)] text-xs">s</span>
+            <span className="text-(--text-muted) text-xs">s</span>
           </div>
-          <span className="text-xs text-[var(--text-muted)]">{t('job.subtitleOffsetHint')}</span>
+          <span className="text-xs text-(--text-muted)">{t('job.subtitleOffsetHint')}</span>
         </div>
       )}
 
@@ -91,7 +91,7 @@ export function DocumentSettings({ shown, settings, onChange, t }: GroupProps) {
             value={settings.ocrLanguage}
             onChange={(e) => onChange({ ocrLanguage: e.target.value })}
             aria-label={t('job.ocrLanguage')}
-            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-secondary)] text-primary text-xs rounded-lg px-2.5 py-1.5 cursor-pointer focus:outline-none focus:border-[var(--accent)]"
+            className="w-full bg-(--bg-secondary) border border-(--border-secondary) text-primary text-xs rounded-lg px-2.5 py-1.5 cursor-pointer focus:outline-hidden focus:border-(--accent)"
           >
             {Object.entries(OCR_LANGUAGE_NAMES).map(([code, name]) => (
               <option key={code} value={code}>
@@ -99,7 +99,7 @@ export function DocumentSettings({ shown, settings, onChange, t }: GroupProps) {
               </option>
             ))}
           </select>
-          <span className="text-xs text-[var(--text-muted)]">{t('job.ocrHint')}</span>
+          <span className="text-xs text-(--text-muted)">{t('job.ocrHint')}</span>
         </div>
       )}
 
@@ -114,13 +114,13 @@ export function DocumentSettings({ shown, settings, onChange, t }: GroupProps) {
               aria-label={t('job.pdfPages2')}
               aria-invalid={!isPageRangeSyntax(settings.pdfPageRange)}
               placeholder="1-3, 5, 8-"
-              className={`w-full bg-[var(--bg-secondary)] border text-primary text-xs rounded px-2 py-1 focus:outline-none transition-colors ${
+              className={`w-full bg-(--bg-secondary) border text-primary text-xs rounded-sm px-2 py-1 focus:outline-hidden transition-colors ${
                 isPageRangeSyntax(settings.pdfPageRange)
-                  ? 'border-[var(--border-secondary)] focus:border-[var(--accent)]'
-                  : 'border-[var(--error)]'
+                  ? 'border-(--border-secondary) focus:border-(--accent)'
+                  : 'border-(--error)'
               }`}
             />
-            <span className="text-xs text-[var(--text-muted)]">{t('job.pdfPagesHint')}</span>
+            <span className="text-xs text-(--text-muted)">{t('job.pdfPagesHint')}</span>
           </div>
           <div className={CARD}>
             <span className={LABEL}>{t('job.pdfRotate')}</span>
@@ -168,7 +168,7 @@ export function DocumentSettings({ shown, settings, onChange, t }: GroupProps) {
               </button>
             ))}
           </div>
-          <span className="text-xs text-[var(--text-muted)]">{t('job.pdfCompressHint')}</span>
+          <span className="text-xs text-(--text-muted)">{t('job.pdfCompressHint')}</span>
         </div>
       )}
 

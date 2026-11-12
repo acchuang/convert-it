@@ -43,8 +43,8 @@ function Caption({
   align?: 'left' | 'right';
 }) {
   return (
-    <span className={`text-xs text-[var(--text-muted)] ${align === 'right' ? 'text-right' : ''}`}>
-      <span className="text-[var(--text-secondary)] font-semibold">{label}</span> ·{' '}
+    <span className={`text-xs text-(--text-muted) ${align === 'right' ? 'text-right' : ''}`}>
+      <span className="text-(--text-secondary) font-semibold">{label}</span> ·{' '}
       {formatFileSize(bytes)}
       {size && ` · ${size[0]}×${size[1]}`}
     </span>
@@ -81,7 +81,7 @@ function Compare({ before, after, t }: { before: File; after: Blob; t: (key: str
     <div className="flex flex-col gap-2">
       <div
         ref={box}
-        className="relative h-64 bg-[var(--bg-primary)] rounded-lg overflow-hidden cursor-ew-resize select-none touch-none"
+        className="relative h-64 bg-(--bg-primary) rounded-lg overflow-hidden cursor-ew-resize select-none touch-none"
         style={{ border: '1px solid var(--border-primary)' }}
         onPointerDown={drag}
         onPointerMove={drag}
@@ -106,7 +106,7 @@ function Compare({ before, after, t }: { before: File; after: Blob; t: (key: str
           style={{ clipPath: `inset(0 0 0 ${split}%)` }}
         />
         <div
-          className="absolute top-0 bottom-0 w-0.5 bg-[var(--accent)] pointer-events-none"
+          className="absolute top-0 bottom-0 w-0.5 bg-(--accent) pointer-events-none"
           style={{ left: `calc(${split}% - 1px)` }}
           aria-hidden="true"
         />
@@ -118,7 +118,7 @@ function Compare({ before, after, t }: { before: File; after: Blob; t: (key: str
         value={split}
         onChange={(e) => setSplit(Number(e.target.value))}
         aria-label={t('job.compare')}
-        className="w-full accent-[var(--accent)]"
+        className="w-full accent-(--accent)"
       />
       <div className="flex justify-between gap-2" style={{ fontFamily: 'var(--font-mono)' }}>
         <Caption label={t('job.before')} bytes={before.size} size={sizes.before} />
@@ -135,12 +135,12 @@ function ImageOnly({ blob, t }: { blob: Blob; t: (key: string) => string }) {
   return (
     <div className="flex flex-col gap-2">
       <div
-        className="bg-[var(--bg-primary)] rounded-lg p-2 flex items-center justify-center max-h-80 overflow-hidden"
+        className="bg-(--bg-primary) rounded-lg p-2 flex items-center justify-center max-h-80 overflow-hidden"
         style={{ border: '1px solid var(--border-primary)' }}
       >
         {broken || !url ? (
           <p
-            className="text-xs text-[var(--text-muted)] py-4"
+            className="text-xs text-(--text-muted) py-4"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             {t('job.previewUnavailable')}
@@ -152,7 +152,7 @@ function ImageOnly({ blob, t }: { blob: Blob; t: (key: string) => string }) {
             alt={t('job.preview')}
             onLoad={(e) => setSize([e.currentTarget.naturalWidth, e.currentTarget.naturalHeight])}
             onError={() => setBroken(true)}
-            className="max-w-full max-h-64 object-contain rounded"
+            className="max-w-full max-h-64 object-contain rounded-sm"
           />
         )}
       </div>
@@ -177,7 +177,7 @@ function Player({
   if (broken || !url) {
     return (
       <p
-        className="text-xs text-[var(--text-muted)] py-4 text-center"
+        className="text-xs text-(--text-muted) py-4 text-center"
         style={{ fontFamily: 'var(--font-mono)' }}
       >
         {t('job.previewUnavailable')}
@@ -262,14 +262,14 @@ export function PreviewPanel({
           <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--border-primary)' }}>
             <div className="flex items-center justify-between mb-2">
               <span
-                className="text-xs text-[var(--text-muted)] uppercase tracking-wider"
+                className="text-xs text-(--text-muted) uppercase tracking-wider"
                 style={{ fontFamily: 'var(--font-mono)' }}
               >
                 {t('job.preview')}
               </span>
               <button
                 onClick={onClose}
-                className="text-[var(--text-dim)] hover:text-[var(--error)] transition-colors"
+                className="text-(--text-dim) hover:text-(--error) transition-colors"
                 aria-label={t('job.closePreview')}
               >
                 <svg
@@ -298,11 +298,11 @@ export function PreviewPanel({
 
             {textContent !== null && (
               <div
-                className="bg-[var(--bg-primary)] rounded-lg p-3 max-h-80 overflow-auto"
+                className="bg-(--bg-primary) rounded-lg p-3 max-h-80 overflow-auto"
                 style={{ border: '1px solid var(--border-primary)' }}
               >
                 <pre
-                  className="text-xs text-[var(--text-secondary)] whitespace-pre-wrap break-all"
+                  className="text-xs text-(--text-secondary) whitespace-pre-wrap break-all"
                   style={{ fontFamily: 'var(--font-mono)' }}
                 >
                   {textContent.slice(0, 50000)}
@@ -325,7 +325,7 @@ export function PreviewPanel({
 
             {(!kind || (showText && settled && textContent === null)) && (
               <p
-                className="text-xs text-[var(--text-muted)] py-4 text-center"
+                className="text-xs text-(--text-muted) py-4 text-center"
                 style={{ fontFamily: 'var(--font-mono)' }}
               >
                 {t('job.previewUnavailable')}

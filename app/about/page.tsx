@@ -63,7 +63,7 @@ export default function AboutPage() {
     >
       {/* Header */}
       <header
-        className="border-b border-app px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-sm"
+        className="border-b border-app px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-xs"
         style={{ backgroundColor: 'var(--header-bg)' }}
         role="banner"
       >
@@ -72,8 +72,8 @@ export default function AboutPage() {
           className="text-2xl sm:text-3xl tracking-wide whitespace-nowrap"
         >
           <Link href="/" className="hover:opacity-80 transition-opacity">
-            <span className="text-[var(--accent-ink)]">Convert</span>
-            <span className="text-[var(--text-primary)]">-it</span>
+            <span className="text-(--accent-ink)">Convert</span>
+            <span className="text-(--text-primary)">-it</span>
           </Link>
         </div>
 
@@ -82,7 +82,7 @@ export default function AboutPage() {
 
           <button
             onClick={toggleTheme}
-            className="w-9 h-9 flex items-center justify-center rounded-lg text-[var(--text-secondary)] hover:text-[var(--accent-ink)] hover:bg-[var(--bg-tertiary)] transition-all"
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-(--text-secondary) hover:text-(--accent-ink) hover:bg-(--bg-tertiary) transition-all"
             aria-label={theme === 'dark' ? t('header.themeLight') : t('header.themeDark')}
           >
             {theme === 'dark' ? (
@@ -113,7 +113,7 @@ export default function AboutPage() {
 
           <Link
             href="/"
-            className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+            className="text-xs text-(--text-secondary) hover:text-(--text-primary) transition-colors"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             {t('header.home')}
@@ -126,21 +126,21 @@ export default function AboutPage() {
         <section className="mb-20">
           <div
             style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
-            className="text-6xl text-[var(--accent-ink)] mb-6"
+            className="text-6xl text-(--accent-ink) mb-6"
           >
             {t('about.heading')}
           </div>
-          <p className="text-lg text-[var(--text-secondary)] leading-relaxed mb-6">
-            <strong className="text-[var(--text-primary)]">Convert-it</strong> {t('about.intro')}
+          <p className="text-lg text-(--text-secondary) leading-relaxed mb-6">
+            <strong className="text-(--text-primary)">Convert-it</strong> {t('about.intro')}
           </p>
-          <p className="text-[var(--text-muted)] leading-relaxed">{t('about.intro2')}</p>
+          <p className="text-(--text-muted) leading-relaxed">{t('about.intro2')}</p>
         </section>
 
         {/* How it works */}
         <section className="mb-20">
           <h2
             style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}
-            className="text-2xl text-[var(--text-primary)] mb-8"
+            className="text-2xl text-(--text-primary) mb-8"
           >
             {t('about.howHeading')}
           </h2>
@@ -148,21 +148,21 @@ export default function AboutPage() {
             {[1, 2, 3].map((n) => (
               <div
                 key={n}
-                className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6"
+                className="bg-(--bg-secondary) border border-(--border-primary) rounded-2xl p-6"
               >
                 <div
                   style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}
-                  className="text-3xl text-[var(--accent-ink)] mb-3"
+                  className="text-3xl text-(--accent-ink) mb-3"
                 >
                   0{n}
                 </div>
                 <div
                   style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}
-                  className="text-lg text-[var(--text-primary)] mb-2"
+                  className="text-lg text-(--text-primary) mb-2"
                 >
                   {t(`about.step${n}.title`)}
                 </div>
-                <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+                <p className="text-sm text-(--text-muted) leading-relaxed">
                   {t(`about.step${n}.desc`)}
                 </p>
               </div>
@@ -174,7 +174,7 @@ export default function AboutPage() {
         <section className="mb-20">
           <h2
             style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}
-            className="text-2xl text-[var(--text-primary)] mb-8"
+            className="text-2xl text-(--text-primary) mb-8"
           >
             {t('about.formatsHeading')}
           </h2>
@@ -182,21 +182,21 @@ export default function AboutPage() {
             {formats.map((f) => (
               <div
                 key={f.catKey}
-                className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-5 flex items-start gap-4"
+                className="bg-(--bg-secondary) border border-(--border-primary) rounded-xl p-5 flex items-start gap-4"
               >
                 <div
-                  className="w-3 h-3 rounded-full flex-shrink-0 mt-1"
+                  className="w-3 h-3 rounded-full shrink-0 mt-1"
                   style={{ backgroundColor: f.color }}
                 />
                 <div>
                   <div
                     style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}
-                    className="text-lg text-[var(--text-primary)] mb-1"
+                    className="text-lg text-(--text-primary) mb-1"
                   >
                     {t(`dropzone.${f.catKey}`)}
                   </div>
                   <p
-                    className="text-xs text-[var(--text-muted)] leading-relaxed"
+                    className="text-xs text-(--text-muted) leading-relaxed"
                     style={{ fontFamily: 'var(--font-mono)' }}
                   >
                     {f.exts}
@@ -211,21 +211,19 @@ export default function AboutPage() {
         <section className="mb-20">
           <h2
             style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}
-            className="text-2xl text-[var(--text-primary)] mb-6"
+            className="text-2xl text-(--text-primary) mb-6"
           >
             {t('about.privacyHeading')}
           </h2>
-          <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6">
-            <p className="text-[var(--text-secondary)] leading-relaxed mb-4">
-              <strong className="text-[var(--text-primary)]">{t('about.privacy1')}</strong>
+          <div className="bg-(--bg-secondary) border border-(--border-primary) rounded-2xl p-6">
+            <p className="text-(--text-secondary) leading-relaxed mb-4">
+              <strong className="text-(--text-primary)">{t('about.privacy1')}</strong>
             </p>
-            <p className="text-sm text-[var(--text-muted)] leading-relaxed">
-              {t('about.privacy2')}
-            </p>
-            <h3 className="text-sm font-semibold text-[var(--text-primary)] mt-6 mb-2">
+            <p className="text-sm text-(--text-muted) leading-relaxed">{t('about.privacy2')}</p>
+            <h3 className="text-sm font-semibold text-(--text-primary) mt-6 mb-2">
               {t('about.storedHeading')}
             </h3>
-            <ul className="list-disc pl-5 space-y-1 text-sm text-[var(--text-muted)] leading-relaxed">
+            <ul className="list-disc pl-5 space-y-1 text-sm text-(--text-muted) leading-relaxed">
               {Array.from({ length: 7 }, (_, i) => (
                 <li key={i}>{t(`about.stored${i + 1}`)}</li>
               ))}
@@ -237,18 +235,18 @@ export default function AboutPage() {
         <section className="mb-20">
           <h2
             style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}
-            className="text-2xl text-[var(--text-primary)] mb-6"
+            className="text-2xl text-(--text-primary) mb-6"
           >
             {t('about.ossHeading')}
           </h2>
-          <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6">
-            <p className="text-[var(--text-secondary)] leading-relaxed mb-4">{t('about.oss1')}</p>
+          <div className="bg-(--bg-secondary) border border-(--border-primary) rounded-2xl p-6">
+            <p className="text-(--text-secondary) leading-relaxed mb-4">{t('about.oss1')}</p>
             <div className="flex flex-wrap gap-3">
               <a
                 href="https://github.com/acchuang/convert-it"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--border-secondary)] rounded-lg text-xs text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] transition-all"
+                className="inline-flex items-center gap-2 px-4 py-2 border border-(--border-secondary) rounded-lg text-xs text-(--text-muted) hover:border-(--border-hover) hover:text-(--text-primary) transition-all"
                 style={{ fontFamily: 'var(--font-mono)' }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -260,7 +258,7 @@ export default function AboutPage() {
                 href="https://buymeacoffee.com/acchuang"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--border-secondary)] rounded-lg text-xs text-[var(--text-muted)] hover:border-[#FF813F] hover:text-[#FF813F] transition-all"
+                className="inline-flex items-center gap-2 px-4 py-2 border border-(--border-secondary) rounded-lg text-xs text-(--text-muted) hover:border-[#FF813F] hover:text-[#FF813F] transition-all"
                 style={{ fontFamily: 'var(--font-mono)' }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -276,15 +274,15 @@ export default function AboutPage() {
         <section className="mb-20">
           <h2
             style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}
-            className="text-2xl text-[var(--text-primary)] mb-6"
+            className="text-2xl text-(--text-primary) mb-6"
           >
             {t('about.improvementsHeading')}
           </h2>
-          <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6 space-y-3">
+          <div className="bg-(--bg-secondary) border border-(--border-primary) rounded-2xl p-6 space-y-3">
             {Array.from({ length: 61 }, (_, i) => i + 1).map((n) => (
               <div key={n} className="flex items-start gap-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] flex-shrink-0 mt-2" />
-                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                <div className="w-1.5 h-1.5 rounded-full bg-(--accent) shrink-0 mt-2" />
+                <p className="text-sm text-(--text-secondary) leading-relaxed">
                   {t(`about.improvement${n}`)}
                 </p>
               </div>
@@ -296,7 +294,7 @@ export default function AboutPage() {
         <section>
           <h2
             style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}
-            className="text-2xl text-[var(--text-primary)] mb-6"
+            className="text-2xl text-(--text-primary) mb-6"
           >
             {t('about.techHeading')}
           </h2>
@@ -304,15 +302,15 @@ export default function AboutPage() {
             {techStack.map((tech) => (
               <div
                 key={tech.labelKey}
-                className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-4 text-center"
+                className="bg-(--bg-secondary) border border-(--border-primary) rounded-xl p-4 text-center"
               >
                 <div
-                  className="text-xs text-[var(--text-muted)] mb-1 uppercase tracking-wider"
+                  className="text-xs text-(--text-muted) mb-1 uppercase tracking-wider"
                   style={{ fontFamily: 'var(--font-mono)' }}
                 >
                   {t(tech.labelKey)}
                 </div>
-                <div className="text-sm text-[var(--text-primary)] font-semibold">{tech.val}</div>
+                <div className="text-sm text-(--text-primary) font-semibold">{tech.val}</div>
               </div>
             ))}
           </div>
@@ -321,14 +319,14 @@ export default function AboutPage() {
 
       {/* Footer */}
       <Footer maxWidth="max-w-3xl" navLabel="Navigation">
-        <Link href="/" className="hover:text-[var(--text-primary)] transition-colors">
+        <Link href="/" className="hover:text-(--text-primary) transition-colors">
           {t('header.home').replace('← ', '')}
         </Link>
         <a
           href="https://github.com/acchuang/convert-it"
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:text-[var(--text-primary)] transition-colors"
+          className="hover:text-(--text-primary) transition-colors"
         >
           {t('footer.github')}
         </a>

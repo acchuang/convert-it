@@ -45,7 +45,7 @@ export function MetadataReport({
 
   if (state.status === 'reading') return null;
   const { meta } = state;
-  if (!meta) return <p className="text-xs text-[var(--text-muted)]">{t('job.metaNone')}</p>;
+  if (!meta) return <p className="text-xs text-(--text-muted)">{t('job.metaNone')}</p>;
 
   const rows: [string, string | undefined, boolean?][] = [
     [
@@ -70,12 +70,12 @@ export function MetadataReport({
           .filter(([, value]) => value)
           .map(([label, value, isLocation]) => (
             <div key={label} className="contents">
-              <dt className="text-[var(--text-muted)]">{label}</dt>
+              <dt className="text-(--text-muted)">{label}</dt>
               <dd
                 className={
                   removed(isLocation)
-                    ? 'line-through text-[var(--text-muted)] break-words'
-                    : 'text-primary break-words'
+                    ? 'line-through text-(--text-muted) wrap-break-word'
+                    : 'text-primary wrap-break-word'
                 }
               >
                 {value}
@@ -83,7 +83,7 @@ export function MetadataReport({
             </div>
           ))}
       </dl>
-      <p className="text-xs text-[var(--text-muted)]">
+      <p className="text-xs text-(--text-muted)">
         {mode === 'keep'
           ? t('job.metaWillKeep')
           : mode === 'keep-no-gps'

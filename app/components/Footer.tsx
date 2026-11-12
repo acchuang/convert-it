@@ -14,20 +14,17 @@ export default function Footer({ maxWidth = 'max-w-5xl', navLabel, children }: F
   const { t } = useLocale();
 
   return (
-    <footer className="border-t border-[var(--border-primary)] px-6 py-6 mt-16" role="contentinfo">
+    <footer className="border-t border-(--border-primary) px-6 py-6 mt-16" role="contentinfo">
       <div
         className={`${maxWidth} mx-auto flex flex-col md:flex-row items-center justify-between gap-4`}
       >
-        <span
-          style={{ fontFamily: 'var(--font-mono)' }}
-          className="text-xs text-[var(--text-muted)]"
-        >
+        <span style={{ fontFamily: 'var(--font-mono)' }} className="text-xs text-(--text-muted)">
           {t('footer.copyright')}
         </span>
         <OfflineSupport />
         {children && (
           <nav
-            className="flex gap-6 text-xs text-[var(--text-muted)]"
+            className="flex gap-6 text-xs text-(--text-muted)"
             style={{ fontFamily: 'var(--font-mono)' }}
             aria-label={navLabel ?? ''}
           >

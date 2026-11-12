@@ -109,7 +109,7 @@ export function TrimScrubber({
                 key={field}
                 type="button"
                 onClick={() => onChange({ [field]: round(now) })}
-                className="py-1 text-xs rounded bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]"
+                className="py-1 text-xs rounded-sm bg-(--bg-secondary) text-(--text-secondary) border border-(--border-secondary) hover:border-(--border-hover)"
               >
                 {t(label)} · {formatTimecode(round(now)) || '0:00'}
               </button>

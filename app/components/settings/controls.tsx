@@ -21,13 +21,13 @@ export interface GroupProps {
 }
 
 export const CARD =
-  'bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2';
-export const LABEL = 'text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold';
+  'bg-(--bg-tertiary)/60 border border-(--border-secondary) rounded-xl p-3 flex flex-col justify-between gap-2';
+export const LABEL = 'text-(--text-muted) text-xs uppercase tracking-wider font-semibold';
 export const choice = (on: boolean) =>
-  `flex-1 py-1 text-xs rounded transition-colors ${
+  `flex-1 py-1 text-xs rounded-sm transition-colors ${
     on
-      ? 'bg-[var(--accent)] text-[var(--accent-text)] font-semibold'
-      : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
+      ? 'bg-(--accent) text-(--accent-text) font-semibold'
+      : 'bg-(--bg-secondary) text-(--text-secondary) border border-(--border-secondary) hover:border-(--border-hover)'
   }`;
 
 /** A time typed as 1:30 or 90, committed on blur or Enter; bad input is flagged, not saved. */
@@ -64,10 +64,8 @@ export function TimeField({
       aria-label={label}
       aria-invalid={invalid}
       placeholder={placeholder}
-      className={`w-full bg-[var(--bg-secondary)] border text-primary text-xs rounded px-2 py-1 focus:outline-none transition-colors ${
-        invalid
-          ? 'border-[var(--error)]'
-          : 'border-[var(--border-secondary)] focus:border-[var(--accent)]'
+      className={`w-full bg-(--bg-secondary) border text-primary text-xs rounded-sm px-2 py-1 focus:outline-hidden transition-colors ${
+        invalid ? 'border-(--error)' : 'border-(--border-secondary) focus:border-(--accent)'
       }`}
     />
   );

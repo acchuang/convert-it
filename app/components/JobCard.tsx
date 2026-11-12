@@ -162,7 +162,7 @@ export function JobCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -20 }}
       transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-      className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-4 hover:border-[var(--border-hover)] transition-colors shadow-sm"
+      className="bg-(--bg-secondary) border border-(--border-primary) rounded-2xl p-4 hover:border-(--border-hover) transition-colors shadow-xs"
       role="listitem"
       aria-label={`${job.file.name}`}
     >
@@ -170,17 +170,17 @@ export function JobCard({
       <div className="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
         <div className="flex items-center gap-2.5 min-w-0 flex-1 flex-wrap sm:flex-nowrap">
           <div
-            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+            className="w-2.5 h-2.5 rounded-full shrink-0"
             style={{ backgroundColor: categoryColor }}
             aria-hidden="true"
           />
 
-          <div className="min-w-0 flex-shrink truncate">
+          <div className="min-w-0 shrink truncate">
             <p className="text-sm font-medium text-primary truncate" title={job.file.name}>
               {job.file.name}
             </p>
             <p
-              className="text-xs text-[var(--text-muted)] truncate"
+              className="text-xs text-(--text-muted) truncate"
               style={{ fontFamily: 'var(--font-mono)' }}
             >
               {formatFileSize(job.file.size)}
@@ -188,11 +188,11 @@ export function JobCard({
           </div>
 
           <div
-            className="flex items-center gap-1.5 flex-shrink-0"
+            className="flex items-center gap-1.5 shrink-0"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             <span
-              className="px-2 py-0.5 text-xs rounded-md border flex-shrink-0 font-medium"
+              className="px-2 py-0.5 text-xs rounded-md border shrink-0 font-medium"
               style={{
                 borderColor: tint(categoryColor, 25),
                 color: categoryColor,
@@ -201,16 +201,16 @@ export function JobCard({
               .{job.sourceExt.toUpperCase()}
             </span>
 
-            <span className="text-[var(--text-muted)] text-xs flex-shrink-0" aria-hidden="true">
+            <span className="text-(--text-muted) text-xs shrink-0" aria-hidden="true">
               →
             </span>
 
             {targets.length > 0 ? (
-              <div className="relative inline-flex items-center flex-shrink-0">
+              <div className="relative inline-flex items-center shrink-0">
                 <select
                   value={job.targetExt ?? ''}
                   onChange={(e) => onTargetChange(e.target.value)}
-                  className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] text-primary text-xs rounded-lg pl-2.5 pr-7 py-1.5 appearance-none cursor-pointer hover:border-[var(--border-hover)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+                  className="bg-(--bg-tertiary) border border-(--border-secondary) text-primary text-xs rounded-lg pl-2.5 pr-7 py-1.5 appearance-none cursor-pointer hover:border-(--border-hover) focus:outline-hidden focus:border-(--accent) transition-colors"
                   disabled={job.status === 'converting'}
                   aria-label={t('job.targetFormat')}
                 >
@@ -221,7 +221,7 @@ export function JobCard({
                   ))}
                 </select>
                 <svg
-                  className="absolute right-2 pointer-events-none text-[var(--text-muted)]"
+                  className="absolute right-2 pointer-events-none text-(--text-muted)"
                   width="10"
                   height="10"
                   viewBox="0 0 24 24"
@@ -234,13 +234,13 @@ export function JobCard({
                 </svg>
               </div>
             ) : (
-              <span className="text-xs text-[var(--text-muted)] flex-shrink-0">—</span>
+              <span className="text-xs text-(--text-muted) shrink-0">—</span>
             )}
           </div>
 
           {sizeDelta && (
             <div
-              className="text-xs px-2.5 py-1 rounded-md bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] flex items-center gap-1.5 flex-shrink-0"
+              className="text-xs px-2.5 py-1 rounded-md bg-(--bg-tertiary) border border-(--border-secondary) flex items-center gap-1.5 shrink-0"
               style={{ fontFamily: 'var(--font-mono)' }}
             >
               <span className="text-primary font-medium">
@@ -258,16 +258,16 @@ export function JobCard({
         </div>
 
         {/* Top-right actions: Settings & Remove */}
-        <div className="flex items-center gap-1 flex-shrink-0 ml-auto">
+        <div className="flex items-center gap-1 shrink-0 ml-auto">
           {canConfigure && job.status !== 'converting' && (
             <button
               onClick={() => setShowSettings((s) => !s)}
               title={t('job.settings')}
               aria-label={t('job.settings')}
-              className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all hover:bg-[var(--bg-tertiary)] ${
+              className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all hover:bg-(--bg-tertiary) ${
                 showSettings
-                  ? 'text-[var(--accent-ink)] bg-[var(--accent)]/10'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  ? 'text-(--accent-ink) bg-(--accent)/10'
+                  : 'text-(--text-secondary) hover:text-(--text-primary)'
               }`}
             >
               <svg
@@ -298,7 +298,7 @@ export function JobCard({
                   disabled={!move}
                   aria-label={t(label)}
                   title={t(label)}
-                  className="w-7 h-[18px] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-25 disabled:pointer-events-none"
+                  className="w-7 h-[18px] flex items-center justify-center text-(--text-secondary) hover:text-(--text-primary) disabled:opacity-25 disabled:pointer-events-none"
                 >
                   <svg
                     width="12"
@@ -317,7 +317,7 @@ export function JobCard({
 
           <button
             onClick={onRemove}
-            className="w-9 h-9 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--error)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-all"
+            className="w-9 h-9 flex items-center justify-center text-(--text-secondary) hover:text-(--error) hover:bg-(--bg-tertiary) rounded-lg transition-all"
             aria-label={t('job.remove')}
             title={t('job.remove')}
           >
@@ -336,31 +336,31 @@ export function JobCard({
       </div>
 
       {/* Tier 2: Status & Primary Action Toolbar */}
-      <div className="mt-3 pt-2.5 border-t border-[var(--border-primary)] flex items-center justify-between flex-wrap gap-2">
+      <div className="mt-3 pt-2.5 border-t border-(--border-primary) flex items-center justify-between flex-wrap gap-2">
         {/* Status / Stage readout */}
         <div className="flex items-center gap-2 text-xs" style={{ fontFamily: 'var(--font-mono)' }}>
           {job.status === 'idle' && (
-            <span className="text-[var(--text-muted)] flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)]" />
+            <span className="text-(--text-muted) flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-(--text-muted)" />
               {t('job.ready')}
             </span>
           )}
           {job.status === 'converting' && (
-            <div className="flex items-center gap-2 text-[var(--accent-ink)]" aria-live="polite">
+            <div className="flex items-center gap-2 text-(--accent-ink)" aria-live="polite">
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                className="w-3.5 h-3.5 border-2 rounded-full border-[var(--accent)] border-t-transparent flex-shrink-0"
+                className="w-3.5 h-3.5 border-2 rounded-full border-(--accent) border-t-transparent shrink-0"
               />
               <span className="font-semibold">{job.progress}%</span>
-              <span className="text-[var(--text-muted)] text-[10px]">·</span>
-              <span className="text-[var(--text-muted)] truncate max-w-[180px] sm:max-w-xs">
+              <span className="text-(--text-muted) text-[10px]">·</span>
+              <span className="text-(--text-muted) truncate max-w-[180px] sm:max-w-xs">
                 {t(`job.stage.${job.stage ?? 'converting'}`).replace('{pct}', String(job.progress))}
               </span>
             </div>
           )}
           {job.status === 'done' && (
-            <span className="text-[var(--success)] flex items-center gap-1.5 font-medium">
+            <span className="text-(--success) flex items-center gap-1.5 font-medium">
               <svg
                 width="12"
                 height="12"
@@ -375,10 +375,7 @@ export function JobCard({
             </span>
           )}
           {job.status === 'error' && (
-            <span
-              className="text-[var(--error)] flex items-center gap-1.5"
-              title={job.error?.detail}
-            >
+            <span className="text-(--error) flex items-center gap-1.5" title={job.error?.detail}>
               <svg
                 width="12"
                 height="12"
@@ -407,7 +404,7 @@ export function JobCard({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={onConvert}
-              className="px-4 py-1.5 bg-[var(--accent)] text-[var(--accent-text)] text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity shadow-sm"
+              className="px-4 py-1.5 bg-(--accent) text-(--accent-text) text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity shadow-xs"
               style={{ fontFamily: 'var(--font-mono)' }}
               aria-label={`${t('job.convert')} ${job.file.name}`}
             >
@@ -418,7 +415,7 @@ export function JobCard({
           {job.status === 'converting' && (
             <button
               onClick={onCancel}
-              className="px-3 py-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--error)] border border-[var(--border-secondary)] rounded-lg transition-colors"
+              className="px-3 py-1.5 text-xs text-(--text-secondary) hover:text-(--error) border border-(--border-secondary) rounded-lg transition-colors"
               style={{ fontFamily: 'var(--font-mono)' }}
               aria-label={`${t('job.cancel')} ${job.file.name}`}
             >
@@ -436,10 +433,10 @@ export function JobCard({
                   onClick={copyResult}
                   className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors flex items-center gap-1.5 ${
                     copied
-                      ? 'border-[var(--accent)]/50 text-[var(--accent-ink)]'
+                      ? 'border-(--accent)/50 text-(--accent-ink)'
                       : copyFailed
-                        ? 'border-[var(--error)]/50 text-[var(--error)]'
-                        : 'border-[var(--border-secondary)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-primary'
+                        ? 'border-(--error)/50 text-(--error)'
+                        : 'border-(--border-secondary) text-(--text-secondary) hover:border-(--border-hover) hover:text-primary'
                   }`}
                   style={{ fontFamily: 'var(--font-mono)' }}
                   aria-label={
@@ -501,8 +498,8 @@ export function JobCard({
                   onClick={() => setShowPreview((s) => !s)}
                   className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors flex items-center gap-1.5 ${
                     showPreview
-                      ? 'border-[var(--accent)]/50 text-[var(--accent-ink)] bg-[var(--accent)]/5'
-                      : 'border-[var(--border-secondary)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-primary'
+                      ? 'border-(--accent)/50 text-(--accent-ink) bg-(--accent)/5'
+                      : 'border-(--border-secondary) text-(--text-secondary) hover:border-(--border-hover) hover:text-primary'
                   }`}
                   style={{ fontFamily: 'var(--font-mono)' }}
                   aria-label={showPreview ? t('job.hide') : t('job.view')}
@@ -528,7 +525,7 @@ export function JobCard({
                 animate={{ scale: 1 }}
                 whileHover={{ scale: 1.05 }}
                 onClick={onDownload}
-                className="px-4 py-1.5 bg-[var(--success)] text-[var(--success-text)] text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1.5 shadow-sm"
+                className="px-4 py-1.5 bg-(--success) text-(--success-text) text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1.5 shadow-xs"
                 style={{ fontFamily: 'var(--font-mono)' }}
                 aria-label={t('job.download')}
               >
@@ -551,7 +548,7 @@ export function JobCard({
           {job.status === 'error' && job.targetExt && (
             <button
               onClick={onConvert}
-              className="px-4 py-1.5 text-[var(--error)] text-xs rounded-lg border border-[var(--error)]/30 bg-[var(--error)]/10 hover:bg-[var(--error)]/20 transition-colors font-medium flex items-center gap-1"
+              className="px-4 py-1.5 text-(--error) text-xs rounded-lg border border-(--error)/30 bg-(--error)/10 hover:bg-(--error)/20 transition-colors font-medium flex items-center gap-1"
               style={{ fontFamily: 'var(--font-mono)' }}
               title={job.error?.detail}
               aria-label={t('job.retry')}
@@ -564,12 +561,12 @@ export function JobCard({
 
       {/* Progress bar */}
       {job.status === 'converting' && (
-        <div className="mt-3 h-1.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden border border-[var(--border-primary)]">
+        <div className="mt-3 h-1.5 bg-(--bg-tertiary) rounded-full overflow-hidden border border-(--border-primary)">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${job.progress}%` }}
             transition={{ ease: 'easeOut', duration: 0.2 }}
-            className="h-full bg-[var(--accent)] rounded-full shadow-[0_0_8px_rgba(200,255,0,0.4)]"
+            className="h-full bg-(--accent) rounded-full shadow-[0_0_8px_rgba(200,255,0,0.4)]"
           />
         </div>
       )}
@@ -587,7 +584,7 @@ export function JobCard({
               onApplyToSimilar && (similarCount > 0 || applied > 0) ? (
                 <div className="mt-3 flex items-center justify-end gap-2 text-xs">
                   {applied > 0 && (
-                    <span className="text-[var(--text-muted)]" role="status">
+                    <span className="text-(--text-muted)" role="status">
                       {t('job.appliedToSimilar').replace('{n}', String(applied))}
                     </span>
                   )}
@@ -598,7 +595,7 @@ export function JobCard({
                       setTimeout(() => setApplied(0), 2500);
                     }}
                     disabled={similarCount === 0}
-                    className="px-3 py-1.5 rounded-lg border border-[var(--border-secondary)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] disabled:opacity-40 transition-colors"
+                    className="px-3 py-1.5 rounded-lg border border-(--border-secondary) text-(--text-secondary) hover:border-(--border-hover) disabled:opacity-40 transition-colors"
                   >
                     {t('job.applyToSimilar')
                       .replace('{n}', String(similarCount))
@@ -625,7 +622,7 @@ export function JobCard({
       </AnimatePresence>
 
       {job.identified && job.status !== 'error' && (
-        <p className="mt-2 text-xs text-[var(--text-muted)]" data-testid="identified">
+        <p className="mt-2 text-xs text-(--text-muted)" data-testid="identified">
           {t(job.identified.reason === 'alias' ? 'job.readAsAlias' : 'job.readAsContent')
             .replaceAll('{to}', job.sourceExt.toUpperCase())
             .replaceAll('{from}', job.identified.from.toUpperCase())}
@@ -634,13 +631,13 @@ export function JobCard({
 
       {job.status === 'error' && job.error && (
         <div role="alert" className="mt-2 text-xs">
-          <p className="text-[var(--error)] font-semibold">
+          <p className="text-(--error) font-semibold">
             {describeError(job.error, job.sourceExt, t).title}
           </p>
-          <p className="mt-0.5 text-[var(--text-secondary)]">
+          <p className="mt-0.5 text-(--text-secondary)">
             {describeError(job.error, job.sourceExt, t).hint}
           </p>
-          <details className="mt-1 text-[var(--text-muted)]">
+          <details className="mt-1 text-(--text-muted)">
             <summary className="cursor-pointer select-none">{t('errors.details')}</summary>
             <code
               className="block mt-1 break-all whitespace-pre-wrap"

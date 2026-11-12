@@ -38,18 +38,18 @@ export function StatsPanel({ t }: { t: (key: string) => string }) {
 
   return (
     <details className="mt-6 text-xs" style={{ fontFamily: 'var(--font-mono)' }}>
-      <summary className="cursor-pointer text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+      <summary className="cursor-pointer text-(--text-muted) hover:text-(--text-primary)">
         {t('stats.heading')}
       </summary>
-      <div className="mt-3 bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-4">
-        <p className="text-[var(--text-muted)] mb-3">{t('stats.note')}</p>
+      <div className="mt-3 bg-(--bg-secondary) border border-(--border-primary) rounded-2xl p-4">
+        <p className="text-(--text-muted) mb-3">{t('stats.note')}</p>
         {rows.length === 0 ? (
-          <p className="text-[var(--text-muted)]">{t('stats.empty')}</p>
+          <p className="text-(--text-muted)">{t('stats.empty')}</p>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className="text-[var(--text-muted)]">
+                <thead className="text-(--text-muted)">
                   <tr>
                     <th className="py-1 pr-3 font-normal">{t('stats.pair')}</th>
                     <th className="py-1 pr-3 font-normal text-right">{t('stats.done')}</th>
@@ -58,14 +58,12 @@ export function StatsPanel({ t }: { t: (key: string) => string }) {
                     <th className="py-1 font-normal text-right">{t('stats.avgTime')}</th>
                   </tr>
                 </thead>
-                <tbody className="text-[var(--text-secondary)]">
+                <tbody className="text-(--text-secondary)">
                   {rows.map((row) => (
-                    <tr key={row.pair} className="border-t border-[var(--border-primary)]">
+                    <tr key={row.pair} className="border-t border-(--border-primary)">
                       <td className="py-1 pr-3 uppercase">{row.pair}</td>
                       <td className="py-1 pr-3 text-right">{row.ok}</td>
-                      <td
-                        className={`py-1 pr-3 text-right ${row.failed ? 'text-[var(--error)]' : ''}`}
-                      >
+                      <td className={`py-1 pr-3 text-right ${row.failed ? 'text-(--error)' : ''}`}>
                         {row.failed}
                       </td>
                       <td className="py-1 pr-3">
@@ -83,7 +81,7 @@ export function StatsPanel({ t }: { t: (key: string) => string }) {
               <button
                 type="button"
                 onClick={copy}
-                className="text-[var(--accent-ink)] hover:underline"
+                className="text-(--accent-ink) hover:underline"
                 aria-live="polite"
               >
                 {copied ? t('job.copied') : t('stats.copy')}
@@ -94,7 +92,7 @@ export function StatsPanel({ t }: { t: (key: string) => string }) {
                   clearStats();
                   rerender();
                 }}
-                className="text-[var(--text-muted)] hover:text-[var(--error)]"
+                className="text-(--text-muted) hover:text-(--error)"
               >
                 {t('stats.reset')}
               </button>

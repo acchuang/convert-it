@@ -43,8 +43,8 @@ export function MediaSettings({
   return (
     <>
       {shown.has('audioBitrate') && (
-        <div className="bg-[var(--bg-tertiary)]/60 border border-[var(--border-secondary)] rounded-xl p-3 flex flex-col justify-between gap-2">
-          <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold">
+        <div className="bg-(--bg-tertiary)/60 border border-(--border-secondary) rounded-xl p-3 flex flex-col justify-between gap-2">
+          <span className="text-(--text-muted) text-xs uppercase tracking-wider font-semibold">
             {t('job.bitrate')}
           </span>
           <div className="flex gap-1">
@@ -52,10 +52,10 @@ export function MediaSettings({
               <button
                 key={n}
                 onClick={() => onChange({ audioBitrate: n })}
-                className={`flex-1 py-1 text-xs rounded transition-colors ${
+                className={`flex-1 py-1 text-xs rounded-sm transition-colors ${
                   settings.audioBitrate === n
-                    ? 'bg-[var(--accent)] text-[var(--accent-text)] font-semibold'
-                    : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-secondary)] hover:border-[var(--border-hover)]'
+                    ? 'bg-(--accent) text-(--accent-text) font-semibold'
+                    : 'bg-(--bg-secondary) text-(--text-secondary) border border-(--border-secondary) hover:border-(--border-hover)'
                 }`}
               >
                 {n}k
@@ -90,12 +90,10 @@ export function MediaSettings({
             ))}
           </div>
           {videoPreset === 'lossless' && (
-            <span className="text-xs text-[var(--text-muted)]">{t('job.losslessHint')}</span>
+            <span className="text-xs text-(--text-muted)">{t('job.losslessHint')}</span>
           )}
           <details className="text-xs">
-            <summary className="cursor-pointer text-[var(--text-muted)]">
-              {t('job.advanced')}
-            </summary>
+            <summary className="cursor-pointer text-(--text-muted)">{t('job.advanced')}</summary>
             <div className="mt-2 flex flex-col gap-2">
               <input
                 type="range"
@@ -107,7 +105,7 @@ export function MediaSettings({
                 className="w-full"
                 style={{ accentColor: 'var(--video-color)' }}
               />
-              <span className="text-xs text-[var(--text-muted)]">{t('job.crfHint')}</span>
+              <span className="text-xs text-(--text-muted)">{t('job.crfHint')}</span>
               {shown.has('videoPreset') && (
                 <label className="flex flex-col gap-1">
                   <span className={LABEL}>{t('job.preset')}</span>
@@ -115,7 +113,7 @@ export function MediaSettings({
                     <select
                       value={settings.videoPreset}
                       onChange={(e) => onChange({ videoPreset: e.target.value })}
-                      className="w-full bg-[var(--bg-secondary)] border border-[var(--border-secondary)] text-primary text-xs rounded-lg pl-2.5 pr-7 py-1.5 appearance-none cursor-pointer hover:border-[var(--border-hover)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+                      className="w-full bg-(--bg-secondary) border border-(--border-secondary) text-primary text-xs rounded-lg pl-2.5 pr-7 py-1.5 appearance-none cursor-pointer hover:border-(--border-hover) focus:outline-hidden focus:border-(--accent) transition-colors"
                     >
                       {X264_PRESETS.map((p) => (
                         <option key={p} value={p}>
@@ -124,7 +122,7 @@ export function MediaSettings({
                       ))}
                     </select>
                     <svg
-                      className="absolute right-2 pointer-events-none text-[var(--text-muted)]"
+                      className="absolute right-2 pointer-events-none text-(--text-muted)"
                       width="10"
                       height="10"
                       viewBox="0 0 24 24"
@@ -187,13 +185,13 @@ export function MediaSettings({
               <button
                 type="button"
                 onClick={() => onChange({ subtitleFile: null })}
-                className="px-2 py-1 rounded border border-[var(--border-secondary)] text-[var(--text-secondary)] hover:border-[var(--border-hover)]"
+                className="px-2 py-1 rounded-sm border border-(--border-secondary) text-(--text-secondary) hover:border-(--border-hover)"
               >
                 {t('job.burnRemove')}
               </button>
             </div>
           ) : (
-            <label className="cursor-pointer text-center py-1 text-xs rounded bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-dashed border-[var(--border-secondary)] hover:border-[var(--border-hover)]">
+            <label className="cursor-pointer text-center py-1 text-xs rounded-sm bg-(--bg-secondary) text-(--text-secondary) border border-dashed border-(--border-secondary) hover:border-(--border-hover)">
               {t('job.burnChoose')}
               <input
                 type="file"
@@ -208,7 +206,7 @@ export function MediaSettings({
               />
             </label>
           )}
-          <span className="text-xs text-[var(--text-muted)]">{t('job.burnHint')}</span>
+          <span className="text-xs text-(--text-muted)">{t('job.burnHint')}</span>
         </div>
       )}
 
@@ -258,7 +256,7 @@ export function MediaSettings({
               label={t('job.trimStart')}
               placeholder={t('job.trimStart')}
             />
-            <span className="text-[var(--text-muted)] text-xs">→</span>
+            <span className="text-(--text-muted) text-xs">→</span>
             <TimeField
               seconds={settings.trimEnd}
               onCommit={(trimEnd) => onChange({ trimEnd })}
@@ -266,7 +264,7 @@ export function MediaSettings({
               placeholder={t('job.trimEnd')}
             />
           </div>
-          <span className="text-xs text-[var(--text-muted)]">{t('job.trimHint')}</span>
+          <span className="text-xs text-(--text-muted)">{t('job.trimHint')}</span>
           <span className={LABEL}>{t('job.cutOut')}</span>
           <div className="flex items-center gap-1.5">
             <TimeField
@@ -275,7 +273,7 @@ export function MediaSettings({
               label={t('job.cutFrom')}
               placeholder={t('job.cutFrom')}
             />
-            <span className="text-[var(--text-muted)] text-xs">→</span>
+            <span className="text-(--text-muted) text-xs">→</span>
             <TimeField
               seconds={settings.cutEnd}
               onCommit={(cutEnd) => onChange({ cutEnd })}
@@ -283,7 +281,7 @@ export function MediaSettings({
               placeholder={t('job.cutTo')}
             />
           </div>
-          <span className="text-xs text-[var(--text-muted)]">{t('job.cutHint')}</span>
+          <span className="text-xs text-(--text-muted)">{t('job.cutHint')}</span>
           {file && (
             <TrimScrubber
               file={file}
