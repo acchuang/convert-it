@@ -52,6 +52,8 @@ const PAIRS = [
     },
   ],
   ['bilevel-g4.tiff', 'pdf', 'utif g4 → pdf', magic('%PDF')],
+  // More than one page comes back as a zip, a PNG per page.
+  ['two-pages.tiff', 'png', 'utif pages → zip', magic('PK')],
   ['doc.pdf', 'png', 'pdfium', magic('\x89PNG')],
   [
     'blue.pdf',

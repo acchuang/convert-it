@@ -193,7 +193,7 @@ console.log('fixtures written to', DIR);
   }
   // TIFFs written by Pillow (lib/__tests__/fixtures/tiff/README.md).
   const tiff = join(process.cwd(), 'lib/__tests__/fixtures/tiff');
-  for (const name of ['cmyk-packbits.tiff', 'bilevel-g4.tiff']) {
+  for (const name of ['cmyk-packbits.tiff', 'bilevel-g4.tiff', 'two-pages.tiff']) {
     copyFileSync(join(tiff, name), join(DIR, name));
   }
 }
