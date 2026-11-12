@@ -19,6 +19,7 @@ skills-lock.json
 tsconfig.tsbuildinfo
 .codegraph/
 .smoke-fixtures/
+.playwright-mcp/
 
 # misc
 .DS_Store
