@@ -3,7 +3,7 @@
 // PackBits, CCITT G3/G4 and JPEG, at 1–16 bits per channel, RGB, grey,
 // palette and CMYK. It's loaded on first use and only in the worker.
 //
-// A multi-page TIFF converts its first page; thumbnails (reduced-resolution
+// Every page is read, one at a time; thumbnails (reduced-resolution
 // subfiles) are skipped.
 
 import { ConversionError } from './errors';
@@ -20,6 +20,11 @@ const WIDTH = 't256';
 const PHOTOMETRIC = 't262';
 const SAMPLES = 't277';
 const CMYK = 5;
+// Strip and tile offsets / byte counts.
+const CHUNKS: [string, string][] = [
+  ['t273', 't279'],
+  ['t324', 't325'],
+];
 
 /**
  * 8-bit CMYK(A) to RGBA, as UTIF does it. Its own toRGBA8 reads
@@ -40,40 +45,76 @@ function cmykToRgba(ifd: Ifd): Uint8Array {
   return out;
 }
 
-/** The first page's pixels. */
-export async function decodeTiff(file: Blob): Promise<ImageData> {
-  const UTIF = (await import('utif2')).default as unknown as {
-    decode(buffer: ArrayBuffer): Ifd[];
-    decodeImage(buffer: ArrayBuffer, ifd: Ifd): void;
-    toRGBA8(ifd: Ifd): Uint8Array;
-  };
-  const buffer = await file.arrayBuffer();
-  const corrupt = (why: string) =>
-    new ConversionError('corrupt-input', `Not a readable TIFF: ${why}`);
-  let ifds: Ifd[];
-  try {
-    ifds = UTIF.decode(buffer);
-  } catch (err) {
-    throw corrupt(err instanceof Error ? err.message : String(err));
+interface Utif {
+  decode(buffer: ArrayBuffer): Ifd[];
+  decodeImage(buffer: ArrayBuffer, ifd: Ifd): void;
+  toRGBA8(ifd: Ifd): Uint8Array;
+}
+
+const corrupt = (why: string) =>
+  new ConversionError('corrupt-input', `Not a readable TIFF: ${why}`);
+const reason = (err: unknown) => (err instanceof Error ? err.message : String(err));
+
+function toImageData(UTIF: Utif, buffer: ArrayBuffer, page: Ifd): ImageData {
+  // UTIF zero-fills data that lies past the end, so a truncated file would
+  // come out as a black page instead of an error.
+  for (const [offsets, counts] of CHUNKS) {
+    const at = (page[offsets] as number[]) ?? [];
+    const len = (page[counts] as number[]) ?? [];
+    if (at.some((o, i) => o + (len[i] ?? 0) > buffer.byteLength))
+      throw new Error('the file is cut short');
   }
-  // Bit 0 of NewSubfileType marks a reduced-resolution copy (a thumbnail).
-  const isPage = (ifd: Ifd) =>
-    ifd[WIDTH] !== undefined && !((((ifd[SUBFILE_TYPE] as number[]) ?? [0])[0] ?? 0) & 1);
-  const page = ifds.find(isPage) ?? ifds.find((ifd) => ifd[WIDTH] !== undefined);
-  if (!page) throw corrupt('no image in the file');
-  try {
-    UTIF.decodeImage(buffer, page);
-  } catch (err) {
-    throw corrupt(err instanceof Error ? err.message : String(err));
-  }
+  UTIF.decodeImage(buffer, page);
   const { width, height } = page;
-  if (!width || !height || !page.data?.length) throw corrupt('no pixel data');
+  if (!width || !height || !page.data?.length) throw new Error('no pixel data');
   const cmyk = ((page[PHOTOMETRIC] as number[]) ?? [])[0] === CMYK;
   const rgba = cmyk ? cmykToRgba(page) : UTIF.toRGBA8(page);
-  if (rgba.length < width * height * 4) throw corrupt('no pixel data');
+  // Drop the decoded strip so only one page's pixels are alive at a time.
+  delete (page as Partial<Ifd>).data;
+  if (rgba.length < width * height * 4) throw new Error('no pixel data');
   return new ImageData(
     new Uint8ClampedArray(rgba.buffer as ArrayBuffer, rgba.byteOffset, width * height * 4),
     width,
     height,
   );
+}
+
+/**
+ * The page count up front (parsing the directories is cheap) and the pages'
+ * pixels, decoded one at a time as they're taken. A page that won't decode
+ * fails the whole file, naming the page.
+ */
+export async function tiffPages(
+  file: Blob,
+): Promise<{ count: number; pages: Generator<ImageData, void, undefined> }> {
+  const UTIF = (await import('utif2')).default as unknown as Utif;
+  const buffer = await file.arrayBuffer();
+  let ifds: Ifd[];
+  try {
+    ifds = UTIF.decode(buffer);
+  } catch (err) {
+    throw corrupt(reason(err));
+  }
+  const images = ifds.filter((ifd) => ifd[WIDTH] !== undefined);
+  // Bit 0 of NewSubfileType marks a reduced-resolution copy (a thumbnail).
+  const full = images.filter((ifd) => !((((ifd[SUBFILE_TYPE] as number[]) ?? [0])[0] ?? 0) & 1));
+  const pages = full.length ? full : images.slice(0, 1);
+  if (!pages.length) throw corrupt('no image in the file');
+  const count = pages.length;
+  function* each() {
+    for (const [i, page] of pages.entries()) {
+      try {
+        yield toImageData(UTIF, buffer, page);
+      } catch (err) {
+        throw corrupt(count > 1 ? `page ${i + 1} of ${count}: ${reason(err)}` : reason(err));
+      }
+    }
+  }
+  return { count, pages: each() };
+}
+
+/** The first page's pixels. */
+export async function decodeTiff(file: Blob): Promise<ImageData> {
+  const { pages } = await tiffPages(file);
+  return pages.next().value as ImageData;
 }
