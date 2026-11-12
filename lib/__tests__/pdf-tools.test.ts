@@ -245,3 +245,26 @@ describe('mergePdf', () => {
     expect(['mp4', 'csv', 'docx'].some(canMerge)).toBe(false);
   });
 });
+
+describe('TIFF to PDF', () => {
+  const tiff = (name: string) =>
+    new File([readFileSync(join(__dirname, 'fixtures', 'tiff', name))], name, {
+      type: 'image/tiff',
+    });
+
+  it('puts every page of a multi-page TIFF in the PDF', async () => {
+    const out = await imageToPdf(
+      tiff('two-pages.tiff'),
+      'tiff',
+      'pdf',
+      settings({ pdfPageSize: 'fit' }),
+    );
+    expect((await PDFDocument.load(await out.arrayBuffer())).getPageCount()).toBe(2);
+  });
+
+  it('fails the whole file when a page will not decode, naming the page', async () => {
+    await expect(
+      imageToPdf(tiff('two-pages-bad.tiff'), 'tiff', 'pdf', DEFAULT_SETTINGS),
+    ).rejects.toThrow(/page 2 of 2/);
+  });
+});
