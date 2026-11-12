@@ -4,6 +4,8 @@
 
 A bold, modern web app for converting files between popular formats — entirely in the browser. Your files never leave your device: no uploads, no accounts.
 
+Supported browsers: Safari 16.4+, Chrome/Edge 111+, Firefox 128+ (the floor set by Tailwind CSS 4).
+
 [![ci](https://img.shields.io/github/actions/workflow/status/acchuang/convert-it/ci.yml?branch=main&label=ci%20%2B%20deploy&style=flat-square)](https://github.com/acchuang/convert-it/actions/workflows/ci.yml)
 [![repo](https://img.shields.io/badge/source-github-blue?style=flat-square)](https://github.com/acchuang/convert-it)
 [![issues](https://img.shields.io/github/issues/acchuang/convert-it?style=flat-square)](https://github.com/acchuang/convert-it/issues)
